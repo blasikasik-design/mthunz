@@ -382,6 +382,9 @@
     .prod-grid { grid-template-columns: repeat(2, 1fr); }
     .review-grid { grid-template-columns: 1fr; }
     .footer-grid { grid-template-columns: 1fr; }
+    .footer-col,
+    .footer-col h4,
+    .footer-col a { text-align: center; }
     .nav-links { display: none; }
     .hamburger { display: inline-flex; }
     .nav-actions { display: flex; margin-left: auto; }
