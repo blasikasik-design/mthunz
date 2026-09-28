@@ -110,9 +110,6 @@
       <div class="review-location">From walls to pages, we bring imagination to structure</div>
     </div>
   </div>
-  <div style="text-align:center;margin-top:28px;">
-    <button class="btn-fill" id="contactServiceBtn" style="padding:13px 24px;">Get in Touch</button>
-  </div>
 </section>
 
 <section class="about-section section" id="about">
@@ -127,8 +124,8 @@
 <footer>
   <div class="footer-grid">
     <div class="footer-col footer-links-center"><h4>Shop</h4><a class="footer-cat" href="shop.html?cat=Paintings" data-cat="Paintings">Paintings</a><a class="footer-cat" href="shop.html?cat=Drawings" data-cat="Drawings">Drawings</a><a class="footer-cat" href="shop.html?cat=T-Shirts" data-cat="T-Shirts">T-Shirts</a><a class="footer-cat" href="shop.html?cat=Sculptures" data-cat="Sculptures">Sculptures</a><a class="footer-cat" href="shop.html?cat=Prints" data-cat="Prints">Prints</a></div>
-    <div class="footer-col footer-links-center"><h4>Info</h4><a id="footerAbout">About Mthunzi</a><a id="footerShipping">Shipping Policy</a><a id="footerReturns">Returns</a><a id="footerCustom">Custom Orders</a></div>
-    <div class="footer-col footer-links-center"><h4>Connect</h4><a id="footerWhatsApp">WhatsApp</a><a id="footerInstagram">Instagram</a><a id="footerFacebook">Facebook</a><a id="footerContactBtn">Email Us</a></div>
+    <div class="footer-col footer-links-center"><h4>Info</h4><a id="footerAbout">About Mthunzi</a><a id="footerShipping" href="contact.html">Shipping Policy</a><a id="footerReturns" href="contact.html">Returns</a><a id="footerCustom" href="contact.html">Custom Orders</a></div>
+    <div class="footer-col footer-links-center"><h4>Connect</h4><a id="footerWhatsApp">WhatsApp</a><a id="footerInstagram">Instagram</a><a id="footerFacebook">Facebook</a><a id="footerContactBtn" href="contact.html">Contact</a></div>
   </div>
   <div class="footer-bottom"><span>© 2025 MTHUNZI CREATIONS — All rights reserved</span></div>
 </footer>
@@ -142,13 +139,14 @@
 <div class="overlay" id="cartModal"><div class="modal cart-modal"><button class="modal-close" data-close="cartModal">✕</button><div class="modal-title">Your Cart</div><div class="modal-sub">Review your selections</div><div id="cartItems"></div><div class="cart-total" id="cartTotalRow" style="display:none;"><span>Total</span><span id="cartTotalAmt"></span></div><button class="btn-primary" id="checkoutBtn" style="display:none;">Proceed to Payment <i class="fas fa-arrow-right"></i></button></div></div>
 <div class="overlay" id="prodModal"><div class="modal prod-detail-modal"><button class="modal-close" data-close="prodModal">✕</button><div class="prod-detail-img" id="detailImg"></div><div class="modal-sub" id="detailCat"></div><div class="modal-title" id="detailName"></div><div class="detail-dimensions" id="detailDimensions"></div><div class="prod-detail-price" id="detailPrice"></div><p class="prod-detail-desc" id="detailDesc"></p><div class="stock-status in-stock" id="detailStock"></div><button class="btn-primary" id="detailAddBtn"><i class="fas fa-shopping-cart"></i> Add to Cart</button></div></div>
 <div class="overlay" id="paymentModal"><div class="modal payment-modal"><button class="modal-close" data-close="paymentModal">✕</button><div class="modal-title">Payment</div><div class="modal-sub">Complete your purchase</div><div style="background:var(--off-white);padding:18px;border-radius:16px;"><div id="paySummaryItems"></div><div id="payTotal"></div></div><div class="agent-codes"><div class="agent-box"><div class="network">TNM Mpamba</div><div class="code">*838*2*4501#</div><div class="owner">Mthunzi Creations</div></div><div class="agent-box"><div class="network">Airtel Money</div><div class="code">*211*8*3302#</div><div class="owner">Mthunzi Creations</div></div></div><div class="payment-note"><strong><i class="fas fa-info-circle"></i> How to pay:</strong> Dial the agent code, follow prompts, then send receipt to +265 991 234 567</div><button class="btn-primary" id="btnConfirmPayment">I Have Made Payment</button></div></div>
-<div class="overlay" id="contactModal"><div class="modal"><button class="modal-close" data-close="contactModal">✕</button><div class="modal-title">Get in Touch</div><div class="modal-sub">We'd love to hear from you</div><div class="form-group"><label>Name</label><input type="text" id="contactName"></div><div class="form-group"><label>Email</label><input type="email" id="contactEmail"></div><div class="form-group"><label>Message</label><input type="text" id="contactMsg"></div><button class="btn-primary" id="btnSendContact">Send Message</button></div></div>
 <div class="overlay" id="successModal"><div class="modal"><button class="modal-close" data-close="successModal">✕</button><div class="success-box"><div class="success-icon"><i class="fas fa-check-circle" style="color:var(--success);font-size:55px;"></i></div><h2 id="successTitle">Done!</h2><p id="successMsg"></p><button class="btn-primary" id="btnSuccessClose">Continue Shopping</button></div></div></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   var products = [];
   var cart = [];
+  var homeCategories = [];
+  var homeCategoryRotation = null;
 
   function normalizeProduct(product) {
     const id = Number(product.id ?? product.product_id ?? 0);
@@ -185,10 +183,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const result = await response.json();
       const items = Array.isArray(result.data) ? result.data : [];
       products = items.map(normalizeProduct);
+      renderHomeCategories(homeCategories);
       renderFiltered(products.filter(function(p){ return p.badge === 'Featured'; }),'Featured Items');
     } catch (error) {
       console.warn('API product load failed.', error);
       products = [];
+      renderHomeCategories(homeCategories);
       renderFiltered([], 'Featured Items');
     }
   }
@@ -217,18 +217,61 @@ document.addEventListener('DOMContentLoaded', function() {
   function renderHomeCategories(categories) {
     const grid = document.getElementById('homeCategoryGrid');
     if (!grid) return;
-    const items = Array.isArray(categories) && categories.length ? categories : [
+    const categoryImages = {
+      paintings: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1000&h=1333&q=85',
+      drawings: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&h=1333&q=85',
+      't-shirts': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&h=1333&q=85',
+      sculptures: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1000&h=1333&q=85',
+      prints: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1000&h=1333&q=85',
+      others: 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?auto=format&fit=crop&w=1000&h=1333&q=85'
+    };
+    if (Array.isArray(categories)) homeCategories = categories;
+    if (homeCategoryRotation) clearInterval(homeCategoryRotation);
+    homeCategoryRotation = null;
+    const items = homeCategories.length ? homeCategories : [
       { name: 'Paintings' },
       { name: 'Drawings' },
       { name: 'T-Shirts' },
       { name: 'Sculptures' },
       { name: 'Prints' }
     ];
-    grid.innerHTML = items.map(function(category, index) {
+    grid.replaceChildren();
+    const rotatingCards = [];
+    items.forEach(function(category) {
       const name = category.name || 'Category';
-      const count = ['12 pieces', '8 pieces', '24 designs', '6 pieces', '18 designs'][index] || 'New collection';
-      return '<button type="button" class="cat-card" data-cat="' + name + '"><div class="cat-bg" style="background-image:url(\'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=500&fit=crop\')"></div><div class="cat-overlay"><div class="cat-name">' + name + '</div><div class="cat-count">' + count + '</div></div></button>';
-    }).join('');
+      const matchingProducts = products.filter(function(product) {
+        return String(product.category || product.cat || '').trim().toLowerCase() === String(name).trim().toLowerCase();
+      }).length;
+      const normalizedName = String(name).trim().toLowerCase();
+      const availableImages = Array.from(new Set(products.filter(function(product) {
+        return String(product.category || product.cat || '').trim().toLowerCase() === normalizedName && Number(product.stock) > 0 && (product.image || product.img);
+      }).map(function(product) {
+        return product.image || product.img;
+      })));
+      const fallbackImage = category.image || categoryImages[normalizedName] || categoryImages.paintings;
+      const images = availableImages.length ? availableImages : [fallbackImage];
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'cat-card';
+      card.setAttribute('data-cat', name);
+      card.innerHTML = '<div class="cat-bg"></div><div class="cat-overlay"><div class="cat-name"></div><div class="cat-count"></div></div>';
+      const imageElement = card.querySelector('.cat-bg');
+      imageElement.style.backgroundImage = 'url("' + images[0].replace(/"/g, '%22') + '")';
+      card.querySelector('.cat-name').textContent = name;
+      card.querySelector('.cat-count').textContent = matchingProducts + (matchingProducts === 1 ? ' item' : ' items');
+      grid.appendChild(card);
+      if (images.length > 1) {
+        rotatingCards.push({ element: imageElement, images: images, index: 0 });
+      }
+    });
+    if (rotatingCards.length) {
+      homeCategoryRotation = setInterval(function() {
+        rotatingCards.forEach(function(card) {
+          card.index = (card.index + 1) % card.images.length;
+          card.element.style.backgroundImage = 'url("' + card.images[card.index].replace(/"/g, '%22') + '")';
+        });
+      }, 30000);
+    }
   }
 
   var detailProductId = null;
@@ -306,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var mNavGallery = document.getElementById('mNavGallery');
   if (mNavGallery) mNavGallery.addEventListener('click',function(){ mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden', 'true'); scrollToId('gallery'); });
   var mNavContact = document.getElementById('mNavContact');
-  if (mNavContact) mNavContact.addEventListener('click',function(){ mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden', 'true'); openModal('contactModal'); });
+  if (mNavContact) mNavContact.addEventListener('click',function(){ mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden', 'true'); window.location.href='contact.html'; });
   var mNavAbout = document.getElementById('mNavAbout');
   if (mNavAbout) mNavAbout.addEventListener('click',function(){ mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden', 'true'); scrollToId('about'); });
   var mBtnSignIn = document.getElementById('mBtnSignIn');
@@ -331,11 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
     requireAuth('cart', 'Please sign in or create an account to view your cart.');
   });
   document.getElementById('footerContactBtn').addEventListener('click',()=>window.location.href='contact.html');
-  document.getElementById('contactServiceBtn').addEventListener('click',()=>window.location.href='contact.html');
   document.getElementById('footerAbout').addEventListener('click',()=>scrollToId('about'));
-  document.getElementById('footerShipping').addEventListener('click',()=>showToast('Free shipping on orders over MK50,000. Delivery within 3-5 business days.'));
-  document.getElementById('footerReturns').addEventListener('click',()=>showToast('14-day return policy. Items must be unused and in original packaging.'));
-  document.getElementById('footerCustom').addEventListener('click',()=>openModal('contactModal'));
   document.getElementById('footerWhatsApp').addEventListener('click',()=>window.open('https://wa.me/265991234567', '_blank'));
   document.getElementById('footerInstagram').addEventListener('click',()=>window.open('https://instagram.com', '_blank'));
   document.getElementById('footerFacebook').addEventListener('click',()=>window.open('https://facebook.com', '_blank'));
@@ -392,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function saveUser(user) {
     currentUser = user;
     localStorage.setItem('mthunziAuthUser', JSON.stringify(user));
+    cart = loadCart();
     toggleAuthButtons(true);
   }
 
@@ -403,18 +443,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mobileAccountButton) mobileAccountButton.textContent = 'Hi ' + user.name.split(' ')[0];
   }
   function clearUser() {
-    var user = getStoredUser();
-    if (user && user.id) {
-      localStorage.removeItem('mthunziCart:' + String(user.id));
-    }
-    localStorage.removeItem('mthunziCart');
-    localStorage.removeItem('mthunziCart:guest');
     currentUser = null;
     localStorage.removeItem('mthunziAuthUser');
     localStorage.removeItem('mthunziAuthRedirect');
+    cart = loadCart();
     toggleAuthButtons(false);
     showToast('You have logged out.');
   }
+  document.getElementById('btnLogout').addEventListener('click', clearUser);
+  document.getElementById('mBtnLogout').addEventListener('click', function() {
+    mobileMenu.classList.remove('open');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    clearUser();
+  });
   function loadPersistedUser() {
     var stored = localStorage.getItem('mthunziAuthUser');
     if (!stored) return;
@@ -451,6 +492,14 @@ document.addEventListener('DOMContentLoaded', function() {
     window.location.href = redirectTarget;
   });
   document.getElementById('btnAccount').addEventListener('click', function() { window.location.href = 'account.html'; });
+  document.getElementById('switchToSignup').addEventListener('click', function() {
+    closeModal('loginModal');
+    openModal('signupModal');
+  });
+  document.getElementById('switchToLogin').addEventListener('click', function() {
+    closeModal('signupModal');
+    openModal('loginModal');
+  });
   var mobileAccountButton = document.getElementById('mBtnAccount');
   if (mobileAccountButton) mobileAccountButton.addEventListener('click', function() { mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden', 'true'); window.location.href = 'account.html'; });
   document.getElementById('btnDoSignup').addEventListener('click', async function(){
@@ -468,32 +517,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var redirectTarget = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
     localStorage.removeItem('mthunziAuthRedirect');
     window.location.href = redirectTarget;
-  });
-  document.getElementById('btnSendContact').addEventListener('click', async function(){
-    var name = document.getElementById('contactName').value.trim();
-    var email = document.getElementById('contactEmail').value.trim();
-    var body = document.getElementById('contactMsg').value.trim();
-    if (!name || !email || !body) {
-      showToast('Please complete all contact fields');
-      return;
-    }
-    try {
-      var res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, email: email, subject: 'Website message', body: body })
-      });
-      var json = await res.json().catch(function(){ return {}; });
-      if (!res.ok) {
-        showToast(json.error || 'Unable to send message');
-        return;
-      }
-      closeModal('contactModal');
-      success('Message Sent!', 'Your message has been delivered to Mthunzi. You should receive a reply soon.');
-    } catch (err) {
-      console.error(err);
-      showToast('Unable to send message. Please try again later.');
-    }
   });
   document.getElementById('btnSuccessClose').addEventListener('click',()=>closeModal('successModal'));
   document.getElementById('btnSearch').addEventListener('click',doSearch);
@@ -618,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var popupIdx=0; 
   function showPopup(){ var msg=popupMessages[popupIdx%popupMessages.length]; document.getElementById('popupTitle').textContent=msg.title; document.getElementById('popupText').textContent=msg.text; document.getElementById('artistPopup').classList.add('show'); popupIdx++; setTimeout(()=>document.getElementById('artistPopup').classList.remove('show'),8000); } 
   document.getElementById('popupCloseBtn').addEventListener('click',()=>document.getElementById('artistPopup').classList.remove('show')); 
-  document.getElementById('popupLearnMore').addEventListener('click',()=>{ document.getElementById('artistPopup').classList.remove('show'); openModal('contactModal'); }); 
+  document.getElementById('popupLearnMore').addEventListener('click',()=>{ document.getElementById('artistPopup').classList.remove('show'); window.location.href='contact.html'; });
   setTimeout(showPopup,3000); 
   setInterval(showPopup,180000);
   

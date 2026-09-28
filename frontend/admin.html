@@ -291,9 +291,36 @@ tbody tr:hover { background: var(--paper); }
 }
 @media (max-width:620px) {
   .stat-grid { grid-template-columns:1fr; }
-  .content { padding:18px; }
-  .topbar { padding:0 16px; }
+  .app, .main { width:100%; min-width:0; }
+  .sidebar { width:min(var(--sidebar-w), calc(100vw - 48px)); height:100dvh; }
+  .topbar { min-height:64px; height:auto; padding:10px 12px; gap:10px; }
+  .page-title { font-size:18px; }
+  .page-sub { max-width:38vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; letter-spacing:.7px; }
+  .topbar-actions { gap:8px; }
+  .content { min-width:0; padding:14px 12px 24px; overflow-x:hidden; }
+  .panel { min-width:0; padding:16px; border-radius:14px; }
+  .stat-card { padding:16px; }
+  .stat-value { font-size:23px; }
+  .row-2, .row-2b { grid-template-columns:minmax(0,1fr); }
+  .toolbar { align-items:stretch; gap:10px; }
+  .search-input { width:100%; min-width:0; max-width:none; }
+  .table-wrap { width:100%; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { min-width:620px; }
+  .cust-grid { grid-template-columns:minmax(0,1fr); }
+  .cust-card { min-width:0; padding:16px; }
+  .cust-top > div:last-child { min-width:0; }
+  .cust-email { overflow-wrap:anywhere; }
+  .modal { padding:24px 18px; max-height:calc(100dvh - 24px); }
+  .order-detail-head { flex-direction:column; gap:8px; }
   .form-row-2, .settings-grid { grid-template-columns:1fr; }
+}
+@media (max-width:380px) {
+  .topbar { gap:8px; }
+  .page-sub { display:none; }
+  .topbar-avatar { width:34px; height:34px; }
+  .content { padding-right:10px; padding-left:10px; }
+  .panel { padding:13px; }
+  .confirm-actions { flex-direction:column; }
 }
 </style>
 </head>
