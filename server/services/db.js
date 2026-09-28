@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const defaultConnectionString = process.env.DATABASE_URL || process.env.DB_URL || 'postgres://postgres:postgres@127.0.0.1:5433/mthunzi';
@@ -223,13 +224,46 @@ async function getCustomers() {
   }
 }
 
+async function deleteCustomer(id) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const customerResult = await client.query('SELECT id, email FROM users WHERE id = $1 FOR UPDATE', [id]);
+    const customer = customerResult.rows[0];
+    if (!customer) {
+      await client.query('COMMIT');
+      return false;
+    }
+
+    const emailHash = crypto.createHash('sha256').update(String(customer.email).trim().toLowerCase()).digest('hex');
+    await client.query(
+      'INSERT INTO removed_accounts (email_hash) VALUES ($1) ON CONFLICT (email_hash) DO UPDATE SET removed_at = NOW()',
+      [emailHash]
+    );
+    const deleted = await client.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+    await client.query('COMMIT');
+    return deleted.rowCount > 0;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function wasAccountRemoved(email) {
+  const emailHash = crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex');
+  const result = await query('SELECT 1 FROM removed_accounts WHERE email_hash = $1', [emailHash]);
+  return result.rowCount > 0;
+}
+
 async function getOrders() {
   try {
     const result = await query(`
-      SELECT o.id, o.user_id, u.name, u.email, o.total_amount, o.status, o.payment_type, o.payment_screenshot_url, o.created_at,
+      SELECT o.id, o.user_id, COALESCE(u.name, 'Deleted customer') AS name, COALESCE(u.email, '') AS email, o.total_amount, o.status, o.payment_type, o.payment_screenshot_url, o.created_at,
              oi.product_id, oi.quantity, oi.price_at_purchase, p.name as product_name
       FROM orders o
-      JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id = u.id
       LEFT JOIN order_items oi ON oi.order_id = o.id
       LEFT JOIN products p ON p.id = oi.product_id
       ORDER BY o.created_at DESC, oi.id ASC
@@ -277,6 +311,15 @@ async function getMessages() {
     console.error('Error fetching messages:', err);
     throw err;
   }
+}
+
+async function deleteMessage(id) {
+  const result = await query('DELETE FROM messages WHERE id = $1 RETURNING id', [id]);
+  return result.rowCount > 0;
+}
+
+async function markOrdersDeliveredAfter30Days() {
+  return query("UPDATE orders SET status = 'Delivered' WHERE created_at <= NOW() - INTERVAL '30 days' AND LOWER(COALESCE(status, '')) NOT IN ('delivered', 'cancelled')");
 }
 
 async function createOrder({ userId, items, totalAmount, paymentType, screenshot }) {
@@ -343,4 +386,4 @@ async function createMessage({ name, email, subject, body }) {
   }
 }
 
-module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, getOrders, getMessages, createOrder, updateOrderStatus, createMessage, getStockStatus };
+module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getMessages, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, updateOrderStatus, createMessage, getStockStatus };

@@ -94,6 +94,13 @@ function ensureSchema() {
   return db.query(`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS badge VARCHAR(40) DEFAULT '';
     ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0;
+    CREATE TABLE IF NOT EXISTS removed_accounts (
+      email_hash CHAR(64) PRIMARY KEY,
+      removed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    ALTER TABLE orders ALTER COLUMN user_id DROP NOT NULL;
+    ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_user_id_fkey;
+    ALTER TABLE orders ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
   `);
 }
 
@@ -142,7 +149,19 @@ ensureSchema().catch(err => {
   console.error(err.message || err);
 });
 
+let agedOrderUpdateStarted = false;
+
 function startServer(port) {
+  if (!agedOrderUpdateStarted) {
+    agedOrderUpdateStarted = true;
+    const updateAgedOrders = () => db.markOrdersDeliveredAfter30Days().catch(err => {
+      console.error('Unable to update orders older than 30 days:', err.message || err);
+    });
+    updateAgedOrders();
+    const deliveryInterval = setInterval(updateAgedOrders, 60 * 60 * 1000);
+    deliveryInterval.unref();
+  }
+
   const server = app.listen(port, '0.0.0.0', () => {
     console.log(`Server started on http://localhost:${port}`);
   });
@@ -249,7 +268,11 @@ app.post('/api/login', async (req, res) => {
     if (String(password).length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
     }
-    const user = await auth.verifyPassword(email, password);
+    const account = await auth.findUserByEmail(email);
+    if (!account && await auth.wasAccountRemoved(email)) {
+      return res.status(401).json({ error: 'Your account was removed by the store owner. Please contact the owner for more information.' });
+    }
+    const user = await auth.verifyUserPassword(account, password);
     if (!user) {
       return res.status(401).json({ error: 'Invalid login credentials.' });
     }
@@ -330,8 +353,24 @@ app.get('/api/admin/customers', async (req, res) => {
   }
 });
 
+app.delete('/api/admin/customers/:id', async (req, res) => {
+  try {
+    const customerId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(customerId) || customerId < 1) {
+      return res.status(400).json({ error: 'Invalid customer ID.' });
+    }
+    const deleted = await db.deleteCustomer(customerId);
+    if (!deleted) return res.status(404).json({ error: 'Customer not found.' });
+    res.json({ data: { id: customerId, message: 'Customer account removed.' } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Unable to remove customer account.' });
+  }
+});
+
 app.get('/api/admin/orders', async (req, res) => {
   try {
+    await db.markOrdersDeliveredAfter30Days();
     const orders = await db.getOrders();
     res.json({ data: orders });
   } catch (err) {
@@ -365,6 +404,21 @@ app.get('/api/admin/messages', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Unable to fetch messages.' });
+  }
+});
+
+app.delete('/api/admin/messages/:id', async (req, res) => {
+  try {
+    const messageId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(messageId) || messageId < 1) {
+      return res.status(400).json({ error: 'Invalid message ID.' });
+    }
+    const deleted = await db.deleteMessage(messageId);
+    if (!deleted) return res.status(404).json({ error: 'Message not found.' });
+    res.json({ data: { id: messageId, message: 'Message deleted.' } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Unable to delete message.' });
   }
 });
 

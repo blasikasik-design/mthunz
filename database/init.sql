@@ -22,13 +22,18 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id),
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   total_amount NUMERIC(10, 2) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
   payment_type VARCHAR(50),
   payment_screenshot_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS removed_accounts (
+  email_hash CHAR(64) PRIMARY KEY,
+  removed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS order_items (

@@ -28,6 +28,10 @@ async function findUserByEmail(email) {
 
 async function verifyPassword(email, password) {
   const user = await findUserByEmail(email);
+  return verifyUserPassword(user, password);
+}
+
+async function verifyUserPassword(user, password) {
   if (!user) return null;
   const hash = user.password_hash || user.passwordHash || user.password;
   if (!hash) return null;
@@ -39,6 +43,10 @@ async function verifyPassword(email, password) {
     email: user.email,
     phone: user.phone,
   };
+}
+
+async function wasAccountRemoved(email) {
+  return db.wasAccountRemoved(normalizeEmail(email));
 }
 
 async function findUserById(id) {
@@ -79,4 +87,4 @@ async function updateUser({ id, name, email, phone, password }) {
   return result.rows[0];
 }
 
-module.exports = { createUser, findUserByEmail, verifyPassword, findUserById, updateUser };
+module.exports = { createUser, findUserByEmail, verifyPassword, verifyUserPassword, wasAccountRemoved, findUserById, updateUser };

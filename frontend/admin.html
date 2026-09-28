@@ -338,7 +338,7 @@ tbody tr:hover { background: var(--paper); }
         <input type="text" id="topbarSearch" placeholder="Search products, orders, customers…">
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="bellBtn" title="Messages"><i class="fas fa-bell"></i><span class="dot" id="bellDot"></span></button>
+        <button class="icon-btn" id="bellBtn" title="Messages" aria-label="Messages"><i class="fas fa-bell"></i><span class="bell-count" id="bellCount" aria-live="polite"></span></button>
         <div class="topbar-avatar" id="adminAvatarTop">MT</div>
       </div>
     </header>
@@ -576,8 +576,8 @@ tbody tr:hover { background: var(--paper); }
   <div class="modal" style="max-width:400px;">
     <button class="modal-close" data-close="confirmModal">✕</button>
     <div class="confirm-icon"><i class="fas fa-trash-alt"></i></div>
-    <div class="modal-title">Delete Product?</div>
-    <div class="modal-sub" style="color:var(--text-2);text-transform:none;font-family:var(--font-b);font-size:13px;letter-spacing:0;font-weight:400;">This removes it from the storefront. This can't be undone.</div>
+    <div class="modal-title" id="confirmTitle">Delete Product?</div>
+    <div class="modal-sub" id="confirmDescription" style="color:var(--text-2);text-transform:none;font-family:var(--font-b);font-size:13px;letter-spacing:0;font-weight:400;">This removes it from the storefront. This can't be undone.</div>
     <div class="confirm-actions">
       <button class="btn btn-outline" data-close="confirmModal">Cancel</button>
       <button class="btn btn-danger" id="btnConfirmDelete">Delete</button>
@@ -811,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   var revenueLast7 = [];
   var categoryShare = [];
-  var revenueReset = Number(localStorage.getItem('mthunziRevenueReset') || 0);
+  var revenueReset = Math.max(0, Number(localStorage.getItem('mthunziRevenueReset')) || 0);
 
   function calculateDashboardMetrics(){
     var completedOrders = orders.filter(function(o){ return o.status !== 'Cancelled'; });
@@ -846,11 +846,12 @@ document.addEventListener('DOMContentLoaded', function(){
       };
     }).sort(function(a, b){ return b.pct - a.pct; }).slice(0, 5);
 
-    return { totalRevenue: displayRevenue };
+    return { totalRevenue: displayRevenue, grossRevenue: totalRevenue };
   }
 
   var editingProductId = null;
   var deleteTargetId = null;
+  var deleteTargetType = 'product';
   var productImageInput = document.getElementById('productImageInput');
   var productDropZone = document.getElementById('productDropZone');
   var productPreview = document.getElementById('productPreview');
@@ -902,6 +903,13 @@ document.addEventListener('DOMContentLoaded', function(){
   function showToast(msg){ var t=document.getElementById('toast'); document.getElementById('toastMsg').textContent=msg; t.classList.add('show'); clearTimeout(window._toastT); window._toastT=setTimeout(function(){ t.classList.remove('show'); },2600); }
   function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
   function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+  function requestDelete(type, id, title, description){
+    deleteTargetType = type;
+    deleteTargetId = Number(id);
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmDescription').textContent = description;
+    openModal('confirmModal');
+  }
   document.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click',function(){ closeModal(b.getAttribute('data-close')); }); });
   document.querySelectorAll('.overlay').forEach(function(el){ el.addEventListener('click',function(e){ if(e.target===el) closeModal(el.id); }); });
 
@@ -945,7 +953,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   document.getElementById('btnResetRevenue').addEventListener('click', function(){
-    revenueReset += calculateDashboardMetrics().totalRevenue;
+    revenueReset = calculateDashboardMetrics().grossRevenue;
     localStorage.setItem('mthunziRevenueReset', String(revenueReset));
     renderDashboard();
     showToast('Revenue reset');
@@ -1034,7 +1042,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '</tr>';
     }).join('');
     body.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click', function(){ openProductModal(parseInt(b.getAttribute('data-edit'))); }); });
-    body.querySelectorAll('[data-del]').forEach(function(b){ b.addEventListener('click', function(){ deleteTargetId=parseInt(b.getAttribute('data-del')); openModal('confirmModal'); }); });
+    body.querySelectorAll('[data-del]').forEach(function(b){ b.addEventListener('click', function(){ requestDelete('product', b.getAttribute('data-del'), 'Delete Product?', "This removes it from the storefront. This can't be undone."); }); });
   }
   if (document.getElementById('productSearch')) {
     document.getElementById('productSearch').addEventListener('input', renderProducts);
@@ -1172,21 +1180,38 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('btnConfirmDelete').addEventListener('click', async function(){
     if (!deleteTargetId) return;
     try {
-      var res = await fetch('/api/admin/products/' + deleteTargetId, { method: 'DELETE' });
-      var deleteResult = await parseResponsePayload(res, 'Unable to delete product');
-      if (!deleteResult.ok) throw new Error(deleteResult.data.error || 'Unable to delete product');
-      await loadProducts();
+      var endpoints = {
+        product: '/api/admin/products/',
+        customer: '/api/admin/customers/',
+        message: '/api/admin/messages/'
+      };
+      var res = await fetch(endpoints[deleteTargetType] + deleteTargetId, { method: 'DELETE' });
+      var deleteResult = await parseResponsePayload(res, 'Unable to complete deletion');
+      if (!deleteResult.ok) throw new Error(deleteResult.data.error || 'Unable to complete deletion');
+      if (deleteTargetType === 'product') await loadProducts();
+      if (deleteTargetType === 'customer') await loadCustomers();
+      if (deleteTargetType === 'message') {
+        messages = messages.filter(function(message){ return Number(message.id) !== Number(deleteTargetId); });
+        ['mthunziAdminUnreadMessages', 'mthunziAdminSeenMessages'].forEach(function(key){
+          try {
+            var ids = JSON.parse(localStorage.getItem(key) || '[]');
+            localStorage.setItem(key, JSON.stringify(ids.filter(function(id){ return Number(id) !== Number(deleteTargetId); })));
+          } catch (error) {
+            localStorage.removeItem(key);
+          }
+        });
+        syncUnreadMessages();
+        renderMessages();
+        renderDashboard();
+      }
       closeModal('confirmModal');
-      showToast('Product deleted');
+      showToast(deleteTargetType === 'customer' ? 'Customer account removed' : deleteTargetType === 'message' ? 'Message deleted' : 'Product deleted');
     } catch (err) {
       console.error(err);
-      products = products.filter(function(p){ return p.id!==deleteTargetId; });
-      closeModal('confirmModal');
-      renderProducts();
-      renderDashboard();
-      showToast('Product removed locally');
+      showToast(err.message || 'Unable to complete deletion');
     } finally {
       deleteTargetId = null;
+      deleteTargetType = 'product';
     }
   });
 
@@ -1322,8 +1347,16 @@ document.addEventListener('DOMContentLoaded', function(){
       return '<div class="cust-card">'+
         '<div class="cust-top"><div class="cust-avatar" style="background:'+avatarHue(c.name)+'">'+initials(c.name)+'</div><div><div class="cust-name">'+c.name+'</div><div class="cust-email">'+c.email+'</div></div></div>'+
         '<div class="cust-stats"><div class="cust-stat"><div class="v">'+c.phone+'</div><div class="l">Phone</div></div><div class="cust-stat"><div class="v">'+date.toLocaleDateString()+'</div><div class="l">Joined</div></div></div>'+
+        '<div style="display:flex;justify-content:flex-end;margin-top:14px;"><button type="button" class="icon-action danger" data-delete-customer="'+c.id+'" title="Remove account" aria-label="Remove '+c.name+' account"><i class="fas fa-trash-alt"></i></button></div>'+
       '</div>';
     }).join('');
+    grid.querySelectorAll('[data-delete-customer]').forEach(function(button){
+      button.addEventListener('click', function(){
+        var customer = customers.find(function(item){ return Number(item.id) === Number(button.getAttribute('data-delete-customer')); });
+        if (!customer) return;
+        requestDelete('customer', customer.id, 'Remove Customer Account?', 'This permanently removes the customer account. Their order history will remain with customer details anonymized.');
+      });
+    });
   }
   if (document.getElementById('customerSearch')) {
     document.getElementById('customerSearch').addEventListener('input', renderCustomers);
@@ -1342,16 +1375,13 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function updateMessageBell() {
-    var bellDot = document.getElementById('bellDot');
-    if (!bellDot) return;
+    var bellCount = document.getElementById('bellCount');
+    if (!bellCount) return;
     var unreadIds = getUnreadMessageIds();
     var unreadCount = unreadIds.length;
-    bellDot.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
-    if (unreadCount > 0) {
-      bellDot.textContent = unreadCount > 9 ? '9+' : unreadCount;
-    } else {
-      bellDot.textContent = '';
-    }
+    bellCount.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    bellCount.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    document.getElementById('bellBtn').setAttribute('aria-label', unreadCount + ' new messages');
   }
 
   function syncUnreadMessages() {
@@ -1407,11 +1437,18 @@ document.addEventListener('DOMContentLoaded', function(){
         '<td><a href="mailto:'+m.email+'">'+m.email+'</a></td>'+
         '<td><strong>'+m.subject+'</strong></td>'+
         '<td>'+m.date+'</td>'+
-        '<td><button class="icon-action" data-view-msg="'+m.id+'"><i class="fas fa-eye"></i></button></td>'+
+        '<td><div class="row-actions"><button class="icon-action" data-view-msg="'+m.id+'" title="View message" aria-label="View message from '+m.name+'"><i class="fas fa-eye"></i></button><button class="icon-action danger" data-delete-message="'+m.id+'" title="Delete message" aria-label="Delete message from '+m.name+'"><i class="fas fa-trash-alt"></i></button></div></td>'+
       '</tr>';
     }).join('');
     body.querySelectorAll('[data-view-msg]').forEach(function(b){
       b.addEventListener('click', function(){ openMessageDetail(parseInt(b.getAttribute('data-view-msg'))); });
+    });
+    body.querySelectorAll('[data-delete-message]').forEach(function(button){
+      button.addEventListener('click', function(){
+        var message = messages.find(function(item){ return Number(item.id) === Number(button.getAttribute('data-delete-message')); });
+        if (!message) return;
+        requestDelete('message', message.id, 'Delete Message?', 'This permanently deletes the selected message. This action cannot be undone.');
+      });
     });
   }
   if (document.getElementById('messageSearch')) {

@@ -131,7 +131,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
 .icon-btn { position: relative; width: 38px; height: 38px; border-radius: 50%; background: var(--white); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 14px; transition: all .2s; }
 .icon-btn:hover { border-color: var(--lake); color: var(--lake); }
-.icon-btn .dot { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 0 2px var(--white); }
+.icon-btn .bell-count { position: absolute; top: -5px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--warning); color: #fff; box-shadow: 0 0 0 2px var(--white); font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 18px; text-align: center; }
 .topbar-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--horizon); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; color: #fff; font-size: 13.5px; }
 
 .content { padding: 28px; flex: 1; overflow-y: auto; }
