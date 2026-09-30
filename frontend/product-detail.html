@@ -434,7 +434,7 @@
           <i class="fas fa-shopping-bag"></i> Add to Cart
         </button>
         <button class="btn btn-secondary" id="proceedBtn">
-          <i class="fas fa-mobile-alt"></i> Proceed to Payment
+          <i class="fas fa-mobile-alt"></i> Proceed to Paymentt
         </button>
       </div>
     </div>
@@ -785,6 +785,17 @@
     }
     saveCartItems(cart);
     updateCartBadge();
+    window.location.href = 'payment.html';
+  });
+
+  document.getElementById('checkoutBtn').addEventListener('click', function() {
+    cart = getCartItems();
+    if (!cart.length) return;
+    if (!isSignedIn()) {
+      localStorage.setItem('mthunziAuthRedirect', 'payment.html');
+      window.location.href = 'login.html';
+      return;
+    }
     window.location.href = 'payment.html';
   });
 

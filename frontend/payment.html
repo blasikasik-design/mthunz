@@ -129,12 +129,12 @@
     </div>
 
     <div class="layout">
-      <div class="panel">
+      <div class="panel">k
         <h2>Select Payment Method</h2>
         <div class="actions" style="margin:0 0 14px;justify-content:flex-start">
           <button class="btn btn-secondary" id="showSummaryBtn">Review order summary</button>
         </div>
-        <div class="summary-sheet" id="summarySheet">
+        <div class="summary-sheet open" id="summarySheet">
           <div class="summary-header">
             <h3>Order summary</h3>
             <button class="btn-back" id="closeSummaryBtn"><i class="fas fa-xmark"></i> Close</button>
@@ -178,7 +178,6 @@
         </div>
 
         <div style="margin-top:16px">
-          <div class="note">Upload payment proof (PNG, JPG). Please ensure the reference number is clearly visible in the screenshot before submitting.</div>
           <div class="ref-warning"><i class="fas fa-exclamation-circle"></i><span>Take a clear screenshot of the payment confirmation and make sure the reference number is visible in the image before uploading.</span></div>
           <div class="uploader" id="uploader">
             <img id="preview" class="upload-preview" src="" alt="" style="display:none">
@@ -193,7 +192,7 @@
         <div style="margin-top:18px" id="methodDetails"></div>
 
         <div class="actions">
-          <button class="btn btn-secondary" id="saveDraft">Save Draft</button>
+         
           <button class="btn btn-primary" id="confirmBtn">Confirm Payment</button>
         </div>
       </div>
@@ -363,7 +362,8 @@
   $('backBtn').addEventListener('click',()=>{window.location.href='shop.html'});
   $('showSummaryBtn').addEventListener('click',()=>{ $('summarySheet').classList.add('open'); $('summarySheet').scrollIntoView({behavior:'smooth', block:'start'}); });
   $('closeSummaryBtn').addEventListener('click',()=>{$('summarySheet').classList.remove('open');});
-  $('saveDraft').addEventListener('click',()=>{
+  const saveDraftButton = $('saveDraft');
+  if (saveDraftButton) saveDraftButton.addEventListener('click',()=>{
     const chosen = document.querySelector('input[name=paymethod]:checked');
     const draft = { method: chosen ? chosen.value : null, proof: preview.dataset.dataurl || null, savedAt: Date.now(), cart: loadCart() };
     localStorage.setItem('paymentDraft', JSON.stringify(draft));

@@ -293,10 +293,12 @@ tbody tr:hover { background: var(--paper); }
   .stat-grid { grid-template-columns:1fr; }
   .app, .main { width:100%; min-width:0; }
   .sidebar { width:min(var(--sidebar-w), calc(100vw - 48px)); height:100dvh; }
-  .topbar { min-height:64px; height:auto; padding:10px 12px; gap:10px; }
-  .page-title { font-size:18px; }
-  .page-sub { max-width:38vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; letter-spacing:.7px; }
-  .topbar-actions { gap:8px; }
+  .topbar { display:grid; grid-template-columns:38px minmax(0,1fr) auto; min-height:64px; height:auto; padding:10px 12px; gap:8px; }
+  .sidebar-toggle { grid-column:1; }
+  .page-title-wrap { grid-column:2; min-width:0; }
+  .page-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:18px; }
+  .page-sub { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; letter-spacing:.4px; }
+  .topbar-actions { grid-column:3; margin-left:0; gap:8px; }
   .content { min-width:0; padding:14px 12px 24px; overflow-x:hidden; }
   .panel { min-width:0; padding:16px; border-radius:14px; }
   .stat-card { padding:16px; }
@@ -315,7 +317,8 @@ tbody tr:hover { background: var(--paper); }
   .form-row-2, .settings-grid { grid-template-columns:1fr; }
 }
 @media (max-width:380px) {
-  .topbar { gap:8px; }
+  .topbar { padding-right:10px; padding-left:10px; grid-template-columns:36px minmax(0,1fr) auto; }
+  .sidebar-toggle { width:36px; height:36px; }
   .page-sub { display:none; }
   .topbar-avatar { width:34px; height:34px; }
   .content { padding-right:10px; padding-left:10px; }

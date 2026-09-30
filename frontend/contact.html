@@ -79,8 +79,8 @@
     .faq-item { padding: 14px 16px; border-radius: 6px; border: 1px solid #e6edf6; background: #fbfdff; }
     .faq-item strong { display: block; color: #10233b; margin-bottom: 6px; }
     .faq-item span { color: #51657a; font-size: 14px; line-height: 1.6; }
-    .toast { position: fixed; bottom: 24px; right: 24px; background: #10233b; color: #fff; padding: 12px 18px; border-radius: 10px; box-shadow: 0 12px 26px rgba(0,0,0,0.18); opacity: 0; transform: translateY(12px); pointer-events: none; transition: all 0.25s ease; z-index: 3000; }
-    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast { position: fixed; bottom: 30px; left: 50%; right: auto; transform: translate(-50%, 12px); background: #10233b; color: #fff; padding: 12px 18px; border-radius: 10px; box-shadow: 0 12px 26px rgba(0,0,0,0.18); opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 3000; max-width: calc(100vw - 24px); }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
     @media (max-width: 900px) { .contact-hero-card, .contact-grid { grid-template-columns: 1fr; } }
     @media (max-width: 640px) { .contact-hero { padding: 44px 4% 28px; } .contact-hero-card { padding: 24px; } .contact-main { padding: 20px 4% 56px; } .contact-card, .info-card { padding: 20px; } }
   </style>

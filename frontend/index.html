@@ -458,7 +458,11 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   function loadPersistedUser() {
     var stored = localStorage.getItem('mthunziAuthUser');
-    if (!stored) return;
+    if (!stored) {
+      currentUser = null;
+      toggleAuthButtons(false);
+      return;
+    }
     try {
       var user = JSON.parse(stored);
       if (user && user.name && user.email) {
@@ -470,6 +474,9 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.removeItem('mthunziAuthUser');
     }
   }
+  window.addEventListener('storage', function(event) {
+    if (event.key === 'mthunziAuthUser') loadPersistedUser();
+  });
   async function authRequest(url, payload) {
     var response = await fetch(url, {
       method: 'POST',
@@ -646,6 +653,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(showPopup,180000);
   
   toggleAuthButtons(false);
+  renderHomeCategories([]);
   loadProducts();
   loadSiteSettings();
   loadPersistedUser();
