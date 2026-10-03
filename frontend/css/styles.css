@@ -333,6 +333,7 @@
   .modal-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-secondary); }
   .modal-switch a { color: var(--lake); font-weight: 600; cursor: pointer; text-decoration: none; }
   .form-group { margin-bottom: 22px; }
+  .iti { width: 100%; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
   .form-group input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--mid-gray); border-radius: var(--r-sm); font-size: 15px; font-family: var(--font-body); transition: border-color 0.2s, box-shadow 0.2s; }
   .form-group input:focus { border-color: var(--lake); outline: none; box-shadow: 0 0 0 4px var(--accent-glow); }

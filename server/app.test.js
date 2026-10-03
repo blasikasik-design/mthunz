@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createDefaultSettings, readSiteSettings, normalizeProductPayload, app } = require('./app');
+const { createDefaultSettings, readSiteSettings, normalizeProductPayload, isValidInternationalPhone, app } = require('./app');
 const db = require('./services/db');
 
 test('default payment settings include the configured account details', () => {
@@ -33,6 +33,13 @@ test('missing stock values stay at zero unless explicitly provided', async () =>
   const explicit = await normalizeProductPayload({ name: 'Sample artwork', price: 3000, stock: 12 });
   assert.equal(explicit.stock, 12);
   assert.equal(explicit.in_stock, true);
+});
+
+test('international phone numbers must be valid E.164 values', () => {
+  assert.equal(isValidInternationalPhone('+265991234567'), true);
+  assert.equal(isValidInternationalPhone('+447911123456'), true);
+  assert.equal(isValidInternationalPhone('0991234567'), false);
+  assert.equal(isValidInternationalPhone('+0123456789'), false);
 });
 
 test('admin API rejects requests without a bearer token', async () => {

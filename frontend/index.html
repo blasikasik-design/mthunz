@@ -6,6 +6,7 @@
 <title>MTHUNZI CREATIONS – Original Art from Blantyre, Malawi</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,500;1,9..144,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/css/intlTelInput.min.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -128,16 +129,27 @@
 
 <!-- MODALS -->
 <div class="overlay" id="loginModal"><div class="modal"><button class="modal-close" data-close="loginModal">✕</button><div class="modal-title">Welcome Back</div><div class="modal-sub">Sign in to your account</div><div class="form-group"><label>Email</label><input type="email" id="loginEmail"></div><div class="form-group"><label>Password</label><input type="password" id="loginPassword"></div><button class="btn-primary" id="btnDoLogin">Sign In</button><div class="modal-switch">No account? <a id="switchToSignup">Create one</a></div></div></div>
-<div class="overlay" id="signupModal"><div class="modal"><button class="modal-close" data-close="signupModal">✕</button><div class="modal-title">Join Us</div><div class="modal-sub">Create your account</div><div class="form-group"><label>Full Name</label><input type="text" id="signupName" autocomplete="name"></div><div class="form-group"><label>Email</label><input type="email" id="signupEmail" autocomplete="email"></div><div class="form-group"><label>Phone</label><input type="tel" id="signupPhone" autocomplete="tel"></div><div class="form-group"><label>Password</label><input type="password" id="signupPassword" autocomplete="new-password"></div><div class="form-group"><label>Confirm</label><input type="password" id="signupConfirm" autocomplete="new-password"></div><button class="btn-primary" id="btnDoSignup">Create Account</button><div class="modal-switch">Have an account? <a id="switchToLogin">Sign in</a></div></div></div>
+<div class="overlay" id="signupModal"><div class="modal"><button class="modal-close" data-close="signupModal">✕</button><div class="modal-title">Join Us</div><div class="modal-sub">Create your account</div><div class="form-group"><label for="signupName">Full Name</label><input type="text" id="signupName" autocomplete="name"></div><div class="form-group"><label for="signupEmail">Email</label><input type="email" id="signupEmail" autocomplete="email"></div><div class="form-group"><label for="signupPhone">Phone</label><input type="tel" id="signupPhone" autocomplete="tel"></div><div class="form-group"><label for="signupPassword">Password</label><input type="password" id="signupPassword" autocomplete="new-password"></div><div class="form-group"><label for="signupConfirm">Confirm password</label><input type="password" id="signupConfirm" autocomplete="new-password"></div><button class="btn-primary" id="btnDoSignup">Create Account</button><div id="signupStatus" role="status" aria-live="polite" style="min-height:20px;margin-top:10px;font-size:13px;color:var(--clay);"></div><div class="modal-switch">Have an account? <a id="switchToLogin">Sign in</a></div></div></div>
 <div class="overlay" id="cartModal"><div class="modal cart-modal"><button class="modal-close" data-close="cartModal">✕</button><div class="modal-title">Your Cart</div><div class="modal-sub">Review your selections</div><div id="cartItems"></div><div class="cart-total" id="cartTotalRow" style="display:none;"><span>Total</span><span id="cartTotalAmt"></span></div><button class="btn-primary" id="checkoutBtn" style="display:none;">Proceed to Payment <i class="fas fa-arrow-right"></i></button></div></div>
 <div class="overlay" id="prodModal"><div class="modal prod-detail-modal"><button class="modal-close" data-close="prodModal">✕</button><div class="prod-detail-img" id="detailImg"></div><div class="modal-sub" id="detailCat"></div><div class="modal-title" id="detailName"></div><div class="detail-dimensions" id="detailDimensions"></div><div class="prod-detail-price" id="detailPrice"></div><p class="prod-detail-desc" id="detailDesc"></p><div class="stock-status in-stock" id="detailStock"></div><button class="btn-primary" id="detailAddBtn"><i class="fas fa-shopping-cart"></i> Add to Cart</button></div></div>
 <div class="overlay" id="paymentModal"><div class="modal payment-modal"><button class="modal-close" data-close="paymentModal">✕</button><div class="modal-title">Payment</div><div class="modal-sub">Complete your purchase</div><div style="background:var(--off-white);padding:18px;border-radius:16px;"><div id="paySummaryItems"></div><div id="payTotal"></div></div><div class="agent-codes"><div class="agent-box"><div class="network">TNM Mpamba</div><div class="code">*838*2*4501#</div><div class="owner">Mthunzi Creations</div></div><div class="agent-box"><div class="network">Airtel Money</div><div class="code">*211*8*3302#</div><div class="owner">Mthunzi Creations</div></div></div><div class="payment-note"><strong><i class="fas fa-info-circle"></i> How to pay:</strong> Dial the agent code, follow prompts, then send receipt to +265 991 234 567</div><button class="btn-primary" id="btnConfirmPayment">I Have Made Payment</button></div></div>
 <div class="overlay" id="successModal"><div class="modal"><button class="modal-close" data-close="successModal">✕</button><div class="success-box"><div class="success-icon"><i class="fas fa-check-circle" style="color:var(--success);font-size:55px;"></i></div><h2 id="successTitle">Done!</h2><p id="successMsg"></p><button class="btn-primary" id="btnSuccessClose">Continue Shopping</button></div></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/intlTelInput.min.js"></script>
+<script src="js/phone-input.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   var products = [];
   var cart = [];
+  var signupPhoneInput = document.getElementById('signupPhone');
+  var signupPhoneWidget = window.initializeInternationalPhoneInput(signupPhoneInput);
+
+  function reportSignupModalError(message, input) {
+    var status = document.getElementById('signupStatus');
+    if (status) status.textContent = message;
+    showToast(message);
+    if (input) input.focus();
+  }
   var homeCategories = [];
   var homeCategoryRotation = null;
 
@@ -553,18 +565,31 @@ document.addEventListener('DOMContentLoaded', function() {
     var name = document.getElementById('signupName').value.trim();
     var emailInput = document.getElementById('signupEmail');
     var email = emailInput.value.trim().toLowerCase();
-    var phone = document.getElementById('signupPhone').value.trim();
+    var rawPhone = signupPhoneInput.value.trim();
     var password = document.getElementById('signupPassword').value;
     var confirm = document.getElementById('signupConfirm').value;
     var button = document.getElementById('btnDoSignup');
-    if (!name || !email || !password || !confirm) { showToast('Please fill all fields'); return; }
-    if (!emailInput.checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showToast('Please enter a valid email address'); return; }
-    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)) { showToast('Password must be at least 8 characters and include a letter and number'); return; }
-    if (password !== confirm) { showToast('Passwords do not match'); return; }
+    var status = document.getElementById('signupStatus');
+    if (status) status.textContent = '';
+    if (!name || !email || !password || !confirm) { reportSignupModalError('Enter your name, email, password, and password confirmation.', !name ? document.getElementById('signupName') : !email ? emailInput : !password ? document.getElementById('signupPassword') : document.getElementById('signupConfirm')); return; }
+    if (!emailInput.checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { reportSignupModalError('Please enter a valid email address, for example name@example.com.', emailInput); return; }
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)) { reportSignupModalError('Password must be at least 8 characters and include a letter and number.', document.getElementById('signupPassword')); return; }
+    if (password !== confirm) { reportSignupModalError('The passwords do not match. Re-enter the confirmation.', document.getElementById('signupConfirm')); return; }
+    if (rawPhone) {
+      if (!signupPhoneWidget) { reportSignupModalError('Phone number validation could not load. Refresh and try again.', signupPhoneInput); return; }
+      try {
+        await signupPhoneWidget.promise;
+      } catch (error) {
+        reportSignupModalError('Phone number validation could not load. Check your connection and try again.', signupPhoneInput);
+        return;
+      }
+      if (!signupPhoneWidget.isValidNumber()) { reportSignupModalError(window.internationalPhoneError(signupPhoneWidget), signupPhoneInput); return; }
+    }
     setModalButtonLoading(button, true, 'Creating account...');
     try {
+      var phone = rawPhone ? signupPhoneWidget.getNumber() : '';
       var result = await authRequest('/api/signup', { name: name, email: email, phone: phone, password: password });
-      if (!result.response.ok) { showToast(result.body.error || 'Signup failed'); return; }
+      if (!result.response.ok) { reportSignupModalError(result.body.error || 'Signup failed. Check your details and try again.', emailInput); return; }
       saveUserAndGreet(result.body.data);
       closeModal('signupModal');
       var redirectTarget = localStorage.getItem('mthunziAuthRedirect') || 'account.html';

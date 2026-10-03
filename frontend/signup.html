@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/css/intlTelInput.min.css">
   <style>
     :root {
       --bg: #07131f;
@@ -208,7 +209,7 @@
         </div>
         <div class="field">
           <label for="phone">Phone</label>
-          <input id="phone" type="tel" placeholder="0991 234 567" />
+          <input id="phone" type="tel" autocomplete="tel" aria-describedby="statusMessage" />
         </div>
       </div>
 
@@ -244,6 +245,8 @@
   <div class="toast" id="toast"></div>
 
   <script src="js/auth-helpers.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/intlTelInput.min.js"></script>
+  <script src="js/phone-input.js"></script>
   <script>
 
     function isValidEmail(value) {
@@ -254,6 +257,15 @@
       return /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(String(value || ''));
     }
 
+    const phoneInput = document.getElementById('phone');
+    const phoneWidget = window.initializeInternationalPhoneInput(phoneInput);
+
+    function reportSignupError(message, input) {
+      setStatus(message, 'error');
+      showToast(message);
+      if (input) input.focus();
+    }
+
     window.addEventListener('pageshow', function() {
       const button = document.getElementById('submitBtn');
       setLoading(button, false, 'Create Account');
@@ -262,32 +274,49 @@
 
     document.getElementById('submitBtn').addEventListener('click', async function () {
       const name = document.getElementById('name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
+      const rawPhone = phoneInput.value.trim();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const confirm = document.getElementById('confirm').value;
 
       if (!name || !email || !password || !confirm) {
-        showToast('Please fill in your name, email, and password.');
+        reportSignupError('Please enter your name, email, password, and password confirmation.', !name ? document.getElementById('name') : !email ? document.getElementById('email') : !password ? document.getElementById('password') : document.getElementById('confirm'));
         return;
       }
       if (!isValidEmail(email)) {
-        showToast('Please enter a valid email address.');
+        reportSignupError('Please enter a valid email address, for example name@example.com.', document.getElementById('email'));
         return;
       }
       if (!isStrongPassword(password)) {
-        showToast('Password must be at least 8 characters and include a letter and number.');
+        reportSignupError('Password must be at least 8 characters and include a letter and number.', document.getElementById('password'));
         return;
       }
       if (password !== confirm) {
-        showToast('Passwords do not match.');
+        reportSignupError('The passwords do not match. Re-enter the confirmation.', document.getElementById('confirm'));
         return;
+      }
+      if (rawPhone) {
+        if (!phoneWidget) {
+          reportSignupError('Phone number validation could not load. Refresh the page and try again.', phoneInput);
+          return;
+        }
+        try {
+          await phoneWidget.promise;
+        } catch (error) {
+          reportSignupError('Phone number validation could not load. Check your connection and try again.', phoneInput);
+          return;
+        }
+        if (!phoneWidget.isValidNumber()) {
+          reportSignupError(window.internationalPhoneError(phoneWidget), phoneInput);
+          return;
+        }
       }
 
       const button = document.getElementById('submitBtn');
       setLoading(button, true, 'Creating Account...');
 
       try {
+        const phone = rawPhone ? phoneWidget.getNumber() : '';
         const result = await authRequest('/api/signup', { name, email, phone, password });
         if (!result.response.ok) {
           setLoading(button, false, 'Create Account');

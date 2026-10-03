@@ -180,6 +180,10 @@ function isStrongPassword(value) {
   return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(value || ''));
 }
 
+function isValidInternationalPhone(value) {
+  return /^\+[1-9]\d{6,14}$/.test(String(value || '').trim());
+}
+
 async function normalizeProductPayload(payload) {
   const next = { ...payload };
   const rawStock = next.stock;
@@ -286,6 +290,7 @@ module.exports = {
   createDefaultSettings,
   readSiteSettings,
   normalizeProductPayload,
+  isValidInternationalPhone,
   app
 };
 
@@ -336,6 +341,7 @@ app.get('/api/health', async (req, res) => {
 app.post('/api/signup', async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
+    const normalizedPhone = String(phone || '').trim();
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
@@ -345,7 +351,10 @@ app.post('/api/signup', async (req, res) => {
     if (!isStrongPassword(password)) {
       return res.status(400).json({ error: 'Password must be at least 8 characters and include a letter and number.' });
     }
-    const user = await auth.createUser({ name, email, phone, password });
+    if (normalizedPhone && !isValidInternationalPhone(normalizedPhone)) {
+      return res.status(400).json({ error: 'Please enter a valid phone number with its country code.' });
+    }
+    const user = await auth.createUser({ name, email, phone: normalizedPhone || null, password });
     res.status(201).json({ data: user });
   } catch (err) {
     console.error(err);
