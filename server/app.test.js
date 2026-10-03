@@ -25,12 +25,12 @@ test('stock status flags low inventory and high inventory correctly', () => {
   assert.deepEqual(db.getStockStatus(12), { label: 'High Stock', cls: 'success', amount: 12 });
 });
 
-test('missing stock values stay at zero unless explicitly provided', () => {
-  const normalized = normalizeProductPayload({ name: 'Sample artwork', price: 3000 });
+test('missing stock values stay at zero unless explicitly provided', async () => {
+  const normalized = await normalizeProductPayload({ name: 'Sample artwork', price: 3000 });
   assert.equal(normalized.stock, 0);
   assert.equal(normalized.in_stock, false);
 
-  const explicit = normalizeProductPayload({ name: 'Sample artwork', price: 3000, stock: 12 });
+  const explicit = await normalizeProductPayload({ name: 'Sample artwork', price: 3000, stock: 12 });
   assert.equal(explicit.stock, 12);
   assert.equal(explicit.in_stock, true);
 });

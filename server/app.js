@@ -4,12 +4,21 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const cors = require('cors');
+const cloudinary = require('cloudinary').v2;
 const db = require('./services/db');
 const auth = require('./services/auth');
 const settingsPath = path.join(__dirname, 'data', 'site-settings.json');
 const adminTokenSecret = process.env.ADMIN_TOKEN_SECRET || '';
 
 const app = express();
+
+if (!process.env.CLOUDINARY_URL && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
 
 function createDefaultSettings() {
   return {
@@ -141,7 +150,7 @@ function isStrongPassword(value) {
   return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(value || ''));
 }
 
-function normalizeProductPayload(payload) {
+async function normalizeProductPayload(payload) {
   const next = { ...payload };
   const rawStock = next.stock;
   const normalizedStock = rawStock === undefined || rawStock === null || rawStock === ''
@@ -154,23 +163,49 @@ function normalizeProductPayload(payload) {
   if (typeof next.image_url === 'string' && next.image_url.startsWith('data:image/')) {
     const match = next.image_url.match(/^data:image\/([^;]+);base64,(.+)$/i);
     if (!match) {
-      throw new Error('Invalid image data payload.');
+      const error = new Error('Invalid image data payload.');
+      error.code = 'INVALID_IMAGE_DATA';
+      throw error;
     }
     const maxBytes = Number(process.env.MAX_PRODUCT_IMAGE_BYTES || 80 * 1024 * 1024);
     const buffer = Buffer.from(match[2], 'base64');
     if (buffer.length > maxBytes) {
-      throw new Error(`Image is too large. Maximum size is ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+      const error = new Error(`Image is too large. Maximum size is ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+      error.code = 'IMAGE_TOO_LARGE';
+      throw error;
     }
-
-    const ext = match[1].toLowerCase() || 'png';
-    const uploadsDir = path.join(__dirname, '..', 'assets', 'uploads');
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    const fileName = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
-    const filePath = path.join(uploadsDir, fileName);
-    fs.writeFileSync(filePath, buffer);
-    next.image_url = `/assets/uploads/${fileName}`;
+    const configuration = cloudinary.config();
+    if (!configuration.cloud_name || !configuration.api_key || !configuration.api_secret) {
+      const error = new Error('Cloudinary is not configured on the server.');
+      error.code = 'CLOUDINARY_NOT_CONFIGURED';
+      throw error;
+    }
+    next.image_url = await new Promise((resolve, reject) => {
+      const upload = cloudinary.uploader.upload_stream(
+        { folder: 'mthunzi/products', resource_type: 'image' },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result || !result.secure_url) return reject(new Error('Cloudinary did not return a secure image URL.'));
+          resolve(result.secure_url);
+        }
+      );
+      upload.end(buffer);
+    });
   }
   return next;
+}
+
+function handleProductImageError(err, res) {
+  if (err.code === 'CLOUDINARY_NOT_CONFIGURED') {
+    return res.status(503).json({ error: err.message });
+  }
+  if (err.code === 'IMAGE_TOO_LARGE') {
+    return res.status(413).json({ error: err.message });
+  }
+  if (err.code === 'INVALID_IMAGE_DATA') {
+    return res.status(400).json({ error: err.message });
+  }
+  return null;
 }
 
 let agedOrderUpdateStarted = false;
@@ -474,11 +509,13 @@ app.post('/api/order', async (req, res) => {
 
 app.post('/api/admin/products', async (req, res) => {
   try {
-    const payload = normalizeProductPayload(req.body);
+    const payload = await normalizeProductPayload(req.body);
     const product = await db.createProduct(payload);
     res.status(201).json({ data: product });
   } catch (err) {
     console.error(err);
+    const imageErrorResponse = handleProductImageError(err, res);
+    if (imageErrorResponse) return imageErrorResponse;
     if (err.code === '23505') {
       return res.status(409).json({ error: 'A product with that name already exists.' });
     }
@@ -501,7 +538,7 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 
 app.patch('/api/admin/products/:id', async (req, res) => {
   try {
-    const payload = normalizeProductPayload(req.body);
+    const payload = await normalizeProductPayload(req.body);
     const product = await db.updateProduct(req.params.id, payload);
     if (!product) {
       return res.status(404).json({ error: 'Product not found.' });
@@ -509,6 +546,8 @@ app.patch('/api/admin/products/:id', async (req, res) => {
     res.json({ data: product });
   } catch (err) {
     console.error(err);
+    const imageErrorResponse = handleProductImageError(err, res);
+    if (imageErrorResponse) return imageErrorResponse;
     res.status(500).json({ error: 'Unable to update product.' });
   }
 });
