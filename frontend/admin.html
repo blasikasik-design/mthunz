@@ -40,6 +40,9 @@ button { cursor:pointer; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--lake); outline-offset: 2px; }
 .action-spinner { display:inline-block; width:15px; height:15px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:adminSpin .75s linear infinite; vertical-align:middle; margin-right:8px; }
 @keyframes adminSpin { to { transform:rotate(360deg); } }
+.admin-password-wrap { position:relative; }
+.admin-password-wrap input { padding-right:44px; }
+.admin-password-toggle { position:absolute; top:50%; right:10px; transform:translateY(-50%); border:0; background:transparent; color:var(--text-3); padding:6px; cursor:pointer; }
 
 /* ===== LAYOUT ===== */
 .app { display:flex; min-height:100vh; }
@@ -552,9 +555,9 @@ tbody tr:hover { background: var(--paper); }
           <div class="panel-head"><div><div class="panel-title">Admin Account</div><div class="panel-sub">Change the email or password used to sign in</div></div></div>
           <div class="settings-grid">
             <div class="form-group"><label for="adminCredentialEmail">Admin Email</label><input type="email" id="adminCredentialEmail" autocomplete="username" required></div>
-            <div class="form-group"><label for="adminCurrentPassword">Current Password</label><input type="password" id="adminCurrentPassword" autocomplete="current-password" required></div>
-            <div class="form-group"><label for="adminNewPassword">New Password</label><input type="password" id="adminNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current password"></div>
-            <div class="form-group"><label for="adminConfirmPassword">Confirm New Password</label><input type="password" id="adminConfirmPassword" autocomplete="new-password"></div>
+            <div class="form-group"><label for="adminCurrentPassword">Current Password</label><div class="admin-password-wrap"><input type="password" id="adminCurrentPassword" autocomplete="current-password" required><button type="button" class="admin-password-toggle" data-toggle-password="adminCurrentPassword" aria-label="Show current password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button></div></div>
+            <div class="form-group"><label for="adminNewPassword">New Password</label><div class="admin-password-wrap"><input type="password" id="adminNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current password"><button type="button" class="admin-password-toggle" data-toggle-password="adminNewPassword" aria-label="Show new password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button></div></div>
+            <div class="form-group"><label for="adminConfirmPassword">Confirm New Password</label><div class="admin-password-wrap"><input type="password" id="adminConfirmPassword" autocomplete="new-password"><button type="button" class="admin-password-toggle" data-toggle-password="adminConfirmPassword" aria-label="Show confirmed password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button></div></div>
           </div>
           <div class="panel-sub" style="margin:0 0 14px;">Changing credentials signs out existing admin sessions. The current password is required to save.</div>
           <button class="btn btn-primary" id="btnSaveAdminCredentials"><i class="fas fa-shield-alt"></i> Update Admin Credentials</button>
@@ -698,6 +701,16 @@ document.addEventListener('DOMContentLoaded', function(){
 
   var adminName = adminAuth.name || 'Admin';
   document.getElementById('adminCredentialEmail').value = adminAuth.email;
+  document.querySelectorAll('[data-toggle-password]').forEach(function(button){
+    button.addEventListener('click', function(){
+      var input = document.getElementById(button.getAttribute('data-toggle-password'));
+      var isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      button.setAttribute('aria-pressed', String(isHidden));
+      button.setAttribute('aria-label', (isHidden ? 'Hide ' : 'Show ') + input.labels[0].textContent.toLowerCase());
+      button.querySelector('i').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    });
+  });
   document.getElementById('adminAvatarTop').textContent = adminName.split(' ').map(function(part){ return part[0]; }).join('').slice(0,2).toUpperCase() || 'AD';
   document.getElementById('adminAvatarTop').setAttribute('title', adminName);
 
