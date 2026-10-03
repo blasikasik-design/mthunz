@@ -36,6 +36,14 @@ CREATE TABLE IF NOT EXISTS removed_accounts (
   removed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS admin_credentials (
+  id SMALLINT PRIMARY KEY CHECK (id = 1),
+  email VARCHAR(180) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  auth_version INTEGER NOT NULL DEFAULT 1,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS order_items (
   id SERIAL PRIMARY KEY,
   order_id INTEGER NOT NULL REFERENCES orders(id),

@@ -39,8 +39,12 @@ test('admin API rejects requests without a bearer token', async () => {
   const server = app.listen(0, '127.0.0.1');
   try {
     await new Promise(resolve => server.once('listening', resolve));
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/admin/customers`);
-    assert.equal(response.status, 401);
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const protectedRoutes = ['/api/admin/customers', '/api/admin/credentials'];
+    for (const route of protectedRoutes) {
+      const response = await fetch(baseUrl + route, { method: route.endsWith('/credentials') ? 'PUT' : 'GET' });
+      assert.equal(response.status, 401, `${route} should require an admin bearer token`);
+    }
   } finally {
     await new Promise((resolve, reject) => server.close(err => err ? reject(err) : resolve()));
   }

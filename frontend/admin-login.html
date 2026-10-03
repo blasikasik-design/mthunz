@@ -353,7 +353,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
   hideError();
   
   var email = document.getElementById('adminEmail').value.trim();
-  var password = document.getElementById('adminPassword').value.trim();
+  var password = document.getElementById('adminPassword').value;
   var btn = document.getElementById('loginBtn');
   
   if (!email || !password) {

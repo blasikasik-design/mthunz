@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
 const db = require('./services/db');
@@ -116,30 +117,59 @@ async function ensureSchema() {
   `);
 }
 
-function createAdminToken() {
+async function ensureAdminCredentials() {
+  const existing = await db.query('SELECT id FROM admin_credentials WHERE id = 1');
+  if (existing.rowCount) return;
+
+  const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || '';
+  if (!email || !password) return;
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await db.query(
+    'INSERT INTO admin_credentials (id, email, password_hash) VALUES (1, $1, $2) ON CONFLICT (id) DO NOTHING',
+    [email, passwordHash]
+  );
+}
+
+function createAdminToken(authVersion) {
   const expiresAt = Date.now() + 12 * 60 * 60 * 1000;
-  const signature = crypto.createHmac('sha256', adminTokenSecret).update(String(expiresAt)).digest('hex');
-  return `${expiresAt}.${signature}`;
+  const tokenData = `${expiresAt}.${authVersion}`;
+  const signature = crypto.createHmac('sha256', adminTokenSecret).update(tokenData).digest('hex');
+  return `${tokenData}.${signature}`;
 }
 
-function isValidAdminToken(token) {
-  if (!adminTokenSecret || typeof token !== 'string') return false;
-  const [expiresAt, signature] = token.split('.');
-  if (!/^\d+$/.test(expiresAt || '') || !/^[a-f0-9]{64}$/.test(signature || '') || Number(expiresAt) <= Date.now()) {
-    return false;
+function getAdminTokenVersion(token) {
+  if (!adminTokenSecret || typeof token !== 'string') return null;
+  const [expiresAt, authVersion, signature] = token.split('.');
+  if (!/^\d+$/.test(expiresAt || '') || !/^\d+$/.test(authVersion || '') || !/^[a-f0-9]{64}$/.test(signature || '') || Number(expiresAt) <= Date.now()) {
+    return null;
   }
-  const expected = crypto.createHmac('sha256', adminTokenSecret).update(expiresAt).digest();
+  const tokenData = `${expiresAt}.${authVersion}`;
+  const expected = crypto.createHmac('sha256', adminTokenSecret).update(tokenData).digest();
   const received = Buffer.from(signature, 'hex');
-  return received.length === expected.length && crypto.timingSafeEqual(received, expected);
+  return received.length === expected.length && crypto.timingSafeEqual(received, expected)
+    ? Number(authVersion)
+    : null;
 }
 
-function requireAdmin(req, res, next) {
+async function requireAdmin(req, res, next) {
   const authorization = req.get('authorization') || '';
   const match = authorization.match(/^Bearer (.+)$/i);
-  if (!match || !isValidAdminToken(match[1])) {
+  const tokenVersion = match ? getAdminTokenVersion(match[1]) : null;
+  if (tokenVersion === null) {
     return res.status(401).json({ error: 'Admin authentication required.' });
   }
-  next();
+  try {
+    const result = await db.query('SELECT auth_version FROM admin_credentials WHERE id = 1');
+    if (!result.rowCount || Number(result.rows[0].auth_version) !== tokenVersion) {
+      return res.status(401).json({ error: 'Admin session has expired. Please sign in again.' });
+    }
+    next();
+  } catch (err) {
+    console.error('Unable to verify admin session:', err.message || err);
+    res.status(503).json({ error: 'Unable to verify admin session.' });
+  }
 }
 
 function isValidEmail(value) {
@@ -212,6 +242,7 @@ let agedOrderUpdateStarted = false;
 
 async function startServer(port) {
   await ensureSchema();
+  await ensureAdminCredentials();
 
   if (!agedOrderUpdateStarted) {
     agedOrderUpdateStarted = true;
@@ -358,19 +389,22 @@ app.post('/api/admin/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    if (!adminEmail || !adminPassword || !adminTokenSecret) {
+    if (!adminTokenSecret) {
       return res.status(503).json({ error: 'Admin login is not configured.' });
     }
-    
-    if (email === adminEmail && password === adminPassword) {
+    const result = await db.query('SELECT id, email, password_hash, auth_version FROM admin_credentials WHERE id = 1');
+    const admin = result.rows[0];
+    if (!admin) {
+      return res.status(503).json({ error: 'Admin login is not configured.' });
+    }
+    const passwordMatches = await bcrypt.compare(String(password), admin.password_hash);
+    if (String(email).trim().toLowerCase() === admin.email && passwordMatches) {
       return res.json({ 
         data: { 
-          id: 1,
+          id: admin.id,
           name: 'Admin',
-          email: adminEmail,
-          token: createAdminToken()
+          email: admin.email,
+          token: createAdminToken(admin.auth_version)
         } 
       });
     }
@@ -379,6 +413,42 @@ app.post('/api/admin/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed.' });
+  }
+});
+
+app.put('/api/admin/credentials', async (req, res) => {
+  try {
+    const email = String(req.body && req.body.email || '').trim().toLowerCase();
+    const currentPassword = String(req.body && req.body.currentPassword || '');
+    const newPassword = String(req.body && req.body.newPassword || '');
+    if (!email || !currentPassword) {
+      return res.status(400).json({ error: 'Email and current password are required.' });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+    if (newPassword && !isStrongPassword(newPassword)) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters and include a letter and number.' });
+    }
+
+    const current = await db.query('SELECT password_hash FROM admin_credentials WHERE id = 1');
+    const admin = current.rows[0];
+    if (!admin || !await bcrypt.compare(currentPassword, admin.password_hash)) {
+      return res.status(401).json({ error: 'Current password is incorrect.' });
+    }
+
+    const passwordHash = newPassword ? await bcrypt.hash(newPassword, 12) : admin.password_hash;
+    const updated = await db.query(
+      'UPDATE admin_credentials SET email = $1, password_hash = $2, auth_version = auth_version + 1, updated_at = now() WHERE id = 1 RETURNING email',
+      [email, passwordHash]
+    );
+    res.json({ data: { email: updated.rows[0].email } });
+  } catch (err) {
+    console.error(err);
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'That email is already in use.' });
+    }
+    res.status(500).json({ error: 'Unable to update admin credentials.' });
   }
 });
 

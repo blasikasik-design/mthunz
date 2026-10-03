@@ -548,6 +548,18 @@ tbody tr:hover { background: var(--paper); }
           </div>
         </div>
 
+        <div class="panel" style="max-width:880px;margin-top:18px;">
+          <div class="panel-head"><div><div class="panel-title">Admin Account</div><div class="panel-sub">Change the email or password used to sign in</div></div></div>
+          <div class="settings-grid">
+            <div class="form-group"><label for="adminCredentialEmail">Admin Email</label><input type="email" id="adminCredentialEmail" autocomplete="username" required></div>
+            <div class="form-group"><label for="adminCurrentPassword">Current Password</label><input type="password" id="adminCurrentPassword" autocomplete="current-password" required></div>
+            <div class="form-group"><label for="adminNewPassword">New Password</label><input type="password" id="adminNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current password"></div>
+            <div class="form-group"><label for="adminConfirmPassword">Confirm New Password</label><input type="password" id="adminConfirmPassword" autocomplete="new-password"></div>
+          </div>
+          <div class="panel-sub" style="margin:0 0 14px;">Changing credentials signs out existing admin sessions. The current password is required to save.</div>
+          <button class="btn btn-primary" id="btnSaveAdminCredentials"><i class="fas fa-shield-alt"></i> Update Admin Credentials</button>
+        </div>
+
         <div style="margin-top:20px;"><button class="btn btn-primary" id="btnSaveSettings"><i class="fas fa-check"></i> Save Changes</button></div>
       </section>
 
@@ -685,6 +697,7 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   var adminName = adminAuth.name || 'Admin';
+  document.getElementById('adminCredentialEmail').value = adminAuth.email;
   document.getElementById('adminAvatarTop').textContent = adminName.split(' ').map(function(part){ return part[0]; }).join('').slice(0,2).toUpperCase() || 'AD';
   document.getElementById('adminAvatarTop').setAttribute('title', adminName);
 
@@ -1608,6 +1621,51 @@ document.addEventListener('DOMContentLoaded', function(){
       showToast(err.message || 'Unable to save settings');
     } finally {
       setButtonLoading(saveButton, false);
+    }
+  });
+
+  document.getElementById('btnSaveAdminCredentials').addEventListener('click', async function(){
+    var button = document.getElementById('btnSaveAdminCredentials');
+    var email = document.getElementById('adminCredentialEmail').value.trim().toLowerCase();
+    var currentPassword = document.getElementById('adminCurrentPassword').value;
+    var newPassword = document.getElementById('adminNewPassword').value;
+    var confirmPassword = document.getElementById('adminConfirmPassword').value;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      showToast('Please enter a valid email address');
+      return;
+    }
+    if (!currentPassword) {
+      showToast('Enter your current password to continue');
+      return;
+    }
+    if (newPassword && !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(newPassword)) {
+      showToast('New password must be at least 8 characters and include a letter and number');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('New passwords do not match');
+      return;
+    }
+
+    setButtonLoading(button, true, 'Updating credentials...');
+    try {
+      var response = await fetch('/api/admin/credentials', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, currentPassword: currentPassword, newPassword: newPassword })
+      });
+      var result = await parseResponsePayload(response, 'Unable to update credentials');
+      if (!result.ok) throw new Error(result.data.error || 'Unable to update credentials');
+
+      sessionStorage.removeItem('mthunziAdminAuth');
+      localStorage.removeItem('mthunziAdminAuth');
+      showToast('Credentials updated. Please sign in again.');
+      setTimeout(function(){ window.location.replace('admin-login.html'); }, 700);
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Unable to update admin credentials');
+    } finally {
+      setButtonLoading(button, false);
     }
   });
 

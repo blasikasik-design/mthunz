@@ -254,6 +254,12 @@
       return /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(String(value || ''));
     }
 
+    window.addEventListener('pageshow', function() {
+      const button = document.getElementById('submitBtn');
+      setLoading(button, false, 'Create Account');
+      setStatus('', '');
+    });
+
     document.getElementById('submitBtn').addEventListener('click', async function () {
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
