@@ -281,22 +281,29 @@
       const button = document.getElementById('submitBtn');
       setLoading(button, true, 'Creating Account...');
 
-      const result = await authRequest('/api/signup', { name, email, phone, password });
-      if (!result.response.ok) {
-        setLoading(button, false, 'Create Account');
-        setStatus(result.body.error || 'Signup failed.', 'error');
-        showToast(result.body.error || 'Signup failed.');
-        return;
-      }
+      try {
+        const result = await authRequest('/api/signup', { name, email, phone, password });
+        if (!result.response.ok) {
+          setLoading(button, false, 'Create Account');
+          setStatus(result.body.error || 'Signup failed.', 'error');
+          showToast(result.body.error || 'Signup failed.');
+          return;
+        }
 
-      localStorage.setItem('mthunziAuthUser', JSON.stringify(result.body.data));
-      setStatus('Account created successfully! Redirecting...', 'success');
-      showToast('Account created successfully!');
-      const redirect = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
-      localStorage.removeItem('mthunziAuthRedirect');
-      setTimeout(() => {
-        window.location.href = redirect;
-      }, 1000);
+        localStorage.setItem('mthunziAuthUser', JSON.stringify(result.body.data));
+        setStatus('Account created successfully! Redirecting...', 'success');
+        showToast('Account created successfully!');
+        const redirect = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
+        localStorage.removeItem('mthunziAuthRedirect');
+        setTimeout(() => {
+          window.location.href = redirect;
+        }, 1000);
+      } catch (error) {
+        console.error('Signup request failed:', error);
+        setLoading(button, false, 'Create Account');
+        setStatus('Unable to connect to the server. Please try again.', 'error');
+        showToast('Unable to connect to the server. Please try again.');
+      }
     });
   </script>
 </body>
