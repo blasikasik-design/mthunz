@@ -659,6 +659,22 @@ document.addEventListener('DOMContentLoaded', function(){
     return;
   }
 
+  var fetchWithoutAdminAuth = window.fetch.bind(window);
+  window.fetch = function(input, options) {
+    var requestUrl = typeof input === 'string' ? input : input.url;
+    var requestPath = new URL(requestUrl, window.location.href).pathname;
+    if (!requestPath.startsWith('/api/admin/') || requestPath === '/api/admin/login') {
+      return fetchWithoutAdminAuth(input, options);
+    }
+    var requestOptions = options || {};
+    var headers = new Headers(input instanceof Request ? input.headers : undefined);
+    new Headers(requestOptions.headers).forEach(function(value, key) {
+      headers.set(key, value);
+    });
+    headers.set('Authorization', 'Bearer ' + adminAuth.token);
+    return fetchWithoutAdminAuth(input, Object.assign({}, requestOptions, { headers: headers }));
+  };
+
   var adminName = adminAuth.name || 'Admin';
   document.getElementById('adminAvatarTop').textContent = adminName.split(' ').map(function(part){ return part[0]; }).join('').slice(0,2).toUpperCase() || 'AD';
   document.getElementById('adminAvatarTop').setAttribute('title', adminName);

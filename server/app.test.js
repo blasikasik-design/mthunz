@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createDefaultSettings, readSiteSettings, normalizeProductPayload } = require('./app');
+const { createDefaultSettings, readSiteSettings, normalizeProductPayload, app } = require('./app');
 const db = require('./services/db');
 
 test('default payment settings include the configured account details', () => {
@@ -33,4 +33,15 @@ test('missing stock values stay at zero unless explicitly provided', () => {
   const explicit = normalizeProductPayload({ name: 'Sample artwork', price: 3000, stock: 12 });
   assert.equal(explicit.stock, 12);
   assert.equal(explicit.in_stock, true);
+});
+
+test('admin API rejects requests without a bearer token', async () => {
+  const server = app.listen(0, '127.0.0.1');
+  try {
+    await new Promise(resolve => server.once('listening', resolve));
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/admin/customers`);
+    assert.equal(response.status, 401);
+  } finally {
+    await new Promise((resolve, reject) => server.close(err => err ? reject(err) : resolve()));
+  }
 });

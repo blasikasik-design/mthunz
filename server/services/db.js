@@ -26,6 +26,10 @@ function saveFallbackProducts(products) {
   fs.writeFileSync(productsPath, JSON.stringify(products, null, 2));
 }
 
+function allowProductFallback() {
+  return process.env.NODE_ENV !== 'production';
+}
+
 function mapFallbackProduct(product) {
   const image = product.image || product.image_url || '/assets/sample1.jpg';
   const stocked = product.stocked ?? product.in_stock ?? (product.stock === 'in-stock' || product.stock === true);
@@ -101,6 +105,7 @@ async function getProducts() {
     const result = await query('SELECT id, name, category, description, price, image_url, in_stock, stock, dimensions, badge FROM products ORDER BY id');
     return result.rows.map(mapProductRow);
   } catch (err) {
+    if (!allowProductFallback()) throw err;
     console.warn('PostgreSQL unavailable, using local products fallback.', err.message);
     return loadFallbackProducts().map(mapFallbackProduct);
   }
@@ -126,6 +131,7 @@ async function createProduct(product) {
     );
     return mapProductRow(result.rows[0]);
   } catch (err) {
+    if (!allowProductFallback()) throw err;
     console.warn('PostgreSQL unavailable, writing product to local fallback file.', err.message);
     const products = loadFallbackProducts();
     const nextProduct = {
@@ -167,6 +173,7 @@ async function updateProduct(id, product) {
     );
     return mapProductRow(result.rows[0]);
   } catch (err) {
+    if (!allowProductFallback()) throw err;
     console.warn('PostgreSQL unavailable, updating local fallback product.', err.message);
     const products = loadFallbackProducts();
     const index = products.findIndex(item => Number(item.id) === Number(id));
@@ -205,6 +212,7 @@ async function deleteProduct(id) {
       client.release();
     }
   } catch (err) {
+    if (!allowProductFallback()) throw err;
     console.warn('PostgreSQL unavailable, removing product from local fallback file.', err.message);
     const products = loadFallbackProducts();
     const nextProducts = products.filter(item => Number(item.id) !== Number(id));

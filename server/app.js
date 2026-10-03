@@ -7,6 +7,7 @@ const cors = require('cors');
 const db = require('./services/db');
 const auth = require('./services/auth');
 const settingsPath = path.join(__dirname, 'data', 'site-settings.json');
+const adminTokenSecret = process.env.ADMIN_TOKEN_SECRET || '';
 
 const app = express();
 
@@ -90,8 +91,10 @@ function writeSiteSettings(nextSettings) {
   return normalized;
 }
 
-function ensureSchema() {
-  return db.query(`
+async function ensureSchema() {
+  const schemaPath = path.join(__dirname, '..', 'database', 'init.sql');
+  await db.query(fs.readFileSync(schemaPath, 'utf8'));
+  await db.query(`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS badge VARCHAR(40) DEFAULT '';
     ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0;
     CREATE TABLE IF NOT EXISTS removed_accounts (
@@ -102,6 +105,32 @@ function ensureSchema() {
     ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_user_id_fkey;
     ALTER TABLE orders ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
   `);
+}
+
+function createAdminToken() {
+  const expiresAt = Date.now() + 12 * 60 * 60 * 1000;
+  const signature = crypto.createHmac('sha256', adminTokenSecret).update(String(expiresAt)).digest('hex');
+  return `${expiresAt}.${signature}`;
+}
+
+function isValidAdminToken(token) {
+  if (!adminTokenSecret || typeof token !== 'string') return false;
+  const [expiresAt, signature] = token.split('.');
+  if (!/^\d+$/.test(expiresAt || '') || !/^[a-f0-9]{64}$/.test(signature || '') || Number(expiresAt) <= Date.now()) {
+    return false;
+  }
+  const expected = crypto.createHmac('sha256', adminTokenSecret).update(expiresAt).digest();
+  const received = Buffer.from(signature, 'hex');
+  return received.length === expected.length && crypto.timingSafeEqual(received, expected);
+}
+
+function requireAdmin(req, res, next) {
+  const authorization = req.get('authorization') || '';
+  const match = authorization.match(/^Bearer (.+)$/i);
+  if (!match || !isValidAdminToken(match[1])) {
+    return res.status(401).json({ error: 'Admin authentication required.' });
+  }
+  next();
 }
 
 function isValidEmail(value) {
@@ -144,14 +173,11 @@ function normalizeProductPayload(payload) {
   return next;
 }
 
-ensureSchema().catch(err => {
-  console.error('Schema initialization failed. Make sure PostgreSQL is running and DATABASE_URL is correct.');
-  console.error(err.message || err);
-});
-
 let agedOrderUpdateStarted = false;
 
-function startServer(port) {
+async function startServer(port) {
+  await ensureSchema();
+
   if (!agedOrderUpdateStarted) {
     agedOrderUpdateStarted = true;
     const updateAgedOrders = () => db.markOrdersDeliveredAfter30Days().catch(err => {
@@ -162,28 +188,32 @@ function startServer(port) {
     deliveryInterval.unref();
   }
 
-  const server = app.listen(port, '0.0.0.0', () => {
-    console.log(`Server started on http://localhost:${port}`);
-  });
+  const listen = nextPort => {
+    const server = app.listen(nextPort, '0.0.0.0', () => {
+      console.log(`Server started on http://localhost:${nextPort}`);
+    });
 
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      const nextPort = port + 1;
-      console.warn(`Port ${port} is busy. Trying http://localhost:${nextPort} instead.`);
-      if (server.listening) {
-        server.close(() => startServer(nextPort));
+    server.on('error', err => {
+      if (err.code === 'EADDRINUSE') {
+        const fallbackPort = nextPort + 1;
+        console.warn(`Port ${nextPort} is busy. Trying http://localhost:${fallbackPort} instead.`);
+        listen(fallbackPort);
       } else {
-        startServer(nextPort);
+        console.error(err);
+        process.exit(1);
       }
-    } else {
-      console.error(err);
-      process.exit(1);
-    }
-  });
+    });
+  };
+
+  listen(port);
 }
 
 if (require.main === module) {
-  startServer(Number(process.env.PORT || 3000));
+  startServer(Number(process.env.PORT || 3000)).catch(err => {
+    console.error('Schema initialization failed. Check DATABASE_URL and database permissions.');
+    console.error(err.message || err);
+    process.exit(1);
+  });
 }
 
 module.exports = {
@@ -211,6 +241,10 @@ app.use((req, res, next) => {
     return next();
   }
   return express.static(path.join(__dirname, '..', 'frontend'))(req, res, next);
+});
+app.use('/api/admin', (req, res, next) => {
+  if (req.path === '/login') return next();
+  return requireAdmin(req, res, next);
 });
 
 app.get('/api/products', async (req, res) => {
@@ -289,9 +323,11 @@ app.post('/api/admin/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
-    // Check if admin credentials match hardcoded admin or database admin
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@mthunzi.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminEmail || !adminPassword || !adminTokenSecret) {
+      return res.status(503).json({ error: 'Admin login is not configured.' });
+    }
     
     if (email === adminEmail && password === adminPassword) {
       return res.json({ 
@@ -299,7 +335,7 @@ app.post('/api/admin/login', async (req, res) => {
           id: 1,
           name: 'Admin',
           email: adminEmail,
-          token: 'admin-token-' + Date.now()
+          token: createAdminToken()
         } 
       });
     }
