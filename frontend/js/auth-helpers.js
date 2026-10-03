@@ -9,12 +9,15 @@ function showToast(message) {
 function setLoading(button, loading, label) {
   const status = document.getElementById('statusMessage');
   button.disabled = loading;
+  button.setAttribute('aria-busy', String(loading));
   if (loading) {
-    button.innerHTML = '<span class="spinner"></span> ' + label;
-    status.className = 'status-msg';
-    status.textContent = label.toLowerCase().startsWith('creating')
-      ? 'Creating your account...'
-      : 'Please wait...';
+    button.innerHTML = '<span class="spinner" aria-hidden="true"></span> ' + label;
+    if (status) {
+      status.className = 'status-msg';
+      status.textContent = label.toLowerCase().startsWith('creating')
+        ? 'Creating your account...'
+        : 'Please wait...';
+    }
   } else {
     button.innerHTML = label;
   }

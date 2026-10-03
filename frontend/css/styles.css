@@ -338,6 +338,9 @@
   .form-group input:focus { border-color: var(--lake); outline: none; box-shadow: 0 0 0 4px var(--accent-glow); }
   .btn-primary { width: 100%; background: var(--near-black); color: var(--white); border: none; padding: 16px; font-weight: 600; font-family: var(--font-body); font-size: 14px; border-radius: var(--r-button); cursor: pointer; transition: all 0.25s ease; }
   .btn-primary:hover { background: var(--lake-deep); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn-primary:disabled { opacity: 0.75; cursor: wait; transform: none; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.75s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .cart-item { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border-light); align-items: center; }
   .cart-item-img { width: 66px; height: 66px; background-size: cover; background-position: center; border-radius: var(--r-sm); flex-shrink: 0; }
   .cart-item-info { flex: 1; }

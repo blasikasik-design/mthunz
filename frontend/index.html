@@ -507,17 +507,36 @@ document.addEventListener('DOMContentLoaded', function() {
     var body = await response.json().catch(function(){ return {}; });
     return { response: response, body: body };
   }
+  function setModalButtonLoading(button, loading, label) {
+    if (loading) {
+      button.dataset.originalLabel = button.textContent.trim();
+      button.innerHTML = '<span class="spinner" aria-hidden="true"></span>' + label;
+    } else {
+      button.textContent = button.dataset.originalLabel || label;
+    }
+    button.disabled = loading;
+    button.setAttribute('aria-busy', String(loading));
+  }
   document.getElementById('btnDoLogin').addEventListener('click', async function(){
     var email = document.getElementById('loginEmail').value.trim();
-    var password = document.getElementById('loginPassword').value.trim();
+    var password = document.getElementById('loginPassword').value;
     if (!email || !password) { showToast('Please enter email and password'); return; }
-    var result = await authRequest('/api/login', { email: email, password: password });
-    if (!result.response.ok) { showToast(result.body.error || 'Login failed'); return; }
-    saveUserAndGreet(result.body.data);
-    closeModal('loginModal');
-    var redirectTarget = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
-    localStorage.removeItem('mthunziAuthRedirect');
-    window.location.href = redirectTarget;
+    var button = document.getElementById('btnDoLogin');
+    setModalButtonLoading(button, true, 'Signing in...');
+    try {
+      var result = await authRequest('/api/login', { email: email, password: password });
+      if (!result.response.ok) { showToast(result.body.error || 'Login failed'); return; }
+      saveUserAndGreet(result.body.data);
+      closeModal('loginModal');
+      var redirectTarget = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
+      localStorage.removeItem('mthunziAuthRedirect');
+      window.location.href = redirectTarget;
+    } catch (error) {
+      console.error('Login request failed:', error);
+      showToast('Unable to connect to the server. Please try again.');
+    } finally {
+      setModalButtonLoading(button, false, 'Sign In');
+    }
   });
   document.getElementById('btnAccount').addEventListener('click', function() { window.location.href = 'account.html'; });
   document.getElementById('switchToSignup').addEventListener('click', function() {
@@ -542,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!emailInput.checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showToast('Please enter a valid email address'); return; }
     if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)) { showToast('Password must be at least 8 characters and include a letter and number'); return; }
     if (password !== confirm) { showToast('Passwords do not match'); return; }
-    button.disabled = true;
+    setModalButtonLoading(button, true, 'Creating account...');
     try {
       var result = await authRequest('/api/signup', { name: name, email: email, phone: phone, password: password });
       if (!result.response.ok) { showToast(result.body.error || 'Signup failed'); return; }
@@ -555,7 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Signup request failed:', error);
       showToast('Unable to connect to the server. Please try again.');
     } finally {
-      button.disabled = false;
+      setModalButtonLoading(button, false, 'Create Account');
     }
   });
   document.getElementById('btnSuccessClose').addEventListener('click',()=>closeModal('successModal'));

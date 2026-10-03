@@ -377,22 +377,29 @@
       const button = document.getElementById('submitBtn');
       setLoading(button, true, 'Signing In...');
 
-      const result = await authRequest('/api/login', { email, password });
-      if (!result.response.ok) {
-        setLoading(button, false, 'Sign In');
-        setStatus(result.body.error || 'Login failed.', 'error');
-        showToast(result.body.error || 'Login failed.');
-        return;
-      }
+      try {
+        const result = await authRequest('/api/login', { email, password });
+        if (!result.response.ok) {
+          setLoading(button, false, 'Sign In');
+          setStatus(result.body.error || 'Login failed.', 'error');
+          showToast(result.body.error || 'Login failed.');
+          return;
+        }
 
-      localStorage.setItem('mthunziAuthUser', JSON.stringify(result.body.data));
-      setStatus('Welcome back! Redirecting...', 'success');
-      showToast('Welcome back!');
-      const redirect = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
-      localStorage.removeItem('mthunziAuthRedirect');
-      setTimeout(() => {
-        window.location.href = redirect;
-      }, 1000);
+        localStorage.setItem('mthunziAuthUser', JSON.stringify(result.body.data));
+        setStatus('Welcome back! Redirecting...', 'success');
+        showToast('Welcome back!');
+        const redirect = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
+        localStorage.removeItem('mthunziAuthRedirect');
+        setTimeout(() => {
+          window.location.href = redirect;
+        }, 1000);
+      } catch (error) {
+        console.error('Login request failed:', error);
+        setLoading(button, false, 'Sign In');
+        setStatus('Unable to connect to the server. Please try again.', 'error');
+        showToast('Unable to connect to the server. Please try again.');
+      }
     });
   </script>
 </body>
