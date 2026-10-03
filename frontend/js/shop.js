@@ -493,6 +493,19 @@ document.addEventListener('DOMContentLoaded', function() {
       var res = await fetch('/api/site-settings');
       var json = await res.json();
       var categories = Array.isArray(json.data && json.data.categories) ? json.data.categories : [];
+      var footerLinks = document.getElementById('footerCategoryLinks');
+      if (footerLinks) {
+        footerLinks.replaceChildren();
+        categories.forEach(function(category) {
+          var name = String(category && category.name || '').trim();
+          if (!name) return;
+          var link = document.createElement('a');
+          link.className = 'footer-cat';
+          link.href = 'shop.html?cat=' + encodeURIComponent(name);
+          link.textContent = name;
+          footerLinks.appendChild(link);
+        });
+      }
       if (categoryFilter) {
         var current = categoryFilter.value;
         categoryFilter.innerHTML = '<option value="All">All categories</option>' + categories.map(function(category) {

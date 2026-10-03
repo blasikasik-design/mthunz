@@ -66,8 +66,14 @@
         <input type="search" name="product-search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search paintings, t-shirts, sculptures…" id="heroSearch">
         <button id="btnSearch"><i class="fas fa-search"></i> Search</button>
       </div>
+      <div class="hero-tags" id="heroCategoryTags"></div>
     </div>
   </div>
+</section>
+
+<section class="section" id="gallery">
+  <div class="section-header"><h2 class="section-title">Browse by Category</h2><span class="section-sub">All Collections</span></div>
+  <div class="cat-grid" id="homeCategoryGrid"></div>
 </section>
 
 <section class="section products-bg" id="shop">
@@ -110,7 +116,7 @@
 
 <footer>
   <div class="footer-grid">
-    <div class="footer-col footer-links-center"><h4>Shop</h4><a href="shop.html">All products</a></div>
+    <div class="footer-col footer-links-center"><h4>Shop</h4><div id="footerCategoryLinks"></div></div>
     <div class="footer-col footer-links-center"><h4>Info</h4><a id="footerAbout">About Mthunzi</a><a id="footerShipping" href="contact.html">Shipping Policy</a><a id="footerReturns" href="contact.html">Returns</a><a id="footerCustom" href="contact.html">Custom Orders</a></div>
     <div class="footer-col footer-links-center"><h4>Connect</h4><a id="footerWhatsApp">WhatsApp</a><a id="footerInstagram">Instagram</a><a id="footerFacebook">Facebook</a><a id="footerContactBtn" href="contact.html">Contact</a></div>
   </div>
@@ -132,6 +138,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   var products = [];
   var cart = [];
+  var homeCategories = [];
+  var homeCategoryRotation = null;
 
   function normalizeProduct(product) {
     const id = Number(product.id ?? product.product_id ?? 0);
@@ -168,10 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const result = await response.json();
       const items = Array.isArray(result.data) ? result.data : [];
       products = items.map(normalizeProduct);
+      renderHomeCategories(homeCategories);
       renderFiltered(products.filter(function(p){ return p.badge === 'Featured'; }),'Featured Items');
     } catch (error) {
       console.warn('API product load failed.', error);
       products = [];
+      renderHomeCategories(homeCategories);
       renderFiltered([], 'Featured Items');
     }
   }
@@ -186,9 +196,102 @@ document.addEventListener('DOMContentLoaded', function() {
       const aboutTextEl = document.getElementById('aboutText');
       if (aboutTitleEl) aboutTitleEl.textContent = settings.aboutTitle || 'Mthunzi Born to Create';
       if (aboutTextEl) aboutTextEl.textContent = settings.aboutText || settings.storeDescription || 'Mthunzi Creations is a creative enterprise that offers different artistic services to meet your needs.';
+      renderHomeCategories(settings.categories || []);
     } catch (error) {
       console.warn('Site settings load failed.', error);
     }
+  }
+
+  function navigateToShop(categoryName) {
+    if (!categoryName) return;
+    window.location.href = 'shop.html?cat=' + encodeURIComponent(categoryName);
+  }
+
+  function renderHomeCategories(categories) {
+    const grid = document.getElementById('homeCategoryGrid');
+    if (!grid) return;
+    const categoryImages = {
+      paintings: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1000&h=1333&q=85',
+      drawings: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&h=1333&q=85',
+      't-shirts': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&h=1333&q=85',
+      sculptures: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1000&h=1333&q=85',
+      prints: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1000&h=1333&q=85',
+      others: 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?auto=format&fit=crop&w=1000&h=1333&q=85'
+    };
+    if (Array.isArray(categories)) homeCategories = categories;
+    renderCategoryNavigation(homeCategories);
+    if (homeCategoryRotation) clearInterval(homeCategoryRotation);
+    homeCategoryRotation = null;
+    const items = homeCategories.length ? homeCategories : [
+      { name: 'Paintings' },
+      { name: 'Drawings' },
+      { name: 'T-Shirts' },
+      { name: 'Sculptures' },
+      { name: 'Prints' }
+    ];
+    grid.replaceChildren();
+    const rotatingCards = [];
+    items.forEach(function(category) {
+      const name = category.name || 'Category';
+      const matchingProducts = products.filter(function(product) {
+        return String(product.category || product.cat || '').trim().toLowerCase() === String(name).trim().toLowerCase();
+      }).length;
+      const normalizedName = String(name).trim().toLowerCase();
+      const availableImages = Array.from(new Set(products.filter(function(product) {
+        return String(product.category || product.cat || '').trim().toLowerCase() === normalizedName && Number(product.stock) > 0 && (product.image || product.img);
+      }).map(function(product) {
+        return product.image || product.img;
+      })));
+      const fallbackImage = category.image || categoryImages[normalizedName] || categoryImages.paintings;
+      const images = availableImages.length ? availableImages : [fallbackImage];
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'cat-card';
+      card.setAttribute('data-cat', name);
+      card.innerHTML = '<div class="cat-bg"></div><div class="cat-overlay"><div class="cat-name"></div><div class="cat-count"></div></div>';
+      const imageElement = card.querySelector('.cat-bg');
+      imageElement.style.backgroundImage = 'url("' + images[0].replace(/"/g, '%22') + '")';
+      card.querySelector('.cat-name').textContent = name;
+      card.querySelector('.cat-count').textContent = matchingProducts + (matchingProducts === 1 ? ' item' : ' items');
+      grid.appendChild(card);
+      if (images.length > 1) {
+        rotatingCards.push({ element: imageElement, images: images, index: 0 });
+      }
+    });
+    if (rotatingCards.length) {
+      homeCategoryRotation = setInterval(function() {
+        rotatingCards.forEach(function(card) {
+          card.index = (card.index + 1) % card.images.length;
+          card.element.style.backgroundImage = 'url("' + card.images[card.index].replace(/"/g, '%22') + '")';
+        });
+      }, 30000);
+    }
+  }
+
+  function renderCategoryNavigation(categories) {
+    var heroTags = document.getElementById('heroCategoryTags');
+    var footerLinks = document.getElementById('footerCategoryLinks');
+    if (heroTags) heroTags.replaceChildren();
+    if (footerLinks) footerLinks.replaceChildren();
+    (Array.isArray(categories) ? categories : []).forEach(function(category) {
+      var name = String(category && category.name || '').trim();
+      if (!name) return;
+      var url = 'shop.html?cat=' + encodeURIComponent(name);
+      if (heroTags) {
+        var tag = document.createElement('a');
+        tag.className = 'tag';
+        tag.href = url;
+        tag.textContent = name;
+        heroTags.appendChild(tag);
+      }
+      if (footerLinks) {
+        var link = document.createElement('a');
+        link.className = 'footer-cat';
+        link.href = url;
+        link.textContent = name;
+        footerLinks.appendChild(link);
+      }
+    });
   }
 
   var detailProductId = null;
@@ -279,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (navShop) navShop.addEventListener('click',function(e){ e.preventDefault(); window.location.href='shop.html'; });
   var navGallery = document.getElementById('navGallery');
   if (navGallery) {
-    navGallery.addEventListener('click',()=>scrollToId('shop'));
+    navGallery.addEventListener('click',()=>scrollToId('gallery'));
   }
   var navContact = document.getElementById('navContact');
   if (navContact) navContact.addEventListener('click',function(e){ e.preventDefault(); window.location.href='contact.html'; });
@@ -462,7 +565,16 @@ document.addEventListener('DOMContentLoaded', function() {
   if(shopNowBtn) shopNowBtn.addEventListener('click', function(){ scrollToId('shop'); });
   
   function doSearch(){ var q=document.getElementById('heroSearch').value.toLowerCase().trim(); if(!q){ window.location.href='shop.html'; return; } window.location.href='shop.html?q='+encodeURIComponent(q); }
-  
+
+  const homeCategoryGrid = document.getElementById('homeCategoryGrid');
+  if (homeCategoryGrid) {
+    homeCategoryGrid.addEventListener('click', function(event) {
+      const card = event.target.closest('.cat-card');
+      if (card) {
+        navigateToShop(card.getAttribute('data-cat'));
+      }
+    });
+  }
   function renderFiltered(list,label){ 
     document.getElementById('filterLabel').textContent=label; 
     var grid=document.getElementById('prodGrid'); 
@@ -573,6 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(showPopup,180000);
   
   toggleAuthButtons(false);
+  renderHomeCategories([]);
   loadProducts();
   loadSiteSettings();
   loadPersistedUser();
