@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var redirectTarget = window.location.pathname + window.location.search;
     localStorage.setItem('mthunziAuthRedirect', redirectTarget);
     showToast(message || 'Please sign in to continue.');
-    window.location.href = 'login.html';
+    window.location.href = 'signup.html';
     return false;
   }
 
@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
     localStorage.removeItem('mthunziAuthRedirect');
     updateAuthHeader(null);
     showToast('You have logged out.');
+    window.location.href = 'index.html';
   }
 
   function updateAuthHeader(user) {
@@ -383,9 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.querySelectorAll('#mobileMenu a, #mobileMenu button').forEach(function(el) {
     el.addEventListener('click', function() {
-      if (el.id === 'mBtnLogout') {
-        logoutUser();
-      } else if (el.id === 'mBtnSignIn') {
+      if (el.id === 'mBtnSignIn') {
         closeMobileMenu();
         window.location.href = 'login.html';
       } else if (el.id === 'mBtnSignUp') {
@@ -412,14 +411,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var logoutBtn = document.getElementById('btnLogout');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function() {
-      logoutUser();
-    });
-  }
-
-  var mobileLogoutBtn = document.getElementById('mBtnLogout');
-  if (mobileLogoutBtn) {
-    mobileLogoutBtn.addEventListener('click', function() {
-      closeMobileMenu();
       logoutUser();
     });
   }
@@ -474,8 +465,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.body.addEventListener('click', function(event) {
     var target = event.target;
-    if (target.matches('[data-add]')) {
-      var productId = Number(target.dataset.add);
+    var addButton = target.closest('[data-add]');
+    if (addButton) {
+      if (!requireAuth('Create an account to add items to your cart.')) return;
+      var productId = Number(addButton.dataset.add);
       var product = products.find(function(item) { return item.id === productId; });
       if (!product) return;
       var cart = getCartItems();
@@ -489,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast(product.name + ' added to cart');
       updateCartBadge();
     }
-    if (target.closest('.prod-card') && !target.matches('[data-add]')) {
+    if (target.closest('.prod-card') && !addButton) {
       var card = target.closest('.prod-card');
       window.location.href = 'product-detail.html?id=' + card.dataset.id;
     }

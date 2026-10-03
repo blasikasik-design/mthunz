@@ -63,24 +63,11 @@
       </h1>
       <p>Original paintings, hand-crafted drawings, wearable art — created by Malawian artist Mthunzi.</p>
       <div class="hero-search">
-        <input type="text" placeholder="Search paintings, t-shirts, sculptures…" id="heroSearch">
+        <input type="search" name="product-search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search paintings, t-shirts, sculptures…" id="heroSearch">
         <button id="btnSearch"><i class="fas fa-search"></i> Search</button>
-      </div>
-      <div class="hero-tags">
-        <span class="tag" data-cat="Paintings">Paintings</span>
-        <span class="tag" data-cat="T-Shirts">T-Shirts</span>
-        <span class="tag" data-cat="Drawings">Drawings</span>
-        <span class="tag" data-cat="Sculptures">Sculptures</span>
-        <span class="tag" data-cat="Prints">Prints</span>
       </div>
     </div>
   </div>
-</section>
-
-
-<section class="section" id="gallery">
-  <div class="section-header"><h2 class="section-title">Browse by Category</h2><span class="section-sub">All Collections</span></div>
-  <div class="cat-grid" id="homeCategoryGrid"></div>
 </section>
 
 <section class="section products-bg" id="shop">
@@ -123,7 +110,7 @@
 
 <footer>
   <div class="footer-grid">
-    <div class="footer-col footer-links-center"><h4>Shop</h4><a class="footer-cat" href="shop.html?cat=Paintings" data-cat="Paintings">Paintings</a><a class="footer-cat" href="shop.html?cat=Drawings" data-cat="Drawings">Drawings</a><a class="footer-cat" href="shop.html?cat=T-Shirts" data-cat="T-Shirts">T-Shirts</a><a class="footer-cat" href="shop.html?cat=Sculptures" data-cat="Sculptures">Sculptures</a><a class="footer-cat" href="shop.html?cat=Prints" data-cat="Prints">Prints</a></div>
+    <div class="footer-col footer-links-center"><h4>Shop</h4><a href="shop.html">All products</a></div>
     <div class="footer-col footer-links-center"><h4>Info</h4><a id="footerAbout">About Mthunzi</a><a id="footerShipping" href="contact.html">Shipping Policy</a><a id="footerReturns" href="contact.html">Returns</a><a id="footerCustom" href="contact.html">Custom Orders</a></div>
     <div class="footer-col footer-links-center"><h4>Connect</h4><a id="footerWhatsApp">WhatsApp</a><a id="footerInstagram">Instagram</a><a id="footerFacebook">Facebook</a><a id="footerContactBtn" href="contact.html">Contact</a></div>
   </div>
@@ -135,7 +122,7 @@
 
 <!-- MODALS -->
 <div class="overlay" id="loginModal"><div class="modal"><button class="modal-close" data-close="loginModal">✕</button><div class="modal-title">Welcome Back</div><div class="modal-sub">Sign in to your account</div><div class="form-group"><label>Email</label><input type="email" id="loginEmail"></div><div class="form-group"><label>Password</label><input type="password" id="loginPassword"></div><button class="btn-primary" id="btnDoLogin">Sign In</button><div class="modal-switch">No account? <a id="switchToSignup">Create one</a></div></div></div>
-<div class="overlay" id="signupModal"><div class="modal"><button class="modal-close" data-close="signupModal">✕</button><div class="modal-title">Join Us</div><div class="modal-sub">Create your account</div><div class="form-group"><label>Full Name</label><input type="text" id="signupName"></div><div class="form-group"><label>Email</label><input type="email" id="signupEmail"></div><div class="form-group"><label>Phone</label><input type="tel" id="signupPhone"></div><div class="form-group"><label>Password</label><input type="password" id="signupPassword"></div><div class="form-group"><label>Confirm</label><input type="password" id="signupConfirm"></div><button class="btn-primary" id="btnDoSignup">Create Account</button><div class="modal-switch">Have an account? <a id="switchToLogin">Sign in</a></div></div></div>
+<div class="overlay" id="signupModal"><div class="modal"><button class="modal-close" data-close="signupModal">✕</button><div class="modal-title">Join Us</div><div class="modal-sub">Create your account</div><div class="form-group"><label>Full Name</label><input type="text" id="signupName" autocomplete="name"></div><div class="form-group"><label>Email</label><input type="email" id="signupEmail" autocomplete="email"></div><div class="form-group"><label>Phone</label><input type="tel" id="signupPhone" autocomplete="tel"></div><div class="form-group"><label>Password</label><input type="password" id="signupPassword" autocomplete="new-password"></div><div class="form-group"><label>Confirm</label><input type="password" id="signupConfirm" autocomplete="new-password"></div><button class="btn-primary" id="btnDoSignup">Create Account</button><div class="modal-switch">Have an account? <a id="switchToLogin">Sign in</a></div></div></div>
 <div class="overlay" id="cartModal"><div class="modal cart-modal"><button class="modal-close" data-close="cartModal">✕</button><div class="modal-title">Your Cart</div><div class="modal-sub">Review your selections</div><div id="cartItems"></div><div class="cart-total" id="cartTotalRow" style="display:none;"><span>Total</span><span id="cartTotalAmt"></span></div><button class="btn-primary" id="checkoutBtn" style="display:none;">Proceed to Payment <i class="fas fa-arrow-right"></i></button></div></div>
 <div class="overlay" id="prodModal"><div class="modal prod-detail-modal"><button class="modal-close" data-close="prodModal">✕</button><div class="prod-detail-img" id="detailImg"></div><div class="modal-sub" id="detailCat"></div><div class="modal-title" id="detailName"></div><div class="detail-dimensions" id="detailDimensions"></div><div class="prod-detail-price" id="detailPrice"></div><p class="prod-detail-desc" id="detailDesc"></p><div class="stock-status in-stock" id="detailStock"></div><button class="btn-primary" id="detailAddBtn"><i class="fas fa-shopping-cart"></i> Add to Cart</button></div></div>
 <div class="overlay" id="paymentModal"><div class="modal payment-modal"><button class="modal-close" data-close="paymentModal">✕</button><div class="modal-title">Payment</div><div class="modal-sub">Complete your purchase</div><div style="background:var(--off-white);padding:18px;border-radius:16px;"><div id="paySummaryItems"></div><div id="payTotal"></div></div><div class="agent-codes"><div class="agent-box"><div class="network">TNM Mpamba</div><div class="code">*838*2*4501#</div><div class="owner">Mthunzi Creations</div></div><div class="agent-box"><div class="network">Airtel Money</div><div class="code">*211*8*3302#</div><div class="owner">Mthunzi Creations</div></div></div><div class="payment-note"><strong><i class="fas fa-info-circle"></i> How to pay:</strong> Dial the agent code, follow prompts, then send receipt to +265 991 234 567</div><button class="btn-primary" id="btnConfirmPayment">I Have Made Payment</button></div></div>
@@ -145,8 +132,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   var products = [];
   var cart = [];
-  var homeCategories = [];
-  var homeCategoryRotation = null;
 
   function normalizeProduct(product) {
     const id = Number(product.id ?? product.product_id ?? 0);
@@ -183,12 +168,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const result = await response.json();
       const items = Array.isArray(result.data) ? result.data : [];
       products = items.map(normalizeProduct);
-      renderHomeCategories(homeCategories);
       renderFiltered(products.filter(function(p){ return p.badge === 'Featured'; }),'Featured Items');
     } catch (error) {
       console.warn('API product load failed.', error);
       products = [];
-      renderHomeCategories(homeCategories);
       renderFiltered([], 'Featured Items');
     }
   }
@@ -203,74 +186,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const aboutTextEl = document.getElementById('aboutText');
       if (aboutTitleEl) aboutTitleEl.textContent = settings.aboutTitle || 'Mthunzi Born to Create';
       if (aboutTextEl) aboutTextEl.textContent = settings.aboutText || settings.storeDescription || 'Mthunzi Creations is a creative enterprise that offers different artistic services to meet your needs.';
-      renderHomeCategories(settings.categories || []);
     } catch (error) {
       console.warn('Site settings load failed.', error);
-    }
-  }
-
-  function navigateToShop(categoryName) {
-    if (!categoryName) return;
-    window.location.href = 'shop.html?cat=' + encodeURIComponent(categoryName);
-  }
-
-  function renderHomeCategories(categories) {
-    const grid = document.getElementById('homeCategoryGrid');
-    if (!grid) return;
-    const categoryImages = {
-      paintings: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1000&h=1333&q=85',
-      drawings: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&h=1333&q=85',
-      't-shirts': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&h=1333&q=85',
-      sculptures: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1000&h=1333&q=85',
-      prints: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1000&h=1333&q=85',
-      others: 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?auto=format&fit=crop&w=1000&h=1333&q=85'
-    };
-    if (Array.isArray(categories)) homeCategories = categories;
-    if (homeCategoryRotation) clearInterval(homeCategoryRotation);
-    homeCategoryRotation = null;
-    const items = homeCategories.length ? homeCategories : [
-      { name: 'Paintings' },
-      { name: 'Drawings' },
-      { name: 'T-Shirts' },
-      { name: 'Sculptures' },
-      { name: 'Prints' }
-    ];
-    grid.replaceChildren();
-    const rotatingCards = [];
-    items.forEach(function(category) {
-      const name = category.name || 'Category';
-      const matchingProducts = products.filter(function(product) {
-        return String(product.category || product.cat || '').trim().toLowerCase() === String(name).trim().toLowerCase();
-      }).length;
-      const normalizedName = String(name).trim().toLowerCase();
-      const availableImages = Array.from(new Set(products.filter(function(product) {
-        return String(product.category || product.cat || '').trim().toLowerCase() === normalizedName && Number(product.stock) > 0 && (product.image || product.img);
-      }).map(function(product) {
-        return product.image || product.img;
-      })));
-      const fallbackImage = category.image || categoryImages[normalizedName] || categoryImages.paintings;
-      const images = availableImages.length ? availableImages : [fallbackImage];
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'cat-card';
-      card.setAttribute('data-cat', name);
-      card.innerHTML = '<div class="cat-bg"></div><div class="cat-overlay"><div class="cat-name"></div><div class="cat-count"></div></div>';
-      const imageElement = card.querySelector('.cat-bg');
-      imageElement.style.backgroundImage = 'url("' + images[0].replace(/"/g, '%22') + '")';
-      card.querySelector('.cat-name').textContent = name;
-      card.querySelector('.cat-count').textContent = matchingProducts + (matchingProducts === 1 ? ' item' : ' items');
-      grid.appendChild(card);
-      if (images.length > 1) {
-        rotatingCards.push({ element: imageElement, images: images, index: 0 });
-      }
-    });
-    if (rotatingCards.length) {
-      homeCategoryRotation = setInterval(function() {
-        rotatingCards.forEach(function(card) {
-          card.index = (card.index + 1) % card.images.length;
-          card.element.style.backgroundImage = 'url("' + card.images[card.index].replace(/"/g, '%22') + '")';
-        });
-      }, 30000);
     }
   }
 
@@ -362,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (navShop) navShop.addEventListener('click',function(e){ e.preventDefault(); window.location.href='shop.html'; });
   var navGallery = document.getElementById('navGallery');
   if (navGallery) {
-    navGallery.addEventListener('click',()=>scrollToId('gallery'));
+    navGallery.addEventListener('click',()=>scrollToId('shop'));
   }
   var navContact = document.getElementById('navContact');
   if (navContact) navContact.addEventListener('click',function(e){ e.preventDefault(); window.location.href='contact.html'; });
@@ -399,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var target = redirectTarget === 'cart' ? 'index.html?authRequired=cart' : (redirectTarget === 'payment' ? 'payment.html' : (redirectTarget || 'account.html'));
     localStorage.setItem('mthunziAuthRedirect', target);
     showToast(message || 'Please sign in or create an account to continue.');
-    window.location.href = 'login.html';
+    window.location.href = 'signup.html';
     return false;
   }
 
@@ -449,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cart = loadCart();
     toggleAuthButtons(false);
     showToast('You have logged out.');
+    window.location.href = 'index.html';
   }
   document.getElementById('btnLogout').addEventListener('click', clearUser);
   document.getElementById('mBtnLogout').addEventListener('click', function() {
@@ -511,19 +429,31 @@ document.addEventListener('DOMContentLoaded', function() {
   if (mobileAccountButton) mobileAccountButton.addEventListener('click', function() { mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden', 'true'); window.location.href = 'account.html'; });
   document.getElementById('btnDoSignup').addEventListener('click', async function(){
     var name = document.getElementById('signupName').value.trim();
-    var email = document.getElementById('signupEmail').value.trim();
+    var emailInput = document.getElementById('signupEmail');
+    var email = emailInput.value.trim().toLowerCase();
     var phone = document.getElementById('signupPhone').value.trim();
-    var password = document.getElementById('signupPassword').value.trim();
-    var confirm = document.getElementById('signupConfirm').value.trim();
+    var password = document.getElementById('signupPassword').value;
+    var confirm = document.getElementById('signupConfirm').value;
+    var button = document.getElementById('btnDoSignup');
     if (!name || !email || !password || !confirm) { showToast('Please fill all fields'); return; }
+    if (!emailInput.checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showToast('Please enter a valid email address'); return; }
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)) { showToast('Password must be at least 8 characters and include a letter and number'); return; }
     if (password !== confirm) { showToast('Passwords do not match'); return; }
-    var result = await authRequest('/api/signup', { name: name, email: email, phone: phone, password: password });
-    if (!result.response.ok) { showToast(result.body.error || 'Signup failed'); return; }
-    saveUserAndGreet(result.body.data);
-    closeModal('signupModal');
-    var redirectTarget = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
-    localStorage.removeItem('mthunziAuthRedirect');
-    window.location.href = redirectTarget;
+    button.disabled = true;
+    try {
+      var result = await authRequest('/api/signup', { name: name, email: email, phone: phone, password: password });
+      if (!result.response.ok) { showToast(result.body.error || 'Signup failed'); return; }
+      saveUserAndGreet(result.body.data);
+      closeModal('signupModal');
+      var redirectTarget = localStorage.getItem('mthunziAuthRedirect') || 'account.html';
+      localStorage.removeItem('mthunziAuthRedirect');
+      window.location.href = redirectTarget;
+    } catch (error) {
+      console.error('Signup request failed:', error);
+      showToast('Unable to connect to the server. Please try again.');
+    } finally {
+      button.disabled = false;
+    }
   });
   document.getElementById('btnSuccessClose').addEventListener('click',()=>closeModal('successModal'));
   document.getElementById('btnSearch').addEventListener('click',doSearch);
@@ -532,20 +462,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if(shopNowBtn) shopNowBtn.addEventListener('click', function(){ scrollToId('shop'); });
   
   function doSearch(){ var q=document.getElementById('heroSearch').value.toLowerCase().trim(); if(!q){ window.location.href='shop.html'; return; } window.location.href='shop.html?q='+encodeURIComponent(q); }
-  
-  document.querySelectorAll('.tag').forEach(t=>t.addEventListener('click',function(){ navigateToShop(t.getAttribute('data-cat')); }));
-  const homeCategoryGrid = document.getElementById('homeCategoryGrid');
-  if (homeCategoryGrid) {
-    homeCategoryGrid.addEventListener('click', function(event) {
-      const card = event.target.closest('.cat-card');
-      if (card) {
-        navigateToShop(card.getAttribute('data-cat'));
-      }
-    });
-  }
-  document.querySelectorAll('.footer-cat').forEach(a=>a.addEventListener('click',function(e){ e.preventDefault(); navigateToShop(a.getAttribute('data-cat')); }));
-  
-  function filterCat(cat){ window.location.href='shop.html?cat='+encodeURIComponent(cat); }
   
   function renderFiltered(list,label){ 
     document.getElementById('filterLabel').textContent=label; 
@@ -574,6 +490,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function addToCart(id){ 
+    if (!isSignedIn()) {
+      requireAuth(window.location.pathname + window.location.search, 'Create an account to add items to your cart.');
+      return;
+    }
     var p=products.find(p=>p.id===id); 
     if(!p)return; 
     var found=cart.find(i=>i.id===id); 
@@ -653,7 +573,6 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(showPopup,180000);
   
   toggleAuthButtons(false);
-  renderHomeCategories([]);
   loadProducts();
   loadSiteSettings();
   loadPersistedUser();
@@ -663,13 +582,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isSignedIn()) {
       openModal('cartModal');
     } else {
-      window.location.href = 'login.html?redirect=' + encodeURIComponent('index.html?authRequired=cart');
+      localStorage.setItem('mthunziAuthRedirect', 'index.html?authRequired=cart');
+      window.location.href = 'signup.html';
     }
   } else if (authParam === 'payment') {
     if (isSignedIn()) {
       window.location.href = 'payment.html';
     } else {
-      window.location.href = 'login.html?redirect=' + encodeURIComponent('payment.html');
+      localStorage.setItem('mthunziAuthRedirect', 'payment.html');
+      window.location.href = 'signup.html';
     }
   }
 });

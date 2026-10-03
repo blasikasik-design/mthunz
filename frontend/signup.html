@@ -214,17 +214,17 @@
 
       <div class="field">
         <label for="email">Email</label>
-        <input id="email" type="email" placeholder="you@example.com" />
+          <input id="email" type="email" autocomplete="email" placeholder="you@example.com" />
       </div>
 
       <div class="grid">
         <div class="field">
           <label for="password">Password</label>
-          <input id="password" type="password" placeholder="••••••••" />
+          <input id="password" type="password" autocomplete="new-password" placeholder="••••••••" />
         </div>
         <div class="field">
           <label for="confirm">Confirm password</label>
-          <input id="confirm" type="password" placeholder="••••••••" />
+          <input id="confirm" type="password" autocomplete="new-password" placeholder="••••••••" />
         </div>
       </div>
 
@@ -258,8 +258,8 @@
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const confirm = document.getElementById('confirm').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
 
       if (!name || !email || !password || !confirm) {
         showToast('Please fill in your name, email, and password.');
