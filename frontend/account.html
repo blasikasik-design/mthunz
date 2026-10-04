@@ -960,8 +960,12 @@
     if(!('IntersectionObserver' in window)){ cards.forEach(c => c.classList.add('in')); return; }
     const io = new IntersectionObserver((entries) => {
       entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
-    }, {threshold:.12});
+    }, {threshold:.12, rootMargin:'0px 0px 80px 0px'});
     cards.forEach(c => io.observe(c));
+    window.setTimeout(() => {
+      cards.forEach(card => card.classList.add('in'));
+      io.disconnect();
+    }, 1200);
   }
 
   function drawRows(){
@@ -1025,8 +1029,16 @@
       renderOrders(Array.isArray(body.data) ? body.data : []);
     }catch(err){
       console.error(err);
-      renderOrders([]);
-      showToast(err.message || 'Unable to load your orders.', 'error');
+      $('chartCard').hidden = true;
+      $('toolbar').style.display = 'none';
+      $('orderTabs').style.display = 'none';
+      $('resultInfo').textContent = '';
+      $('moreWrap').hidden = true;
+      ordersTableBody.innerHTML = '<div class="empty"><div class="big">' + I('alert') + '</div><strong>Orders could not be loaded</strong><p>' + esc(err.message || 'Check your connection and try again.') + '</p><button class="add-btn" id="retryOrders" type="button">Try again</button></div>';
+      $('retryOrders').addEventListener('click', function(){
+        ordersTableBody.innerHTML = '<div class="skel"></div><div class="skel"></div>';
+        loadUserOrders(user);
+      });
     }
   }
 
