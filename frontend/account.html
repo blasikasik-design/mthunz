@@ -2,242 +2,812 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>My Account — Mthunzi Creations</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link rel="stylesheet" href="css/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body{font-family:'Inter',sans-serif;background:#f3f7f8;color:#102b3b;margin:0;padding:0}
-  .page-wrap{max-width:1120px;margin:0 auto;padding:22px 24px 56px}
-  .account-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-  .account-brand{display:flex;align-items:center;gap:11px;color:#102b3b;text-decoration:none;font-weight:800;font-size:13px;letter-spacing:.06em}
-  .account-brand img{width:38px;height:38px;object-fit:contain;border-radius:10px}
-  .account-brand span{display:block;color:#547078;font-size:10px;font-weight:600;letter-spacing:.13em;margin-top:2px}
-  .account-context{font-size:12px;font-weight:700;color:#547078;text-transform:uppercase;letter-spacing:.1em}
-  .hero-card{background:linear-gradient(112deg,#102b3b 0%,#145c66 66%,#b27d2c 130%);border-radius:20px;padding:30px 32px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:20px;box-shadow:0 18px 48px rgba(17,44,55,.13);position:relative;overflow:hidden}
-  .hero-card::after{content:'';position:absolute;top:-85px;right:-65px;width:280px;height:280px;border:1px solid rgba(255,255,255,.12);border-radius:50%;box-shadow:0 0 0 34px rgba(255,255,255,.035),0 0 0 68px rgba(255,255,255,.025);pointer-events:none}
-  .hero-title{display:flex;align-items:center;gap:14px;margin-bottom:10px}
-  .avatar-control{position:relative;width:58px;height:58px;flex:0 0 auto}
-  .avatar{width:100%;height:100%;border-radius:16px;background:linear-gradient(135deg,#fff 0%,#f3dca7 100%);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:#14545d;box-shadow:0 10px 24px rgba(0,0,0,.15);overflow:hidden}
-  .avatar img{width:100%;height:100%;object-fit:cover}
-  .avatar-upload{position:absolute;right:-5px;bottom:-5px;width:27px;height:27px;border:2px solid #fff;border-radius:50%;background:#d9a93b;color:#102b3b;display:grid;place-items:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.2)}
-  .avatar-upload:disabled{opacity:.65;cursor:wait}
-  .hero-card h1{font-family:'Fraunces',serif;font-size:30px;font-weight:600;margin:0 0 6px}
-  .hero-card p{margin:0;color:rgba(255,255,255,.82);max-width:720px;line-height:1.6}
-  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.16);font-size:12px;font-weight:700;backdrop-filter:blur(8px);margin-bottom:12px;text-transform:uppercase;letter-spacing:.12em}
-  .hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-  .hero-meta span{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600}
-  .hero-actions{display:flex;flex-direction:column;gap:10px;min-width:190px;position:relative;z-index:1}
-  .hero-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:6px;border:0;cursor:pointer;font-weight:700;background:#fff;color:#14545d;box-shadow:0 8px 20px rgba(0,0,0,.13);transition:transform .18s ease,background .18s ease}
-  .hero-btn:hover{transform:translateY(-1px);background:#fff9e9}
-  .hero-btn:disabled{opacity:.72;cursor:wait;transform:none}
-  .hero-btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.24)}
-  .hero-btn.logout{background:#fff1eb;color:#a14331}
-  .account-notice{display:none;margin:0 0 18px;padding:12px 16px;border:1px solid #cfe3df;border-radius:10px;background:#f1faf7;color:#14545d;font-size:14px;font-weight:600}
-  .account-notice.show{display:block}
-  .account-notice.error{border-color:#f0c9c2;background:#fff5f2;color:#a14331}
-  .account-spinner{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:accountSpin .75s linear infinite}
-  @keyframes accountSpin{to{transform:rotate(360deg)}}
-  .dashboard-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-bottom:18px;align-items:start}
-  .card{background:#fff;border:1px solid #e0e9e9;border-radius:16px;padding:24px;box-shadow:0 12px 30px rgba(17,44,55,.045)}
-  .card h2{font-family:'Fraunces',serif;margin:0 0 18px;font-size:21px;font-weight:600;color:#143842}
+  :root{
+    --ink:#102b3b; --teal:#145c66; --gold:#b27d2c; --green:#2f7f56; --blue:#1f5fa8;
+    --bg:#f3f7f8; --surface:#ffffff; --surface2:#f5f9f8; --line:#e0e9e9;
+    --text:#102b3b; --head:#143842; --muted:#6b7c8f; --label:#4a5f7f;
+    --inputbg:#ffffff; --inputline:#d3dfe3; --hover:#eef5f5; --tabbg:#e8f0f0;
+    --accent:#145c66; --chipOn:#102b3b; --shadow:0 10px 30px rgba(17,44,55,.06);
+    --ease:cubic-bezier(.2,.7,.2,1);
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  }
+  [data-theme="dark"]{
+    --bg:#0a1822; --surface:#102633; --surface2:#143040; --line:#22414f;
+    --text:#e4eef2; --head:#f2f7f9; --muted:#8ba3b1; --label:#a6bac5;
+    --inputbg:#0c202b; --inputline:#2a4958; --hover:#17394a; --tabbg:#0c202b;
+    --accent:#6cc3cd; --chipOn:#1f7581; --shadow:0 10px 30px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);margin:0;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.55;transition:background .4s,color .4s}
+  button,input,select{font-family:inherit}
+  button:active:not([disabled]){transform:scale(.97)}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 70px}
+
+  /* Icons (inline SVG – no external font needed) */
+  .ic{display:inline-flex;width:1em;height:1em;flex:0 0 auto;vertical-align:-.125em}
+  .ic svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .spin svg{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Entrance */
+  .rise{opacity:0;transform:translateY(18px);animation:rise .7s var(--ease) forwards;animation-delay:calc(var(--d,0) * 1s)}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  .hello{margin:4px 4px 16px}
+  .hello h1{font-family:var(--serif);font-size:28px;font-weight:600;margin:0;color:var(--head);line-height:1.25}
+  .hello p{margin:4px 0 0;color:var(--muted);font-size:14.5px}
+
+  /* Ripple */
+  .rip{position:relative;overflow:hidden}
+  .ripple{position:absolute;border-radius:50%;background:currentColor;pointer-events:none;transform:scale(0);animation:ripple .65s ease-out forwards}
+  @keyframes ripple{from{transform:scale(0);opacity:.28}to{transform:scale(1);opacity:0}}
+
+  /* ===== Profile card ===== */
+  .me-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);transition:background .4s,border-color .4s}
+  .cover{position:relative;height:128px;padding:18px 22px;display:flex;justify-content:space-between;align-items:flex-start;overflow:hidden;background:linear-gradient(112deg,#102b3b 0%,#145c66 68%,#b27d2c 140%)}
+  .cover::before{content:'';position:absolute;right:-50px;top:-90px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 30px rgba(255,255,255,.03);animation:drift 14s ease-in-out infinite alternate;pointer-events:none}
+  @keyframes drift{from{transform:translate(0,0)}to{transform:translate(-18px,12px)}}
+  .spot{position:absolute;inset:0;pointer-events:none;background:radial-gradient(240px circle at var(--mx,72%) var(--my,30%),rgba(243,220,167,.30),transparent 62%);transition:background .1s}
+  .account-brand{position:relative;z-index:1;display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;font-size:12.5px;letter-spacing:.08em}
+  .account-brand img{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#fff;padding:2px}
+  .account-brand span{display:block;color:rgba(255,255,255,.7);font-size:9.5px;font-weight:500;letter-spacing:.16em;margin-top:2px}
+  .cover-actions{position:relative;z-index:1;display:flex;align-items:center;gap:10px}
+  .btn-shop,.btn-theme{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s,transform .2s}
+  .btn-shop{padding:9px 16px;border-radius:999px}
+  .btn-theme{width:38px;height:38px;border-radius:50%;font-size:17px}
+  .btn-shop:hover,.btn-theme:hover{background:rgba(255,255,255,.26)}
+  .btn-shop .ic{transition:transform .25s var(--ease)}
+  .btn-shop:hover .ic{transform:translateX(-3px)}
+  .btn-theme .ic{transition:transform .5s var(--ease)}
+  .btn-theme:hover .ic{transform:rotate(25deg)}
+  .me-body{display:flex;gap:20px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;padding:0 26px 22px}
+  .me-id{display:flex;align-items:flex-end;gap:18px;min-width:0}
+  .av-wrap{position:relative;flex:0 0 auto;width:112px;height:112px;margin-top:-56px;border-radius:50%;background:var(--surface);box-shadow:0 8px 22px rgba(17,44,55,.18)}
+  .av-wrap svg.ring{position:absolute;inset:0;transform:rotate(-90deg)}
+  .av-wrap circle{fill:none;stroke-width:4}
+  .av-wrap .trk{stroke:var(--line)}
+  .av-wrap .prg{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset 1.2s var(--ease)}
+  .avatar{position:absolute;inset:9px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--teal),#102b3b);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:38px;font-weight:600}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .cam{position:absolute;right:-2px;bottom:4px;width:32px;height:32px;border-radius:50%;border:3px solid var(--surface);background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:transform .25s var(--ease),background .2s}
+  .cam:hover{transform:scale(1.12);background:#18707c}
+  .me-text{padding-top:14px;min-width:0}
+  .me-text h2{font-family:var(--serif);font-size:24px;font-weight:600;margin:0;color:var(--head);overflow-wrap:anywhere}
+  .me-meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:13.5px;color:var(--muted)}
+  .me-meta > span{display:inline-flex;align-items:center;gap:7px}
+  .me-meta .ic{color:var(--muted);font-size:14px}
+  #loginStatus{display:inline-flex;align-items:center;gap:7px;font-weight:600;color:var(--green)}
+  #loginStatus::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--green);animation:ping 2.2s ease-out infinite}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(47,127,86,.5)}80%,100%{box-shadow:0 0 0 8px rgba(47,127,86,0)}}
+  #loginStatus.off{color:#d4727a}
+  #loginStatus.off::before{background:#d4727a;animation:none}
+  .btn-out{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;border:1px solid #e3cfd1;background:var(--surface);color:#c0505a;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .2s}
+  .btn-out:hover{background:rgba(217,83,79,.1)}
+  .btn-out .ic{transition:transform .25s var(--ease)}
+  .btn-out:hover .ic{transform:translateX(3px)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface2)}
+  .stat{position:relative;display:flex;align-items:center;gap:13px;padding:16px 20px;border-right:1px solid var(--line);transition:background .25s}
+  .stat:last-child{border-right:0}
+  .stat:hover{background:var(--hover)}
+  .stat .si{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;transition:transform .35s var(--ease)}
+  .stat:hover .si{transform:scale(1.12) rotate(-6deg)}
+  .stat:nth-child(1) .si{background:rgba(20,92,102,.14);color:var(--accent)}
+  .stat:nth-child(2) .si{background:rgba(178,125,44,.16);color:var(--gold)}
+  .stat:nth-child(3) .si{background:rgba(47,127,86,.16);color:#3fa06e}
+  .stat:nth-child(4) .si{background:rgba(31,95,168,.16);color:#4d8fd6}
+  .stat .value{font-size:20px;font-weight:700;color:var(--head);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2}
+  .stat .label{font-size:12.5px;color:var(--muted)}
+
+  /* ===== Tabs ===== */
+  .tabs{position:relative;display:flex;gap:4px;margin:26px 0 18px;padding:5px;background:var(--tabbg);border-radius:14px;width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab-ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:10px;background:var(--surface);box-shadow:0 2px 8px rgba(17,44,55,.14);transition:transform .45s var(--ease),width .45s var(--ease);pointer-events:none}
+  .tab{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;border:0;background:transparent;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;color:var(--label);cursor:pointer;white-space:nowrap;transition:color .25s}
+  .tab .ic{font-size:16px;transition:transform .35s var(--ease)}
+  .tab:hover{color:var(--accent)}
+  .tab.active{color:var(--accent)}
+  .tab.active .ic{transform:scale(1.12)}
+  .tab .cnt{min-width:22px;padding:1px 7px;border-radius:999px;background:var(--teal);color:#fff;font-size:11.5px;font-weight:700;text-align:center}
+  .tab .short{display:none}
+  .panel{display:none}
+  .panel.show{display:block;animation:panelIn .5s var(--ease)}
+  @keyframes panelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* ===== Spending / insights ===== */
+  .chart-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px 18px;margin-bottom:18px}
+  .chart-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .chart-head h3{margin:0;font-size:15px;font-weight:600;color:var(--head);display:flex;align-items:center;gap:8px}
+  .chart-head h3 .ic{color:var(--accent);font-size:18px}
+  .chart-head span.sub{font-size:12.5px;color:var(--muted)}
+  .bars{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;align-items:end;height:130px}
+  .bar-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:8px;position:relative}
+  .bar-col .b{width:100%;max-width:48px;height:var(--h,0%);min-height:4px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,var(--teal),#2d8591);transform-origin:bottom;transform:scaleY(0);animation:grow .9s var(--ease) forwards;animation-delay:calc(var(--k) * .08s + .2s);transition:filter .2s}
+  .bar-col:hover .b{filter:brightness(1.18)}
+  .bar-col.now .b{background:linear-gradient(180deg,var(--gold),#d9ab5c)}
+  .bar-col small{font-size:11.5px;color:var(--muted);font-weight:500}
+  .bar-col .tipv{position:absolute;top:-4px;left:50%;transform:translate(-50%,-100%);padding:3px 8px;border-radius:6px;background:#102b3b;color:#fff;font-size:11.5px;font-weight:600;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:2}
+  .bar-col:hover .tipv{opacity:1}
+  @keyframes grow{to{transform:scaleY(1)}}
+  .insights{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+  .ins{display:flex;align-items:center;gap:11px}
+  .ins .ii{width:36px;height:36px;border-radius:50%;background:var(--hover);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto}
+  .ins b{display:block;font-size:15px;color:var(--head);line-height:1.2}
+  .ins small{font-size:12px;color:var(--muted)}
+
+  /* ===== Orders toolbar ===== */
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .search{position:relative;flex:1 1 220px;min-width:180px}
+  .search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+  .search input{width:100%;padding:11px 40px 11px 40px;border:1px solid var(--inputline);border-radius:999px;font-size:14px;background:var(--inputbg);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+  .search input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,92,102,.18)}
+  .search kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:600 11px var(--sans);color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:var(--surface2)}
+  .sort{padding:11px 14px;border:1px solid var(--inputline);border-radius:999px;font-size:13.5px;background:var(--inputbg);color:var(--label);font-weight:600;outline:none;cursor:pointer}
+  .tool-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:999px;border:1px solid var(--inputline);background:var(--inputbg);color:var(--label);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s}
+  .tool-btn:hover{color:var(--accent);border-color:var(--teal);background:var(--hover)}
+  .tool-btn .ic{font-size:16px;transition:transform .3s var(--ease)}
+  .tool-btn:hover .ic{transform:translateY(2px)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .25s var(--ease)}
+  .chip i{font-style:normal;min-width:20px;padding:0 6px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);font-size:11px;text-align:center}
+  .chip:hover{color:var(--accent);border-color:var(--teal)}
+  .chip.active{background:var(--chipOn);color:#fff;border-color:var(--chipOn);transform:translateY(-1px);box-shadow:0 6px 14px rgba(16,43,59,.22)}
+  .chip.active i{background:rgba(255,255,255,.2);border-color:transparent;color:#fff}
+  .result-info{font-size:12.5px;color:var(--muted);margin:0 2px 12px}
+
+  /* ===== Order cards ===== */
+  .orders-list{display:flex;flex-direction:column;gap:16px}
+  .order{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;opacity:0;transform:translateY(22px);transition:opacity .6s var(--ease),transform .6s var(--ease),box-shadow .25s,background .4s;transition-delay:calc(var(--i,0) * .07s),calc(var(--i,0) * .07s),0s,0s}
+  .order.in{opacity:1;transform:none}
+  .order.in:hover{box-shadow:0 14px 32px rgba(17,44,55,.12);transform:translateY(-2px);transition-delay:0s}
+  .o-head{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;padding:14px 22px;background:var(--surface2);border-bottom:1px solid var(--line)}
+  .o-head span.k{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  .o-head b{display:block;margin-top:2px;font-size:14px;color:var(--head);font-weight:600}
+  .o-head .o-no{text-align:right}
+  .copy{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;margin-top:2px;font-size:14px;font-weight:600;color:var(--head);cursor:pointer}
+  .copy .ic{font-size:14px;color:var(--muted);transition:color .2s,transform .25s var(--ease)}
+  .copy:hover .ic{color:var(--accent);transform:scale(1.2)}
+  .o-body{padding:20px 22px 8px}
+  .o-top h3{margin:8px 0 2px;font-size:17px;font-weight:600;color:var(--head)}
+  .o-top p{margin:0;font-size:13.5px;color:var(--muted)}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+  .status-pill .ic{font-size:13px}
+  .status-pill.pending{background:#fff3d6;color:#8a5a0c}
+  .status-pill.processing{background:#e3efff;color:#1f4f96}
+  .status-pill.shipped{background:#dcf3e6;color:#27704b}
+  .status-pill.delivered{background:#dcf3e6;color:#27704b}
+  .status-pill.cancelled{background:#fbe0e2;color:#9a3039}
+  .track{--p:0%;position:relative;display:grid;grid-template-columns:repeat(4,1fr);margin-top:24px}
+  .order.in .track{--p:var(--target)}
+  .track::before,.track::after{content:'';position:absolute;top:11px;left:12.5%;height:3px;border-radius:3px}
+  .track::before{right:12.5%;background:var(--line)}
+  .track::after{width:var(--p);max-width:75%;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width 1.2s var(--ease) .4s}
+  .step{position:relative;z-index:1;text-align:center;font-size:12px;font-weight:500;color:var(--muted)}
+  .step .dotc{display:flex;align-items:center;justify-content:center;width:25px;height:25px;margin:0 auto 7px;border-radius:50%;background:var(--surface);border:3px solid var(--line);font-size:11px;color:transparent;transition:all .4s var(--ease)}
+  .step.done{color:var(--accent);font-weight:600}
+  .step.done .dotc{background:var(--teal);border-color:var(--teal);color:#fff}
+  .step.now .dotc{animation:pulse 2s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(20,92,102,.5)}80%,100%{box-shadow:0 0 0 9px rgba(20,92,102,0)}}
+  .cancel-note{margin-top:14px;padding:10px 14px;border-radius:10px;background:rgba(217,83,79,.12);color:#c0505a;font-size:13px;font-weight:500}
+  .o-actions{display:flex;gap:8px;flex-wrap:wrap;padding:14px 22px 18px}
+  .o-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--label);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s}
+  .o-btn .ic{font-size:15px}
+  .o-btn:hover{color:var(--accent);border-color:var(--teal);background:var(--hover)}
+  .o-btn .chev{transition:transform .35s var(--ease)}
+  .order.open .o-btn.toggle .chev{transform:rotate(180deg)}
+  .o-det{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease)}
+  .order.open .o-det{grid-template-rows:1fr}
+  .o-det > div{overflow:hidden}
+  .det-inner{margin:0 22px 22px;padding:16px 18px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
+  .det-title{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+  .item{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .item:last-of-type{border-bottom:0}
+  .item .nm{color:var(--head);font-weight:500}
+  .item .qt{color:var(--muted);font-size:12.5px}
+  .item b{white-space:nowrap;color:var(--head)}
+  .det-total{display:flex;justify-content:space-between;margin-top:10px;padding-top:12px;border-top:1px solid var(--line);font-weight:700;color:var(--head)}
+  .det-note{font-size:13px;color:var(--muted);margin:0}
+  .det-help{margin-top:12px;font-size:13px;color:var(--muted)}
+  .det-help a{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:600;text-decoration:none;margin-right:14px}
+  .more-wrap{text-align:center;margin-top:18px}
+  .more-btn{padding:11px 26px;border-radius:999px;border:1px solid var(--inputline);background:var(--surface);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+  .more-btn:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .empty,.signin{padding:54px 20px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--inputline);border-radius:16px;animation:panelIn .5s var(--ease)}
+  .empty .big,.signin .big{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:var(--hover);display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--accent);animation:float 3.2s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .empty strong,.signin strong{display:block;font-size:17px;color:var(--head);margin-bottom:4px}
+  .empty p,.signin p{margin:0}
+  .empty a,.signin a,.add-btn{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:11px 24px;border-radius:999px;background:var(--teal);color:#fff;text-decoration:none;font-weight:600;font-size:14px;border:0;cursor:pointer;transition:transform .2s,box-shadow .2s}
+  .empty a:hover,.signin a:hover,.add-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(20,92,102,.32)}
+  .skel{height:170px;border-radius:16px;background:linear-gradient(90deg,var(--surface2) 25%,var(--hover) 37%,var(--surface2) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}
+  @keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+
+  /* ===== Addresses ===== */
+  .addr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .addr-head h3{margin:0;font-size:17px;font-weight:600;color:var(--head)}
+  .addr-head .add-btn{margin-top:0;padding:9px 18px}
+  .addr-note{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:0 0 16px}
+  .addr-note .ic{color:var(--accent);font-size:15px}
+  .addr-form{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease);margin-bottom:0}
+  .addr-form.open{grid-template-rows:1fr;margin-bottom:16px}
+  .addr-form > div{overflow:hidden}
+  .addr-form .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .type-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .type-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;border:1px solid var(--inputline);background:var(--inputbg);color:var(--label);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s}
+  .type-btn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+  .ghost-btn{padding:11px 22px;border-radius:999px;border:1px solid var(--inputline);background:transparent;color:var(--label);font-size:14px;font-weight:600;cursor:pointer}
+  .ghost-btn:hover{background:var(--hover)}
+  .addr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .addr{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;opacity:0;transform:translateY(16px);animation:rise .6s var(--ease) forwards;animation-delay:calc(var(--i,0) * .08s);transition:box-shadow .25s,border-color .25s}
+  .addr:hover{box-shadow:0 12px 28px rgba(17,44,55,.1);border-color:var(--teal)}
+  .addr.def{border-color:var(--gold)}
+  .addr-top{display:flex;align-items:center;gap:12px}
+  .addr-ic{width:42px;height:42px;border-radius:50%;background:var(--hover);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+  .addr-top b{font-size:15px;color:var(--head)}
+  .badge-def{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:rgba(178,125,44,.16);color:var(--gold);font-size:11.5px;font-weight:700}
+  .addr p{margin:0;font-size:14px;color:var(--label);line-height:1.5;overflow-wrap:anywhere}
+  .addr small{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:7px}
+  .addr-actions{display:flex;gap:6px;margin-top:auto;padding-top:12px;border-top:1px dashed var(--line);flex-wrap:wrap}
+  .mini{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:0;background:transparent;color:var(--label);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s}
+  .mini .ic{font-size:14px}
+  .mini:hover{background:var(--hover);color:var(--accent)}
+  .mini.del:hover{background:rgba(217,83,79,.12);color:#c0505a}
+
+  /* ===== Profile form ===== */
+  .form-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .sec{padding:24px 26px;border-bottom:1px solid var(--line)}
+  .sec h3{margin:0 0 2px;font-size:16px;font-weight:600;color:var(--head)}
+  .sec > p{margin:0 0 18px;font-size:13.5px;color:var(--muted)}
+  .photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;margin-bottom:18px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
+  .photo-row .pv{width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--teal),#102b3b);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;font-weight:600;flex:0 0 auto}
+  .photo-row .pv img{width:100%;height:100%;object-fit:cover}
+  .photo-row .txt{flex:1;min-width:140px}
+  .photo-row b{display:block;font-size:14px;color:var(--head)}
+  .photo-row small{color:var(--muted);font-size:12.5px}
+  .meter{display:flex;align-items:center;gap:14px;margin-top:14px}
+  .meter .bar{flex:1;height:7px;border-radius:7px;background:var(--line);overflow:hidden}
+  .meter .bar i{display:block;height:100%;width:var(--pct,0%);background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:7px;transition:width .8s var(--ease)}
+  .meter b{font-size:13px;color:var(--head);min-width:38px;text-align:right}
+  .tip{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
   .field{margin-bottom:16px}
-  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#4a5f7f}
-  .field input{width:100%;padding:12px 14px;border:1px solid #d8e2ef;border-radius:12px;font-size:15px;background:#fff;outline:none}
-  .field input:focus{border-color:#1f5fa8;box-shadow:0 0 0 4px rgba(31,95,168,.12)}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-radius:6px;border:0;cursor:pointer;font-weight:700}
-  .btn-primary{background:linear-gradient(135deg,#1f5fa8 0%,#2d7dd2 100%);color:#fff;box-shadow:0 10px 24px rgba(31,95,168,.2)}
-  .btn-outline{background:#fff;color:#1f5fa8;border:1px solid #1f5fa8}
-  .note{font-size:13px;color:#6b7c8f;margin-top:12px;line-height:1.6}
-  .detail-list{display:flex;flex-direction:column;gap:12px}
-  .detail-row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #e8f0f9}
-  .detail-row:last-child{border-bottom:none;padding-bottom:0}
-  .detail-label{font-weight:700;color:#4a5f7f}
-  .detail-value{font-weight:700;color:#10233b;text-align:right}
-  .status-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:700}
-  .status-pill.pending{background:#fff8e8;color:#a46a12}
-  .status-pill.processing{background:#eef5ff;color:#2358a4}
-  .status-pill.shipped{background:#e8f7ee;color:#2f7f56}
-  .status-pill.delivered{background:#e8f7ee;color:#2f7f56}
-  .status-pill.cancelled{background:#fce9ea;color:#a33b44}
-  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
-  .stat-card{background:#f5f9f8;border:1px solid #e0eae7;border-radius:12px;padding:15px}
-  .stat-card .label{font-size:11px;font-weight:700;color:#587176;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
-  .stat-card .value{font-size:22px;font-weight:800;color:#143842}
-  .table-wrap{overflow-x:auto}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:13px 10px;border-bottom:1px solid #e8efed;text-align:left;font-size:13px}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#587176;font-weight:700}
-  tbody tr:hover{background:#f7faf9}
-  .muted{color:#6b7c8f}
-  .empty{padding:18px 0;color:#6b7c8f;text-align:center}
-  @media (max-width:960px){.dashboard-grid{grid-template-columns:1fr}.hero-card{flex-direction:column;align-items:flex-start}.hero-actions{width:100%;flex-direction:row;flex-wrap:wrap}}
-  @media (max-width:640px){.stats-grid{grid-template-columns:1fr}.page-wrap{padding:16px 14px 36px}.account-context{font-size:10px}.hero-card{padding:22px 18px}.hero-title{align-items:flex-start}.avatar-control{width:48px;height:48px}.hero-card h1{font-size:25px}.hero-actions{flex-direction:column}.hero-btn{width:100%}.card{padding:18px}.detail-row{align-items:flex-start}.detail-value{max-width:58%;overflow-wrap:anywhere}}
+  .field.full{grid-column:1 / -1}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--label)}
+  .input-wrap{position:relative}
+  .input-wrap > .ic.lead{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none;transition:color .2s,transform .3s var(--ease)}
+  .input-wrap:focus-within > .ic.lead{color:var(--accent);transform:translateY(-50%) scale(1.15)}
+  .field input{width:100%;padding:12px 14px 12px 42px;border:1px solid var(--inputline);border-radius:10px;font-size:15px;color:var(--text);background:var(--inputbg);outline:none;transition:border-color .15s,box-shadow .15s}
+  .field input:hover{border-color:var(--muted)}
+  .field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,92,102,.2)}
+  .field input.bad{border-color:#d9534f;box-shadow:0 0 0 3px rgba(217,83,79,.14);animation:shake .35s}
+  @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .err{display:none;margin-top:5px;font-size:12px;color:#d4727a;font-weight:500}
+  .field.has-err .err{display:block}
+  #profilePassword{padding-right:46px}
+  .toggle-pw{position:absolute;right:5px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center}
+  .toggle-pw:hover{color:var(--accent);background:var(--hover)}
+  .strength{display:flex;gap:4px;margin-top:8px;align-items:center}
+  .strength i{flex:1;height:4px;border-radius:3px;background:var(--line);transition:background .25s}
+  .strength small{font-size:12px;font-weight:600;color:var(--muted);margin-left:8px;min-width:44px}
+  .strength.s1 i:nth-child(-n+1){background:#d9534f}
+  .strength.s2 i:nth-child(-n+2){background:#e0a030}
+  .strength.s3 i:nth-child(-n+3){background:#5bb381}
+  .strength.s4 i:nth-child(-n+4){background:#2f7f56}
+  .form-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 26px;background:var(--surface2);border-top:1px solid var(--line)}
+  .note{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--muted);margin:0;transition:color .3s}
+  .note .ic{color:var(--accent);font-size:16px}
+  .form-foot.dirty .note{color:#d9a441;font-weight:600}
+  .form-foot.dirty .note .ic{color:#d9a441;font-size:12px;animation:pulseDot 1.4s ease-in-out infinite}
+  @keyframes pulseDot{50%{transform:scale(1.4)}}
+  .save-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:999px;border:0;cursor:pointer;font-weight:600;font-size:14.5px;color:#fff;background:var(--teal);box-shadow:0 8px 20px rgba(20,92,102,.28);transition:background .2s,transform .2s,box-shadow .2s,opacity .2s}
+  .save-btn .ic{font-size:17px}
+  .save-btn:hover:not([disabled]){background:#18707c;transform:translateY(-1px)}
+  .save-btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .save-btn.ok{background:var(--green)}
+
+  /* Toast */
+  #toastBox{position:fixed;right:20px;bottom:20px;z-index:100;display:flex;flex-direction:column;gap:10px}
+  .toast{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;min-width:250px;max-width:350px;padding:14px 16px;border-radius:12px;background:#102b3b;color:#fff;font-size:14px;font-weight:500;box-shadow:0 10px 28px rgba(0,0,0,.3);animation:toastIn .4s var(--ease);border:1px solid rgba(255,255,255,.08)}
+  .toast .ic{color:#7fd6a4;font-size:19px}
+  .toast.error .ic{color:#ff9aa2}
+  .toast::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:100%;background:#7fd6a4;transform-origin:left;animation:life 3s linear forwards}
+  .toast.error::after{background:#ff9aa2}
+  .toast.out{animation:toastOut .3s ease forwards}
+  @keyframes toastIn{from{opacity:0;transform:translateX(30px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes toastOut{to{opacity:0;transform:translateX(30px)}}
+  @keyframes life{to{transform:scaleX(0)}}
+
+  :focus-visible{outline:2px solid rgba(77,143,214,.7);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+    .rise,.order,.addr{opacity:1;transform:none}
+    .bar-col .b{transform:none}
+  }
+
+  @media (max-width:760px){
+    .wrap{padding:16px 14px 60px}
+    .hello h1{font-size:23px}
+    .cover{height:114px;padding:14px 16px}
+    .btn-shop span.t{display:none}
+    .btn-shop{padding:10px 13px}
+    .me-body{padding:0 18px 18px;flex-direction:column;align-items:flex-start;gap:14px}
+    .me-id{flex-direction:column;align-items:flex-start;gap:8px}
+    .av-wrap{width:96px;height:96px;margin-top:-48px}
+    .avatar{inset:8px;font-size:32px}
+    .cam{width:28px;height:28px}
+    .me-text{padding-top:0}
+    .me-text h2{font-size:21px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stat:nth-child(2){border-right:0}
+    .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+    .stat{padding:14px 16px;gap:11px}
+    .stat .si{width:36px;height:36px;font-size:16px}
+    .stat .value{font-size:17px}
+    .tabs{width:100%}
+    .tab{flex:1;justify-content:center;padding:10px 10px;gap:7px}
+    .tab .long{display:none}
+    .tab .short{display:inline}
+    .bars{gap:8px;height:110px}
+    .insights{grid-template-columns:1fr;gap:12px}
+    .toolbar .sort,.toolbar .tool-btn{flex:1 1 auto;justify-content:center}
+    .o-head{grid-template-columns:1fr 1fr;padding:14px 16px;gap:12px}
+    .o-head .o-no{text-align:left}
+    .o-body{padding:16px 16px 6px}
+    .o-actions{padding:12px 16px 16px}
+    .det-inner{margin:0 16px 16px}
+    .step{font-size:11px}
+    .addr-grid{grid-template-columns:1fr}
+    .form-grid{grid-template-columns:1fr}
+    .sec{padding:20px 18px}
+    .form-foot{padding:14px 18px;flex-direction:column;align-items:stretch}
+    .save-btn{width:100%}
+    #toastBox{left:14px;right:14px}
+    .toast{max-width:none}
+  }
 </style>
 </head>
 <body>
-<div class="page-wrap">
-  <header class="account-topbar">
-    <a class="account-brand" href="index.html">
-      <img src="assets/mthunzi-logo.png" alt="">
-      <div>MTHUNZI<span>CREATIONS</span></div>
-    </a>
-    <div class="account-context"><i class="fas fa-user-circle"></i> Customer account</div>
-  </header>
-  <section class="hero-card">
-    <div>
-      <div class="hero-badge"><i class="fas fa-shield-alt"></i> Secure customer account</div>
-      <div class="hero-title">
-        <div class="avatar-control">
-          <div class="avatar" id="profileAvatar" aria-label="Profile photo">M</div>
-          <button class="avatar-upload" id="chooseAvatar" type="button" aria-label="Upload profile photo" title="Upload profile photo"><i class="fas fa-camera" aria-hidden="true"></i></button>
-          <input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-        </div>
-        <div>
-          <h1>Welcome back, <span id="welcomeName">there</span></h1>
-          <p>Manage your profile and keep track of every order in one polished place.</p>
-        </div>
-      </div>
-      <div class="hero-meta">
-        <span><i class="fas fa-box"></i><strong id="summaryOrders">0</strong> orders</span>
-        <span><i class="fas fa-check-circle"></i><strong id="summaryDelivered">0</strong> delivered</span>
-        <span><i class="fas fa-wallet"></i><strong id="summarySpend">MK 0</strong></span>
-      </div>
-    </div>
-    <div class="hero-actions">
-      <button id="backBtn" class="hero-btn secondary"><i class="fas fa-arrow-left"></i> Back to shop</button>
-      <button id="saveProfile" class="hero-btn"><i class="fas fa-save"></i> Save profile</button>
-      <button id="logoutBtn" class="hero-btn logout"><i class="fas fa-right-from-bracket"></i> Sign out</button>
-    </div>
-  </section>
-  <div class="account-notice" id="accountNotice" role="status" aria-live="polite"></div>
 
-  <div class="dashboard-grid">
-    <section class="card">
-      <h2>Your profile</h2>
-      <div class="field"><label>Name</label><input type="text" id="profileName"></div>
-      <div class="field"><label>Email</label><input type="email" id="profileEmail"></div>
-      <div class="field"><label>Phone</label><input type="tel" id="profilePhone"></div>
-      <div class="field"><label>New Password <span style="font-weight:400;color:#6b7c8f;font-size:13px;">(leave blank to keep current)</span></label><input type="password" id="profilePassword"></div>
-      <p class="note">Keep your details current so future checkout and delivery updates stay accurate.</p>
-    </section>
+<!-- Icon sprite (inline SVG, works offline, never shows as boxes) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></symbol>
+  <symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" style="fill:currentColor"/></symbol>
+  <symbol id="i-check-all" viewBox="0 0 24 24"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+</defs></svg>
 
-    <aside class="card">
-      <h2>Account overview</h2>
-      <div class="detail-list">
-        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="loginStatus">Checking...</span></div>
-        <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value" id="loginName">—</span></div>
-        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="loginEmail">—</span></div>
-        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="loginPhone">—</span></div>
-      </div>
-    </aside>
+<div class="wrap">
+
+  <div class="hello rise" style="--d:0">
+    <h1><span id="greeting">Welcome back</span>, <span id="welcomeName">there</span></h1>
+    <p>Manage your profile and keep track of every order in one place.</p>
   </div>
 
-  <section class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
-      <div>
-        <div style="font-size:12px;font-weight:700;color:#1f5fa8;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">Order history</div>
-        <h2 style="margin:0;">Your recent orders</h2>
+  <!-- Profile card -->
+  <section class="me-card rise" style="--d:.1">
+    <div class="cover" id="cover">
+      <div class="spot"></div>
+      <a class="account-brand" href="index.html"><img src="assets/mthunzi-logo.png" alt=""><div>MTHUNZI<span>CREATIONS</span></div></a>
+      <div class="cover-actions">
+        <button id="themeBtn" class="btn-theme" type="button" aria-label="Toggle dark mode" title="Toggle dark mode"><span class="ic" data-ic="moon"></span></button>
+        <button id="backBtn" class="btn-shop rip" type="button"><span class="ic" data-ic="arrow-left"></span><span class="t">Back to shop</span></button>
       </div>
-      <div class="status-pill processing" id="orderSummaryBadge">0 orders</div>
     </div>
-
-    <div class="stats-grid">
-      <div class="stat-card"><div class="label">Total orders</div><div class="value" id="statTotalOrders">0</div></div>
-      <div class="stat-card"><div class="label">In progress</div><div class="value" id="statPendingOrders">0</div></div>
-      <div class="stat-card"><div class="label">Total spent</div><div class="value" id="statTotalSpend">MK 0</div></div>
+    <div class="me-body">
+      <div class="me-id">
+        <div class="av-wrap">
+          <svg class="ring" viewBox="0 0 112 112" width="100%" height="100%" aria-hidden="true"><circle class="trk" cx="56" cy="56" r="52"/><circle class="prg" id="ringCircle" cx="56" cy="56" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/></svg>
+          <div class="avatar" id="profileAvatar">M</div>
+          <button class="cam" id="camBtn" type="button" aria-label="Change profile photo" title="Change profile photo"><span class="ic" data-ic="camera"></span></button>
+          <input type="file" id="photoInput" accept="image/*" hidden>
+        </div>
+        <div class="me-text">
+          <h2 id="loginName">—</h2>
+          <div class="me-meta">
+            <span><span class="ic" data-ic="mail"></span><span id="loginEmail">—</span></span>
+            <span><span class="ic" data-ic="phone"></span><span id="loginPhone">—</span></span>
+            <span id="loginStatus">Checking...</span>
+          </div>
+        </div>
+      </div>
+      <a href="#" class="btn-out logout"><span class="ic" data-ic="log-out"></span> Sign out</a>
     </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Order</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTableBody">
-          <tr><td colspan="4" class="empty">Loading your orders…</td></tr>
-        </tbody>
-      </table>
+    <div class="stats">
+      <div class="stat"><div class="si"><span class="ic" data-ic="package"></span></div><div><div class="value" id="summaryOrders">0</div><div class="label">Orders placed</div></div></div>
+      <div class="stat"><div class="si"><span class="ic" data-ic="truck"></span></div><div><div class="value" id="statPendingOrders">0</div><div class="label">In progress</div></div></div>
+      <div class="stat"><div class="si"><span class="ic" data-ic="check-circle"></span></div><div><div class="value" id="summaryDelivered">0</div><div class="label">Delivered</div></div></div>
+      <div class="stat"><div class="si"><span class="ic" data-ic="wallet"></span></div><div><div class="value" id="summarySpend">MK 0</div><div class="label">Total spent</div></div></div>
     </div>
   </section>
+
+  <!-- Tabs -->
+  <div class="tabs rise" id="mainTabs" role="tablist" style="--d:.2">
+    <span class="tab-ind" id="tabInd"></span>
+    <button class="tab active" data-tab="orders" type="button" role="tab"><span class="ic" data-ic="package"></span> My orders <span class="cnt" id="orderSummaryBadge">0</span></button>
+    <button class="tab" data-tab="addresses" type="button" role="tab"><span class="ic" data-ic="pin"></span> Addresses</button>
+    <button class="tab" data-tab="profile" type="button" role="tab"><span class="ic" data-ic="shield"></span> <span class="long">Profile &amp; security</span><span class="short">Profile</span></button>
+  </div>
+
+  <!-- Orders -->
+  <section class="panel show rise" id="panel-orders" style="--d:.28">
+    <div class="chart-card" id="chartCard" hidden>
+      <div class="chart-head"><h3><span class="ic" data-ic="trend"></span> Your spending</h3><span class="sub" id="chartSub">Last 6 months</span></div>
+      <div class="bars" id="bars"></div>
+      <div class="insights" id="insights"></div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <div class="search"><span class="ic" data-ic="search"></span><input type="search" id="orderSearch" placeholder="Search by order number" autocomplete="off"><kbd>/</kbd></div>
+      <select class="sort" id="orderSort" aria-label="Sort orders">
+        <option value="new">Newest first</option>
+        <option value="old">Oldest first</option>
+        <option value="high">Highest total</option>
+        <option value="low">Lowest total</option>
+      </select>
+      <button class="tool-btn" id="exportBtn" type="button"><span class="ic" data-ic="download"></span> Export CSV</button>
+    </div>
+    <div class="filters" id="orderTabs">
+      <button class="chip active" data-filter="all" type="button">All <i data-count="all">0</i></button>
+      <button class="chip" data-filter="progress" type="button">In progress <i data-count="progress">0</i></button>
+      <button class="chip" data-filter="delivered" type="button">Delivered <i data-count="delivered">0</i></button>
+      <button class="chip" data-filter="cancelled" type="button">Cancelled <i data-count="cancelled">0</i></button>
+    </div>
+    <div class="result-info" id="resultInfo"></div>
+    <div class="orders-list" id="ordersTableBody">
+      <div class="skel"></div><div class="skel"></div>
+    </div>
+    <div class="more-wrap" id="moreWrap" hidden><button class="more-btn" id="moreBtn" type="button">Show more orders</button></div>
+  </section>
+
+  <!-- Addresses -->
+  <section class="panel" id="panel-addresses">
+    <div class="addr-head">
+      <h3>Delivery addresses</h3>
+      <button class="add-btn rip" id="addAddrBtn" type="button"><span class="ic" data-ic="plus"></span> Add address</button>
+    </div>
+    <p class="addr-note"><span class="ic" data-ic="shield"></span> Addresses are saved privately on this device.</p>
+    <div class="addr-form" id="addrForm"><div><div class="box">
+      <div class="type-row" id="typeRow">
+        <button type="button" class="type-btn on" data-type="home"><span class="ic" data-ic="home"></span> Home</button>
+        <button type="button" class="type-btn" data-type="work"><span class="ic" data-ic="briefcase"></span> Work</button>
+        <button type="button" class="type-btn" data-type="other"><span class="ic" data-ic="pin"></span> Other</button>
+      </div>
+      <div class="form-grid">
+        <div class="field full" id="f-line"><label for="addrLine">Street / area</label>
+          <div class="input-wrap"><span class="ic lead" data-ic="home"></span><input type="text" id="addrLine" maxlength="120" placeholder="e.g. House 12, Chinamwali"></div><div class="err">Please enter the street or area.</div></div>
+        <div class="field" id="f-city"><label for="addrCity">City / town</label>
+          <div class="input-wrap"><span class="ic lead" data-ic="pin"></span><input type="text" id="addrCity" maxlength="60" placeholder="e.g. Zomba"></div><div class="err">Please enter the city or town.</div></div>
+        <div class="field"><label for="addrPhone">Delivery phone (optional)</label>
+          <div class="input-wrap"><span class="ic lead" data-ic="phone"></span><input type="tel" id="addrPhone" maxlength="30"></div></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="ghost-btn" id="addrCancel">Cancel</button>
+        <button type="button" class="save-btn rip" id="addrSave"><span class="ic" data-ic="check"></span> Save address</button>
+      </div>
+    </div></div></div>
+    <div class="addr-grid" id="addrList"></div>
+  </section>
+
+  <!-- Profile -->
+  <section class="panel" id="panel-profile">
+    <div class="form-card">
+      <div class="sec">
+        <h3>Personal information</h3>
+        <p>This is how we reach you about your orders.</p>
+        <div class="photo-row">
+          <div class="pv" id="photoPrev">M</div>
+          <div class="txt"><b>Profile photo</b><small>Saved privately on this device</small></div>
+          <button class="tool-btn" id="photoUpload" type="button"><span class="ic" data-ic="camera"></span> Upload</button>
+          <button class="tool-btn" id="photoRemove" type="button" hidden><span class="ic" data-ic="trash"></span> Remove</button>
+        </div>
+        <div class="form-grid">
+          <div class="field full" id="f-name"><label for="profileName">Name</label>
+            <div class="input-wrap"><span class="ic lead" data-ic="user"></span><input type="text" id="profileName" autocomplete="name"></div><div class="err">Please enter your name.</div></div>
+          <div class="field" id="f-email"><label for="profileEmail">Email</label>
+            <div class="input-wrap"><span class="ic lead" data-ic="mail"></span><input type="email" id="profileEmail" autocomplete="email"></div><div class="err">Enter a valid email address.</div></div>
+          <div class="field"><label for="profilePhone">Phone</label>
+            <div class="input-wrap"><span class="ic lead" data-ic="phone"></span><input type="tel" id="profilePhone" autocomplete="tel"></div></div>
+        </div>
+        <div class="meter" id="avatarRing">
+          <div class="bar"><i></i></div><b id="ringPct">0%</b>
+        </div>
+        <p class="tip" id="ringTip">Add your details so delivery updates stay accurate.</p>
+      </div>
+      <div class="sec" style="border-bottom:0">
+        <h3>Password</h3>
+        <p>Leave blank to keep your current password.</p>
+        <div class="field" style="margin-bottom:0"><label for="profilePassword">New Password</label>
+          <div class="input-wrap"><span class="ic lead" data-ic="lock"></span><input type="password" id="profilePassword" autocomplete="new-password">
+            <button type="button" class="toggle-pw" id="togglePw" aria-label="Show password"><span class="ic" data-ic="eye"></span></button></div>
+          <div class="strength" id="strength"><i></i><i></i><i></i><i></i><small id="strengthText"></small></div></div>
+      </div>
+      <div class="form-foot" id="formFoot">
+        <p class="note" id="noteText"><span class="ic" data-ic="shield"></span> <span>Your details are kept secure.</span></p>
+        <button id="saveProfile" class="save-btn rip" type="button"><span class="ic" data-ic="save"></span> Save profile</button>
+      </div>
+    </div>
+  </section>
+
 </div>
+
+<div id="toastBox" aria-live="polite"></div>
+
 <script>
+  /* ---- Optional: add support contacts to show a "Need help?" link on each order ---- */
+  const SUPPORT = { whatsapp: '', email: '' };   // e.g. whatsapp: '265999000000', email: 'support@yourshop.com'
+
   function $(id){return document.getElementById(id)}
-  function readStoredUser(){
-    try { return JSON.parse(localStorage.getItem('mthunziAuthUser') || 'null'); }
-    catch (error) { return null; }
+  function I(name){return '<span class="ic"><svg aria-hidden="true"><use href="#i-' + name + '"/></svg></span>';}
+  function hydrate(root){
+    (root || document).querySelectorAll('[data-ic]').forEach(el => {
+      el.innerHTML = '<svg aria-hidden="true"><use href="#i-' + el.dataset.ic + '"/></svg>';
+      el.removeAttribute('data-ic');
+    });
   }
-  let currentUser = readStoredUser();
+  hydrate();
+
+  function readCurrentUser(){
+    try { return JSON.parse(localStorage.getItem('mthunziAuthUser') || 'null'); }
+    catch(error) { return null; }
+  }
+  let currentUser = readCurrentUser();
   const orderSummaryBadge = $('orderSummaryBadge');
   const ordersTableBody = $('ordersTableBody');
+  let allOrders = [];
+  let activeFilter = 'all';
+  let searchTerm = '';
+  let sortMode = 'new';
+  let visibleCount = 5;
+  let initialValues = {name:'',email:'',phone:''};
 
-  function showToast(msg, type){
-    const notice = $('accountNotice');
-    notice.textContent = msg;
-    notice.className = 'account-notice show' + (type === 'error' ? ' error' : '');
-  }
-  function redirectHome(){window.location.href='shop.html'}
+  /* ---------- storage helpers (safe) ---------- */
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function authHeaders(){ return currentUser && currentUser.token ? { Authorization:'Bearer ' + currentUser.token } : {}; }
   function redirectToLogin(){
-    localStorage.setItem('mthunziAuthRedirect', 'account.html');
+    lsSet('mthunziAuthRedirect', 'account.html');
     window.location.replace('login.html');
   }
-  function authHeaders(){
-    return { Authorization: 'Bearer ' + currentUser.token };
-  }
   function handleUnauthorized(){
-    localStorage.removeItem('mthunziAuthUser');
+    lsDel('mthunziAuthUser');
     currentUser = null;
     redirectToLogin();
   }
+
+  /* ---------- theme ---------- */
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    $('themeBtn').innerHTML = I(t === 'dark' ? 'sun' : 'moon');
+  }
+  applyTheme(lsGet('mthunziTheme') === 'dark' ? 'dark' : 'light');
+  $('themeBtn').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next); lsSet('mthunziTheme', next);
+  });
+
+  /* ---------- toast ---------- */
+  function showToast(msg, type){
+    const t = document.createElement('div');
+    t.className = 'toast' + (type === 'error' ? ' error' : '');
+    t.innerHTML = I(type === 'error' ? 'alert' : 'check-circle');
+    const text = document.createElement('span');
+    text.textContent = msg;
+    t.appendChild(text);
+    $('toastBox').appendChild(t);
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3000);
+  }
+
+  /* ---------- formatting ---------- */
+  function redirectHome(){window.location.href='shop.html'}
   function formatCurrency(value){return 'MK ' + Number(value || 0).toLocaleString();}
   function formatDate(value){
     if(!value) return '—';
     const date = new Date(value);
+    if(isNaN(date)) return '—';
     return date.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
   }
+  function esc(s){return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function orderTotal(o){return Number(o.total_amount || o.total || 0);}
+  function orderTime(o){const t = new Date(o.created_at || o.date).getTime(); return isNaN(t) ? 0 : t;}
   function getStatusBadge(status){
     const normalized = (status || 'pending').toLowerCase();
-    const map = {
-      pending: 'pending',
-      processing: 'processing',
-      shipped: 'shipped',
-      delivered: 'delivered',
-      completed: 'delivered',
-      cancelled: 'cancelled'
-    };
+    const map = {pending:'pending',processing:'processing',shipped:'shipped',delivered:'delivered',completed:'delivered',cancelled:'cancelled'};
     return map[normalized] || 'pending';
   }
-  function setAvatar(name, avatarUrl){
-    const avatar = $('profileAvatar');
-    if(!avatar) return;
-    const initial = (name || 'M').trim().charAt(0).toUpperCase();
-    avatar.replaceChildren();
-    if (avatarUrl) {
-      const image = document.createElement('img');
-      image.src = avatarUrl;
-      image.alt = 'Profile photo';
-      image.onerror = function(){ avatar.textContent = initial; };
-      avatar.appendChild(image);
-    } else {
-      avatar.textContent = initial;
-    }
+  function getStatusIcon(badge){
+    return ({pending:'clock',processing:'refresh',shipped:'truck',delivered:'check-circle',cancelled:'x-circle'})[badge] || 'clock';
   }
+  const STATUS_TEXT = {
+    pending:   ['We have received your order', 'We will start preparing it shortly.'],
+    processing:['We are preparing your order', 'Your items are being packed.'],
+    shipped:   ['Your order is on its way', 'It will reach you soon.'],
+    delivered: ['Your order was delivered', 'Thank you for shopping with us.'],
+    cancelled: ['This order was cancelled', 'Contact us if you need help.']
+  };
+  function itemsOf(o){return Array.isArray(o.items) ? o.items : [];}
+  function itemName(it){return it.name || it.product_name || it.title || 'Item';}
+  function itemQty(it){return Number(it.quantity || it.qty || 1);}
+  function itemPrice(it){return Number(it.price || it.unit_price || 0);}
+
+  function animateValue(el, to, fmt){
+    fmt = fmt || (v => v);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce || to === 0){ el.textContent = fmt(to); return; }
+    const start = performance.now(), dur = 1000;
+    function tick(now){
+      const p = Math.min((now - start) / dur, 1);
+      el.textContent = fmt(Math.round(to * (1 - Math.pow(1 - p, 4))));
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function setGreeting(){
+    const h = new Date().getHours();
+    $('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  }
+
+  /* ---------- avatar + photo ---------- */
+  function setAvatar(name){
+    const initial = (name || 'M').trim().charAt(0).toUpperCase();
+    const photo = currentUser && currentUser.avatar_url;
+    ['profileAvatar','photoPrev'].forEach(id => {
+      const el = $(id);
+      if(photo){
+        const image = document.createElement('img');
+        image.alt = '';
+        image.src = photo;
+        image.onerror = () => { el.textContent = initial; };
+        el.replaceChildren(image);
+      } else { el.textContent = initial; }
+    });
+    $('photoRemove').hidden = !photo;
+    const photoHint = document.querySelector('.photo-row .txt small');
+    if(photoHint) photoHint.textContent = photo ? 'Stored securely with your account' : 'Upload a photo for your account';
+  }
+  function currentName(){ return (currentUser && currentUser.name) || ($('profileName').value || 'M'); }
+
+  function pickPhoto(){
+    if(!currentUser){ showToast('Please sign in first.', 'error'); return; }
+    $('photoInput').click();
+  }
+  $('camBtn').addEventListener('click', pickPhoto);
+  $('photoUpload').addEventListener('click', pickPhoto);
+  $('photoInput').addEventListener('change', async function(){
+    const file = this.files && this.files[0];
+    if(!file) return;
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)){ showToast('Choose a JPG, PNG, or WebP photo.', 'error'); this.value = ''; return; }
+    if(file.size > 5 * 1024 * 1024){ showToast('That image is too large (maximum 5 MB).', 'error'); this.value = ''; return; }
+    const button = $('photoUpload');
+    const originalButton = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = I('loader').replace('class="ic"','class="ic spin"') + ' Uploading...';
+    try{
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read that photo.'));
+        reader.readAsDataURL(file);
+      });
+      const response = await fetch('/api/user/' + encodeURIComponent(currentUser.id) + '/avatar', {
+        method:'PUT',
+        headers:Object.assign({'Content-Type':'application/json'}, authHeaders()),
+        body:JSON.stringify({image:dataUrl})
+      });
+      const result = await response.json().catch(() => ({}));
+      if(response.status === 401) return handleUnauthorized();
+      if(!response.ok || !result.data) throw new Error(result.error || 'Photo upload failed. Please try again.');
+      currentUser = Object.assign({}, currentUser, result.data, {token:currentUser.token});
+      lsSet('mthunziAuthUser', JSON.stringify(currentUser));
+      setAvatar(currentName());
+      showToast('Profile photo uploaded to your account.');
+    }catch(error){
+      console.error(error);
+      showToast(error.message || 'Photo upload failed. Please try again.', 'error');
+    }finally{
+      button.disabled = false;
+      button.innerHTML = originalButton;
+      this.value = '';
+    }
+  });
+  $('photoRemove').addEventListener('click', async function(){
+    if(!currentUser) return redirectToLogin();
+    const button = this;
+    button.disabled = true;
+    try{
+      const response = await fetch('/api/user/' + encodeURIComponent(currentUser.id), {
+        method:'PATCH',
+        headers:Object.assign({'Content-Type':'application/json'}, authHeaders()),
+        body:JSON.stringify({removeAvatar:true})
+      });
+      const result = await response.json().catch(() => ({}));
+      if(response.status === 401) return handleUnauthorized();
+      if(!response.ok || !result.data) throw new Error(result.error || 'Could not remove your photo.');
+      currentUser = Object.assign({}, currentUser, result.data, {token:currentUser.token});
+      lsSet('mthunziAuthUser', JSON.stringify(currentUser));
+      setAvatar(currentName());
+      showToast('Profile photo removed.');
+    }catch(error){
+      console.error(error);
+      showToast(error.message || 'Could not remove your photo.', 'error');
+    }finally{
+      button.disabled = false;
+    }
+  });
+
+  function updateCompleteness(){
+    const filled = ['profileName','profileEmail','profilePhone'].filter(id => $(id).value.trim()).length;
+    const pct = Math.round(filled / 3 * 100);
+    $('avatarRing').style.setProperty('--pct', pct + '%');
+    $('ringPct').textContent = pct + '%';
+    $('ringTip').textContent = pct === 100 ? 'Your profile is complete.' : 'Add your details so delivery updates stay accurate.';
+    $('ringCircle').style.strokeDashoffset = 326.7 * (1 - pct / 100);
+  }
+
+  /* ---------- profile state ---------- */
   function renderProfileState(user){
     if(!user){
       $('loginStatus').textContent='Not signed in';
-      $('loginName').textContent='—';
+      $('loginStatus').classList.add('off');
+      $('loginName').textContent='Guest';
       $('loginEmail').textContent='—';
       $('loginPhone').textContent='—';
       $('welcomeName').textContent='there';
-      setAvatar('M', null);
+      setAvatar('M');
+      updateCompleteness();
       return;
     }
     $('loginStatus').textContent='Signed in';
+    $('loginStatus').classList.remove('off');
     $('loginName').textContent=user.name;
     $('loginEmail').textContent=user.email;
     $('loginPhone').textContent=user.phone || '—';
@@ -245,64 +815,213 @@
     $('profileName').value=user.name;
     $('profileEmail').value=user.email;
     $('profilePhone').value=user.phone || '';
-    setAvatar(user.name, user.avatar_url);
+    initialValues = {name:user.name||'', email:user.email||'', phone:user.phone||''};
+    setAvatar(user.name);
+    updateCompleteness();
+    updateDirty();
   }
-  function renderOrders(orders){
-    const totalOrders = orders.length;
-    const pendingOrders = orders.filter(order => {
-      const status = (order.status || '').toLowerCase();
-      return status === 'pending' || status === 'processing' || status === 'shipped';
-    }).length;
-    const deliveredOrders = orders.filter(order => {
-      const status = (order.status || '').toLowerCase();
-      return status === 'delivered' || status === 'completed';
-    }).length;
-    const totalSpend = orders.reduce((sum, order) => sum + Number(order.total_amount || order.total || 0), 0);
 
-    $('summaryOrders').textContent = totalOrders;
-    $('summaryDelivered').textContent = deliveredOrders;
-    $('summarySpend').textContent = formatCurrency(totalSpend);
-    $('statTotalOrders').textContent = totalOrders;
-    $('statPendingOrders').textContent = pendingOrders;
-    $('statTotalSpend').textContent = formatCurrency(totalSpend);
-    orderSummaryBadge.textContent = totalOrders ? `${totalOrders} order${totalOrders > 1 ? 's' : ''}` : 'No orders yet';
-
-    if(!totalOrders){
-      ordersTableBody.innerHTML = '<tr><td colspan="4" class="empty">You have not placed any orders yet.</td></tr>';
-      return;
-    }
-
-    ordersTableBody.innerHTML = orders.slice(0, 8).map(order => {
-      const badge = getStatusBadge(order.status);
-      return `<tr>
-        <td><strong>#${order.id}</strong><div class="muted">${order.items && order.items.length ? order.items.length + ' item' + (order.items.length > 1 ? 's' : '') : 'No items'}</div></td>
-        <td>${formatDate(order.created_at || order.date)}</td>
-        <td><span class="status-pill ${badge}">${(order.status || 'Pending').toUpperCase()}</span></td>
-        <td><strong>${formatCurrency(order.total_amount || order.total || 0)}</strong></td>
-      </tr>`;
-    }).join('');
-  }
-  async function loadUserProfile(){
+  async function loadUserProfile(user){
+    if(!user || !user.token) return;
     try{
-      const res = await fetch('/api/user/' + encodeURIComponent(currentUser.id), { headers: authHeaders() });
+      const res = await fetch('/api/user/' + encodeURIComponent(user.id), {headers:authHeaders()});
       const body = await res.json().catch(()=>({}));
-      if (res.status === 401) return handleUnauthorized();
-      if (!res.ok || !body.data) throw new Error(body.error || 'Unable to load your profile.');
-      currentUser = Object.assign({}, body.data, { token: currentUser.token });
-      localStorage.setItem('mthunziAuthUser', JSON.stringify(currentUser));
+      if(res.status === 401) return handleUnauthorized();
+      if(!res.ok || !body.data) throw new Error(body.error || 'Unable to load your profile.');
+      currentUser = Object.assign({}, currentUser, body.data, {token:user.token});
+      lsSet('mthunziAuthUser', JSON.stringify(currentUser));
       renderProfileState(currentUser);
-    } catch(err){
+    }catch(err){
       console.error(err);
       showToast(err.message || 'Unable to load your profile.', 'error');
     }
   }
 
-  async function loadUserOrders(){
+  function isDirty(){
+    return $('profileName').value.trim() !== initialValues.name ||
+           $('profileEmail').value.trim() !== initialValues.email ||
+           $('profilePhone').value.trim() !== initialValues.phone ||
+           $('profilePassword').value.trim() !== '';
+  }
+  function updateDirty(){
+    if(!currentUser){ return; }
+    const d = isDirty();
+    $('formFoot').classList.toggle('dirty', d);
+    $('saveProfile').disabled = !d;
+    $('noteText').innerHTML = d ? I('dot') + ' <span>You have unsaved changes</span>' : I('shield') + ' <span>Your details are kept secure.</span>';
+  }
+
+  /* ---------- chart + insights ---------- */
+  function renderChart(orders){
+    const card = $('chartCard');
+    const valid = orders.filter(o => getStatusBadge(o.status) !== 'cancelled');
+    const now = new Date();
+    const months = [];
+    for(let i = 5; i >= 0; i--){
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({key: d.getFullYear() + '-' + d.getMonth(), label: d.toLocaleDateString('en-US',{month:'short'}), total: 0});
+    }
+    valid.forEach(o => {
+      const d = new Date(o.created_at || o.date);
+      if(isNaN(d)) return;
+      const m = months.find(x => x.key === d.getFullYear() + '-' + d.getMonth());
+      if(m) m.total += orderTotal(o);
+    });
+    const max = Math.max.apply(null, months.map(m => m.total));
+    if(!valid.length){ card.hidden = true; return; }
+    card.hidden = false;
+    const sum = valid.reduce((s, o) => s + orderTotal(o), 0);
+    $('chartSub').textContent = 'Last 6 months';
+    $('bars').innerHTML = months.map((m, k) =>
+      `<div class="bar-col ${k === 5 ? 'now' : ''}"><span class="tipv">${formatCurrency(m.total)}</span><div class="b" style="--h:${max ? Math.round(m.total / max * 100) : 0}%;--k:${k}"></div><small>${m.label}</small></div>`).join('');
+    const avg = Math.round(sum / valid.length);
+    const big = Math.max.apply(null, valid.map(orderTotal));
+    const last = valid.slice().sort((a,b) => orderTime(b) - orderTime(a))[0];
+    $('insights').innerHTML =
+      `<div class="ins"><div class="ii">${I('zap')}</div><div><b>${formatCurrency(avg)}</b><small>Average order</small></div></div>
+       <div class="ins"><div class="ii">${I('star')}</div><div><b>${formatCurrency(big)}</b><small>Largest order</small></div></div>
+       <div class="ins"><div class="ii">${I('calendar')}</div><div><b>${formatDate(last.created_at || last.date)}</b><small>Last order</small></div></div>`;
+  }
+
+  /* ---------- orders ---------- */
+  function matchesFilter(order, f){
+    f = f || activeFilter;
+    const s = (order.status || 'pending').toLowerCase();
+    if(f === 'progress') return s === 'pending' || s === 'processing' || s === 'shipped';
+    if(f === 'delivered') return s === 'delivered' || s === 'completed';
+    if(f === 'cancelled') return s === 'cancelled';
+    return true;
+  }
+  function matchesSearch(order){
+    if(!searchTerm) return true;
+    return String(order.id).toLowerCase().includes(searchTerm.replace('#','').toLowerCase());
+  }
+
+  function renderOrders(orders){
+    allOrders = orders;
+    const totalOrders = orders.length;
+    const pendingOrders = orders.filter(o => matchesFilter(o,'progress')).length;
+    const deliveredOrders = orders.filter(o => matchesFilter(o,'delivered')).length;
+    const totalSpend = orders.reduce((sum, order) => sum + orderTotal(order), 0);
+
+    animateValue($('summaryOrders'), totalOrders);
+    animateValue($('summaryDelivered'), deliveredOrders);
+    animateValue($('statPendingOrders'), pendingOrders);
+    animateValue($('summarySpend'), totalSpend, formatCurrency);
+    orderSummaryBadge.textContent = totalOrders;
+    ['all','progress','delivered','cancelled'].forEach(f => {
+      const el = document.querySelector('[data-count="' + f + '"]');
+      if(el) el.textContent = orders.filter(o => matchesFilter(o, f)).length;
+    });
+    $('toolbar').style.display = totalOrders ? '' : 'none';
+    $('orderTabs').style.display = totalOrders ? '' : 'none';
+    renderChart(orders);
+    drawRows();
+    positionIndicator();
+  }
+
+  function trackHtml(badge){
+    const idx = {pending:0, processing:1, shipped:2, delivered:3}[badge] || 0;
+    const labels = ['Placed','Processing','Shipped','Delivered'];
+    const pct = (idx / 3) * 75;
+    return `<div class="track" style="--target:${pct}%">` + labels.map((l, i) =>
+      `<div class="step ${i <= idx ? 'done' : ''} ${i === idx ? 'now' : ''}"><div class="dotc">${I('check')}</div>${l}</div>`).join('') + '</div>';
+  }
+
+  function detailsHtml(order){
+    const items = itemsOf(order);
+    let body;
+    if(items.length){
+      body = items.map(it =>
+        `<div class="item"><div><span class="nm">${esc(itemName(it))}</span><div class="qt">Qty ${itemQty(it)}${itemPrice(it) ? ' · ' + formatCurrency(itemPrice(it)) + ' each' : ''}</div></div><b>${itemPrice(it) ? formatCurrency(itemPrice(it) * itemQty(it)) : ''}</b></div>`).join('');
+    } else {
+      body = '<p class="det-note">Item details are not available for this order.</p>';
+    }
+    const links = [];
+    if(SUPPORT.whatsapp) links.push(`<a href="https://wa.me/${encodeURIComponent(SUPPORT.whatsapp)}?text=${encodeURIComponent('Hello, I need help with order #' + order.id)}" target="_blank" rel="noopener">${I('chat')} WhatsApp us</a>`);
+    if(SUPPORT.email) links.push(`<a href="mailto:${esc(SUPPORT.email)}?subject=${encodeURIComponent('Order #' + order.id)}">${I('mail')} Email us</a>`);
+    const help = links.length ? `<div class="det-help">Need help with this order? ${links.join('')}</div>` : '';
+    return `<div class="det-inner"><p class="det-title">Order items</p>${body}<div class="det-total"><span>Total</span><span>${formatCurrency(orderTotal(order))}</span></div>${help}</div>`;
+  }
+
+  function visibleList(){
+    const list = allOrders.filter(o => matchesFilter(o)).filter(matchesSearch);
+    list.sort((a, b) => {
+      if(sortMode === 'old') return orderTime(a) - orderTime(b);
+      if(sortMode === 'high') return orderTotal(b) - orderTotal(a);
+      if(sortMode === 'low') return orderTotal(a) - orderTotal(b);
+      return orderTime(b) - orderTime(a);
+    });
+    return list;
+  }
+
+  function revealCards(){
+    const cards = ordersTableBody.querySelectorAll('.order:not(.in)');
+    if(!('IntersectionObserver' in window)){ cards.forEach(c => c.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, {threshold:.12});
+    cards.forEach(c => io.observe(c));
+  }
+
+  function drawRows(){
+    if(!currentUser){
+      $('toolbar').style.display = 'none'; $('orderTabs').style.display = 'none'; $('resultInfo').textContent = '';
+      ordersTableBody.innerHTML = '<div class="signin"><div class="big">' + I('lock') + '</div><strong>Sign in to see your orders</strong><p>Your orders and tracking appear here once you are signed in.</p><a href="shop.html">Go to shop</a></div>';
+      $('moreWrap').hidden = true;
+      return;
+    }
+    if(!allOrders.length){
+      $('resultInfo').textContent = '';
+      ordersTableBody.innerHTML = '<div class="empty"><div class="big">' + I('bag') + '</div><strong>No orders yet</strong><p>When you place an order it will appear here with its status.</p><a href="shop.html">Start shopping</a></div>';
+      $('moreWrap').hidden = true;
+      return;
+    }
+    const list = visibleList();
+    if(!list.length){
+      $('resultInfo').textContent = '';
+      ordersTableBody.innerHTML = '<div class="empty"><div class="big">' + I('search') + '</div><strong>Nothing found</strong><p>Try a different filter or order number.</p></div>';
+      $('moreWrap').hidden = true;
+      return;
+    }
+    const shown = list.slice(0, visibleCount);
+    $('resultInfo').textContent = `Showing ${shown.length} of ${list.length} order${list.length > 1 ? 's' : ''}`;
+    $('moreWrap').hidden = list.length <= visibleCount;
+    ordersTableBody.innerHTML = shown.map((order, i) => {
+      const badge = getStatusBadge(order.status);
+      const count = itemsOf(order).length;
+      const msg = STATUS_TEXT[badge];
+      return `<article class="order" style="--i:${i}" data-id="${esc(order.id)}">
+        <div class="o-head">
+          <div><span class="k">Order placed</span><b>${formatDate(order.created_at || order.date)}</b></div>
+          <div><span class="k">Total</span><b>${formatCurrency(orderTotal(order))}</b></div>
+          <div><span class="k">Items</span><b>${count || '—'}</b></div>
+          <div class="o-no"><span class="k">Order</span><button class="copy" data-copy="${esc(order.id)}" type="button" title="Copy order number">#${esc(order.id)} ${I('copy')}</button></div>
+        </div>
+        <div class="o-body">
+          <div class="o-top">
+            <span class="status-pill ${badge}">${I(getStatusIcon(badge))}${esc((order.status || 'Pending').toUpperCase())}</span>
+            <h3>${msg[0]}</h3><p>${msg[1]}</p>
+          </div>
+          ${badge === 'cancelled' ? '' : trackHtml(badge)}
+        </div>
+        <div class="o-actions">
+          <button class="o-btn toggle" type="button">${I('list')} View details ${I('chevron-down').replace('class="ic"','class="ic chev"')}</button>
+          <button class="o-btn receipt" type="button" data-id="${esc(order.id)}">${I('printer')} Receipt</button>
+        </div>
+        <div class="o-det"><div>${detailsHtml(order)}</div></div>
+      </article>`;
+    }).join('');
+    revealCards();
+  }
+
+  async function loadUserOrders(user){
+    if(!user){ renderOrders([]); return; }
     try{
-      const res = await fetch('/api/user/' + encodeURIComponent(currentUser.id) + '/orders', { headers: authHeaders() });
+      const res = await fetch('/api/user/' + encodeURIComponent(user.id) + '/orders', {headers:authHeaders()});
       const body = await res.json().catch(()=>({}));
-      if (res.status === 401) return handleUnauthorized();
-      if (!res.ok) throw new Error(body.error || 'Unable to load your orders.');
+      if(res.status === 401) return handleUnauthorized();
+      if(!res.ok) throw new Error(body.error || 'Unable to load your orders.');
       renderOrders(Array.isArray(body.data) ? body.data : []);
     }catch(err){
       console.error(err);
@@ -311,104 +1030,324 @@
     }
   }
 
-  if (!currentUser || !currentUser.id || !currentUser.token) {
-    redirectToLogin();
-  } else {
-    renderProfileState(currentUser);
-    loadUserProfile();
-    loadUserOrders();
+  /* ---------- export + receipt ---------- */
+  function exportCsv(){
+    if(!allOrders.length){ showToast('No orders to export yet.', 'error'); return; }
+    const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const rows = [['Order','Date','Status','Items','Total (MK)']];
+    allOrders.forEach(o => rows.push([o.id, formatDate(o.created_at || o.date), (o.status || 'pending'), itemsOf(o).length, orderTotal(o)]));
+    const csv = '\uFEFF' + rows.map(r => r.map(q).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'my-orders.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Your orders were exported');
+  }
+  $('exportBtn').addEventListener('click', exportCsv);
+
+  function printReceipt(id){
+    const order = allOrders.find(o => String(o.id) === String(id));
+    if(!order) return;
+    const items = itemsOf(order);
+    const rows = items.length ? items.map(it => `<tr><td>${esc(itemName(it))}</td><td style="text-align:center">${itemQty(it)}</td><td style="text-align:right">${itemPrice(it) ? formatCurrency(itemPrice(it) * itemQty(it)) : ''}</td></tr>`).join('') : '<tr><td colspan="3" style="color:#6b7c8f">Item details not available.</td></tr>';
+    const w = window.open('', '_blank', 'width=720,height=860');
+    if(!w){ showToast('Please allow pop-ups to print the receipt.', 'error'); return; }
+    w.document.write(`<!DOCTYPE html><html><head><title>Receipt #${esc(order.id)}</title><style>
+      body{font-family:Arial,Helvetica,sans-serif;color:#102b3b;padding:40px;max-width:640px;margin:0 auto}
+      h1{font-size:22px;margin:0 0 4px}.m{color:#6b7c8f;font-size:13px;line-height:1.7}
+      table{width:100%;border-collapse:collapse;margin-top:24px}th{text-align:left;font-size:12px;text-transform:uppercase;color:#6b7c8f;border-bottom:2px solid #102b3b;padding:8px 0}
+      td{padding:10px 0;border-bottom:1px solid #e0e9e9;font-size:14px}.t{display:flex;justify-content:space-between;margin-top:18px;font-size:18px;font-weight:700}
+      .b{border-top:4px solid #145c66;padding-top:18px;margin-bottom:24px}</style></head><body>
+      <div class="b"><h1>Mthunzi Creations</h1><div class="m">Order receipt</div></div>
+      <div class="m">Order <b style="color:#102b3b">#${esc(order.id)}</b><br>Date: ${formatDate(order.created_at || order.date)}<br>Status: ${esc((order.status || 'Pending').toUpperCase())}<br>Customer: ${esc(currentUser ? currentUser.name : '')}</div>
+      <table><thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="t"><span>Total</span><span>${formatCurrency(orderTotal(order))}</span></div>
+      <p class="m" style="margin-top:40px">Thank you for shopping with Mthunzi Creations.</p>
+      <script>window.onload=function(){window.print();}<\/script></body></html>`);
+    w.document.close();
   }
 
+  /* ---------- addresses (stored on this device) ---------- */
+  let addresses = [];
+  let editingId = null;
+  let addrType = 'home';
+  function addrKey(){ return currentUser ? 'mthunziAddr_' + currentUser.id : null; }
+  function loadAddresses(){
+    try{ addresses = JSON.parse(lsGet(addrKey()) || '[]'); }catch(e){ addresses = []; }
+    if(!Array.isArray(addresses)) addresses = [];
+  }
+  function saveAddresses(){ lsSet(addrKey(), JSON.stringify(addresses)); }
+  const TYPE_META = {home:['Home','home'], work:['Work','briefcase'], other:['Other','pin']};
+
+  function renderAddresses(){
+    const list = $('addrList');
+    if(!currentUser){
+      $('addAddrBtn').style.display = 'none';
+      list.innerHTML = '<div class="signin" style="grid-column:1/-1"><div class="big">' + I('lock') + '</div><strong>Sign in to manage addresses</strong><p>Your saved delivery addresses appear here.</p><a href="shop.html">Go to shop</a></div>';
+      return;
+    }
+    if(!addresses.length){
+      list.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="big">' + I('pin') + '</div><strong>No saved addresses</strong><p>Add an address to speed up your next order.</p></div>';
+      return;
+    }
+    list.innerHTML = addresses.map((a, i) => {
+      const meta = TYPE_META[a.type] || TYPE_META.other;
+      return `<div class="addr ${a.def ? 'def' : ''}" style="--i:${i}" data-id="${esc(a.id)}">
+        <div class="addr-top"><div class="addr-ic">${I(meta[1])}</div><b>${meta[0]}</b>${a.def ? `<span class="badge-def">${I('star')} Default</span>` : ''}</div>
+        <p>${esc(a.line)}<br>${esc(a.city)}</p>
+        ${a.phone ? `<small>${I('phone')} ${esc(a.phone)}</small>` : ''}
+        <div class="addr-actions">
+          ${a.def ? '' : `<button class="mini" data-act="def" type="button">${I('star')} Make default</button>`}
+          <button class="mini" data-act="edit" type="button">${I('edit')} Edit</button>
+          <button class="mini del" data-act="del" type="button">${I('trash')} Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function setType(t){
+    addrType = t;
+    document.querySelectorAll('#typeRow .type-btn').forEach(b => b.classList.toggle('on', b.dataset.type === t));
+  }
+  function openAddrForm(id){
+    editingId = id || null;
+    const a = addresses.find(x => x.id === id);
+    $('addrLine').value = a ? a.line : '';
+    $('addrCity').value = a ? a.city : '';
+    $('addrPhone').value = a ? (a.phone || '') : '';
+    setType(a ? a.type : 'home');
+    ['f-line','f-city'].forEach(f => $(f).classList.remove('has-err'));
+    $('addrForm').classList.add('open');
+    setTimeout(() => $('addrLine').focus(), 300);
+  }
+  function closeAddrForm(){ $('addrForm').classList.remove('open'); editingId = null; }
+
+  $('addAddrBtn').addEventListener('click', () => {
+    if(addresses.length >= 5 && !editingId){ showToast('You can save up to 5 addresses.', 'error'); return; }
+    openAddrForm(null);
+  });
+  $('addrCancel').addEventListener('click', closeAddrForm);
+  $('typeRow').addEventListener('click', e => { const b = e.target.closest('.type-btn'); if(b) setType(b.dataset.type); });
+  $('addrSave').addEventListener('click', () => {
+    const line = $('addrLine').value.trim(), city = $('addrCity').value.trim(), phone = $('addrPhone').value.trim();
+    let ok = true;
+    $('f-line').classList.toggle('has-err', !line); if(!line) ok = false;
+    $('f-city').classList.toggle('has-err', !city); if(!city) ok = false;
+    if(!ok) return;
+    if(editingId){
+      const a = addresses.find(x => x.id === editingId);
+      if(a){ a.line = line; a.city = city; a.phone = phone; a.type = addrType; }
+      showToast('Address updated');
+    } else {
+      addresses.push({id: 'a' + Date.now(), type: addrType, line, city, phone, def: addresses.length === 0});
+      showToast('Address saved');
+    }
+    saveAddresses(); renderAddresses(); closeAddrForm();
+  });
+  $('addrList').addEventListener('click', e => {
+    const btn = e.target.closest('[data-act]'); if(!btn) return;
+    const id = btn.closest('.addr').dataset.id;
+    const act = btn.dataset.act;
+    if(act === 'edit'){ openAddrForm(id); window.scrollTo({top: $('panel-addresses').offsetTop - 80, behavior:'smooth'}); }
+    if(act === 'def'){ addresses.forEach(a => a.def = a.id === id); saveAddresses(); renderAddresses(); showToast('Default address changed'); }
+    if(act === 'del'){
+      const removed = addresses.find(a => a.id === id);
+      addresses = addresses.filter(a => a.id !== id);
+      if(removed && removed.def && addresses.length) addresses[0].def = true;
+      saveAddresses(); renderAddresses(); showToast('Address deleted');
+    }
+  });
+
+  /* ---------- init ---------- */
+  setGreeting();
+  if(currentUser && (!currentUser.id || !currentUser.token)){
+    currentUser = null;
+    lsDel('mthunziAuthUser');
+  }
+  renderProfileState(currentUser);
+  if(currentUser) loadUserProfile(currentUser);
+  loadUserOrders(currentUser);
+  if(currentUser){ loadAddresses(); }
+  renderAddresses();
+  if(!currentUser){ $('saveProfile').disabled = false; }
+
   $('backBtn').addEventListener('click', redirectHome);
-  $('logoutBtn').addEventListener('click', function(){
-    if (currentUser && currentUser.id) localStorage.removeItem('mthunziCart:' + String(currentUser.id));
+  document.querySelectorAll('.logout').forEach(el => el.addEventListener('click', function(e){
+    e.preventDefault();
     localStorage.removeItem('mthunziAuthUser');
     localStorage.removeItem('mthunziAuthRedirect');
     window.location.replace('index.html');
+  }));
+
+  /* ---------- tabs ---------- */
+  function positionIndicator(){
+    const active = document.querySelector('#mainTabs .tab.active');
+    const ind = $('tabInd');
+    if(!active) return;
+    ind.style.width = active.offsetWidth + 'px';
+    ind.style.transform = 'translateX(' + active.offsetLeft + 'px)';
+  }
+  function openTab(name){
+    document.querySelectorAll('#mainTabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('show', p.id === 'panel-' + name));
+    positionIndicator();
+  }
+  const tabBtns = Array.from(document.querySelectorAll('#mainTabs .tab'));
+  tabBtns.forEach((t, i) => {
+    t.addEventListener('click', () => { openTab(t.dataset.tab); history.replaceState(null,'','#' + t.dataset.tab); });
+    t.addEventListener('keydown', e => {
+      if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+        const n = tabBtns[(i + (e.key === 'ArrowRight' ? 1 : tabBtns.length - 1)) % tabBtns.length];
+        n.focus(); n.click();
+      }
+    });
   });
-  $('chooseAvatar').addEventListener('click', function(){ $('avatarFile').click(); });
-  $('avatarFile').addEventListener('change', async function(){
-    const file = this.files && this.files[0];
-    if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      showToast('Choose a JPG, PNG, or WebP photo.', 'error');
-      this.value = '';
-      return;
+  if(['#profile','#addresses'].includes(location.hash)) openTab(location.hash.slice(1));
+  window.addEventListener('resize', positionIndicator);
+  window.addEventListener('load', positionIndicator);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(positionIndicator);
+  positionIndicator();
+
+  /* ---------- filters / search / sort ---------- */
+  document.querySelectorAll('#orderTabs .chip').forEach(chip => {
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('#orderTabs .chip').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      activeFilter = this.dataset.filter;
+      visibleCount = 5;
+      drawRows();
+    });
+  });
+  let searchTimer;
+  $('orderSearch').addEventListener('input', function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { searchTerm = this.value.trim(); visibleCount = 5; drawRows(); }, 180);
+  });
+  $('orderSort').addEventListener('change', function(){ sortMode = this.value; drawRows(); });
+  $('moreBtn').addEventListener('click', function(){ visibleCount += 5; drawRows(); });
+
+  // keyboard shortcut: "/" focuses order search
+  document.addEventListener('keydown', e => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if(e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(tag) && $('toolbar').style.display !== 'none'){
+      e.preventDefault(); openTab('orders'); $('orderSearch').focus();
     }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Your photo must be smaller than 5 MB.', 'error');
-      this.value = '';
-      return;
-    }
-    const button = $('chooseAvatar');
-    const originalHtml = button.innerHTML;
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-    button.innerHTML = '<span class="account-spinner" aria-hidden="true"></span>';
-    showToast('Uploading your photo...');
-    try {
-      const image = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Unable to read this photo. Please choose it again.'));
-        reader.readAsDataURL(file);
-      });
-      const res = await fetch('/api/user/' + encodeURIComponent(currentUser.id) + '/avatar', {
-        method: 'PUT',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
-        body: JSON.stringify({ image: image })
-      });
-      const body = await res.json().catch(() => ({}));
-      if (res.status === 401) return handleUnauthorized();
-      if (!res.ok || !body.data) throw new Error(body.error || 'Unable to upload your photo.');
-      currentUser = Object.assign({}, body.data, { token: currentUser.token });
-      localStorage.setItem('mthunziAuthUser', JSON.stringify(currentUser));
-      renderProfileState(currentUser);
-      showToast('Profile photo updated.');
-    } catch (err) {
-      console.error(err);
-      showToast(err.message || 'Unable to upload your photo.', 'error');
-    } finally {
-      button.disabled = false;
-      button.setAttribute('aria-busy', 'false');
-      button.innerHTML = originalHtml;
-      this.value = '';
+    if(e.key === 'Escape' && document.activeElement === $('orderSearch')){ $('orderSearch').blur(); }
+  });
+
+  // order card actions
+  ordersTableBody.addEventListener('click', function(e){
+    const toggle = e.target.closest('.toggle');
+    if(toggle){ toggle.closest('.order').classList.toggle('open'); return; }
+    const rec = e.target.closest('.receipt');
+    if(rec){ printReceipt(rec.dataset.id); return; }
+    const cp = e.target.closest('.copy');
+    if(cp){
+      const text = cp.dataset.copy;
+      const done = () => showToast('Order number copied');
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
+      else { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); done(); }
     }
   });
+
+  /* ---------- profile form ---------- */
+  ['profileName','profileEmail','profilePhone','profilePassword'].forEach(id => $(id).addEventListener('input', function(){
+    updateCompleteness(); updateDirty();
+    this.classList.remove('bad');
+    const f = this.closest('.field'); if(f) f.classList.remove('has-err');
+  }));
+  ['addrLine','addrCity'].forEach(id => $(id).addEventListener('input', function(){ this.closest('.field').classList.remove('has-err'); }));
+
+  $('togglePw').addEventListener('click', function(){
+    const input = $('profilePassword');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    this.innerHTML = I(show ? 'eye-off' : 'eye');
+    this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  });
+
+  $('profilePassword').addEventListener('input', function(){
+    const v = this.value;
+    let score = 0;
+    if(v.length >= 6) score++;
+    if(v.length >= 10) score++;
+    if(/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+    if(/\d/.test(v) && /[^A-Za-z0-9]/.test(v)) score++;
+    if(!v) score = 0;
+    $('strength').className = 'strength' + (score ? ' s' + score : '');
+    $('strengthText').textContent = ['', 'Weak', 'Fair', 'Good', 'Strong'][score];
+  });
+
+  function flagBad(inputId, fieldId){
+    $(inputId).classList.add('bad');
+    $(fieldId).classList.add('has-err');
+    $(inputId).focus();
+  }
+
+  const SAVE_HTML = I('save') + ' Save profile';
   $('saveProfile').addEventListener('click', async function(){
-    if(!currentUser){showToast('Please sign in first.', 'error'); redirectToLogin(); return;}
+    if(!currentUser){showToast('Please sign in first.','error'); setTimeout(redirectHome,1200); return;}
+    const btn = this;
     const name=$('profileName').value.trim();
-    const email=$('profileEmail').value.trim().toLowerCase();
+    const email=$('profileEmail').value.trim();
     const phone=$('profilePhone').value.trim();
-    const password=$('profilePassword').value;
-    if(!name){showToast('Please enter your name.', 'error'); $('profileName').focus(); return;}
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){showToast('Please enter a valid email address.', 'error'); $('profileEmail').focus(); return;}
-    if(password && !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)){showToast('Password must be at least 8 characters and include a letter and number.', 'error'); $('profilePassword').focus(); return;}
+    const password=$('profilePassword').value.trim();
+    if(!name){ flagBad('profileName','f-name'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ flagBad('profileEmail','f-email'); return; }
     const payload={name,email,phone};
     if(password) payload.password=password;
-    const button=$('saveProfile');
-    const originalHtml=button.innerHTML;
-    button.disabled=true;
-    button.setAttribute('aria-busy','true');
-    button.innerHTML='<span class="account-spinner" aria-hidden="true"></span> Saving profile...';
+    btn.disabled = true;
+    btn.innerHTML = I('loader').replace('class="ic"','class="ic spin"') + ' Saving...';
+    let saved = false;
     try{
       const res=await fetch('/api/user/'+currentUser.id,{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},authHeaders()),body:JSON.stringify(payload)});
       const body=await res.json().catch(()=>({}));
       if(res.status===401){handleUnauthorized();return;}
-      if(!res.ok)throw new Error(body.error||'Unable to update profile.');
-      currentUser=Object.assign({},body.data,{token:currentUser.token});
+      if(!res.ok){showToast(body.error||'Unable to update profile','error'); return;}
+      currentUser=Object.assign({},currentUser,body.data,{token:currentUser.token});
       localStorage.setItem('mthunziAuthUser',JSON.stringify(currentUser));
       renderProfileState(currentUser);
       $('profilePassword').value='';
-      showToast('Profile updated successfully.');
+      $('strength').className='strength';
+      $('strengthText').textContent='';
+      updateDirty();
+      saved = true;
+      showToast('Profile updated successfully');
     }catch(err){
       console.error(err);
-      showToast(err.message||'Unable to update profile.','error');
+      showToast('Network error. Please try again.','error');
     }finally{
-      button.disabled=false;
-      button.setAttribute('aria-busy','false');
-      button.innerHTML=originalHtml;
+      if(saved){
+        btn.classList.add('ok');
+        btn.innerHTML = I('check') + ' Saved';
+        setTimeout(() => { btn.classList.remove('ok'); btn.innerHTML = SAVE_HTML; updateDirty(); }, 1600);
+      } else {
+        btn.innerHTML = SAVE_HTML;
+        btn.disabled = false;
+        updateDirty();
+      }
     }
+  });
+
+  /* ---------- micro-interactions ---------- */
+  // ripple on buttons
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.rip');
+    if(!b || b.disabled) return;
+    const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height) * 2;
+    const el = document.createElement('span');
+    el.className = 'ripple';
+    el.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s/2}px;top:${e.clientY - r.top - s/2}px`;
+    b.appendChild(el);
+    setTimeout(() => el.remove(), 700);
+  });
+  // light that follows the cursor on the cover
+  const cover = $('cover');
+  cover.addEventListener('pointermove', e => {
+    const r = cover.getBoundingClientRect();
+    cover.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    cover.style.setProperty('--my', (e.clientY - r.top) + 'px');
   });
 </script>
 </body>

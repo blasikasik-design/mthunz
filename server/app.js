@@ -541,8 +541,8 @@ app.get('/api/user/:id', requireCustomer, async (req, res) => {
 app.patch('/api/user/:id', requireCustomer, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { name, email, phone, password } = req.body;
-    const user = await auth.updateUser({ id, name, email, phone, password });
+    const { name, email, phone, password, removeAvatar } = req.body;
+    const user = await auth.updateUser({ id, name, email, phone, password, avatarUrl: removeAvatar === true ? null : undefined });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
