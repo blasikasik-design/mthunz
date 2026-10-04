@@ -265,6 +265,36 @@ async function wasAccountRemoved(email) {
   return result.rowCount > 0;
 }
 
+function mapOrderRows(rows) {
+  const ordersMap = new Map();
+  rows.forEach(row => {
+    if (!ordersMap.has(row.id)) {
+      ordersMap.set(row.id, {
+        id: row.id,
+        user_id: row.user_id,
+        name: row.name,
+        email: row.email,
+        total_amount: Number(row.total_amount),
+        status: row.status,
+        payment_type: row.payment_type,
+        payment_screenshot_url: row.payment_screenshot_url,
+        created_at: row.created_at,
+        items: []
+      });
+    }
+
+    if (row.product_id) {
+      ordersMap.get(row.id).items.push({
+        product_id: row.product_id,
+        name: row.product_name || 'Product',
+        qty: row.quantity,
+        price: Number(row.price_at_purchase)
+      });
+    }
+  });
+  return Array.from(ordersMap.values());
+}
+
 async function getOrders() {
   try {
     const result = await query(`
@@ -276,37 +306,28 @@ async function getOrders() {
       LEFT JOIN products p ON p.id = oi.product_id
       ORDER BY o.created_at DESC, oi.id ASC
     `);
-
-    const ordersMap = new Map();
-    result.rows.forEach(row => {
-      if (!ordersMap.has(row.id)) {
-        ordersMap.set(row.id, {
-          id: row.id,
-          user_id: row.user_id,
-          name: row.name,
-          email: row.email,
-          total_amount: Number(row.total_amount),
-          status: row.status,
-          payment_type: row.payment_type,
-          payment_screenshot_url: row.payment_screenshot_url,
-          created_at: row.created_at,
-          items: []
-        });
-      }
-
-      if (row.product_id) {
-        ordersMap.get(row.id).items.push({
-          product_id: row.product_id,
-          name: row.product_name || 'Product',
-          qty: row.quantity,
-          price: Number(row.price_at_purchase)
-        });
-      }
-    });
-
-    return Array.from(ordersMap.values());
+    return mapOrderRows(result.rows);
   } catch (err) {
     console.error('Error fetching orders:', err);
+    throw err;
+  }
+}
+
+async function getOrdersForUser(userId) {
+  try {
+    const result = await query(`
+      SELECT o.id, o.user_id, u.name, u.email, o.total_amount, o.status, o.payment_type, o.payment_screenshot_url, o.created_at,
+             oi.product_id, oi.quantity, oi.price_at_purchase, p.name as product_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      LEFT JOIN order_items oi ON oi.order_id = o.id
+      LEFT JOIN products p ON p.id = oi.product_id
+      WHERE o.user_id = $1
+      ORDER BY o.created_at DESC, oi.id ASC
+    `, [userId]);
+    return mapOrderRows(result.rows);
+  } catch (err) {
+    console.error('Error fetching customer orders:', err);
     throw err;
   }
 }
@@ -394,4 +415,4 @@ async function createMessage({ name, email, subject, body }) {
   }
 }
 
-module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getMessages, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, updateOrderStatus, createMessage, getStockStatus };
+module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, updateOrderStatus, createMessage, getStockStatus };

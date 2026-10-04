@@ -105,6 +105,7 @@ async function ensureSchema() {
   const schemaPath = path.join(__dirname, '..', 'database', 'init.sql');
   await db.query(fs.readFileSync(schemaPath, 'utf8'));
   await db.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
     ALTER TABLE products ADD COLUMN IF NOT EXISTS badge VARCHAR(40) DEFAULT '';
     ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0;
     CREATE TABLE IF NOT EXISTS removed_accounts (
@@ -153,6 +154,39 @@ function getAdminTokenVersion(token) {
     : null;
 }
 
+function createCustomerToken(userId) {
+  const expiresAt = Date.now() + 12 * 60 * 60 * 1000;
+  const tokenData = `customer.${expiresAt}.${userId}`;
+  const signature = crypto.createHmac('sha256', adminTokenSecret).update(tokenData).digest('hex');
+  return `${expiresAt}.${userId}.${signature}`;
+}
+
+function getCustomerTokenUserId(token) {
+  if (!adminTokenSecret || typeof token !== 'string') return null;
+  const [expiresAt, userId, signature] = token.split('.');
+  if (!/^\d+$/.test(expiresAt || '') || !/^\d+$/.test(userId || '') || !/^[a-f0-9]{64}$/.test(signature || '') || Number(expiresAt) <= Date.now()) {
+    return null;
+  }
+  const tokenData = `customer.${expiresAt}.${userId}`;
+  const expected = crypto.createHmac('sha256', adminTokenSecret).update(tokenData).digest();
+  const received = Buffer.from(signature, 'hex');
+  return received.length === expected.length && crypto.timingSafeEqual(received, expected)
+    ? Number(userId)
+    : null;
+}
+
+function requireCustomer(req, res, next) {
+  const authorization = req.get('authorization') || '';
+  const match = authorization.match(/^Bearer (.+)$/i);
+  const userId = match ? getCustomerTokenUserId(match[1]) : null;
+  const requestedUserId = Number.parseInt(req.params.id, 10);
+  if (!userId || userId !== requestedUserId) {
+    return res.status(401).json({ error: 'Customer authentication required.' });
+  }
+  req.customerId = userId;
+  next();
+}
+
 async function requireAdmin(req, res, next) {
   const authorization = req.get('authorization') || '';
   const match = authorization.match(/^Bearer (.+)$/i);
@@ -184,6 +218,40 @@ function isValidInternationalPhone(value) {
   return /^\+[1-9]\d{6,14}$/.test(String(value || '').trim());
 }
 
+async function uploadImageDataUrl(dataUrl, folder, maxBytes, allowedFormats) {
+  const match = String(dataUrl || '').match(/^data:image\/([a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) {
+    const error = new Error('Invalid image data payload.');
+    error.code = 'INVALID_IMAGE_DATA';
+    throw error;
+  }
+  if (allowedFormats && !allowedFormats.includes(match[1].toLowerCase())) {
+    const error = new Error('Please choose a valid JPG, PNG, or WebP image.');
+    error.code = 'INVALID_IMAGE_DATA';
+    throw error;
+  }
+  const buffer = Buffer.from(match[2], 'base64');
+  if (!buffer.length || buffer.length > maxBytes) {
+    const error = new Error(`Image is too large. Maximum size is ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+    error.code = 'IMAGE_TOO_LARGE';
+    throw error;
+  }
+  const configuration = cloudinary.config();
+  if (!configuration.cloud_name || !configuration.api_key || !configuration.api_secret) {
+    const error = new Error('Cloudinary is not configured on the server.');
+    error.code = 'CLOUDINARY_NOT_CONFIGURED';
+    throw error;
+  }
+  return new Promise((resolve, reject) => {
+    const upload = cloudinary.uploader.upload_stream({ folder, resource_type: 'image' }, (error, result) => {
+      if (error) return reject(error);
+      if (!result || !result.secure_url) return reject(new Error('Cloudinary did not return a secure image URL.'));
+      resolve(result.secure_url);
+    });
+    upload.end(buffer);
+  });
+}
+
 async function normalizeProductPayload(payload) {
   const next = { ...payload };
   const rawStock = next.stock;
@@ -195,36 +263,8 @@ async function normalizeProductPayload(payload) {
   next.in_stock = next.stock > 0;
 
   if (typeof next.image_url === 'string' && next.image_url.startsWith('data:image/')) {
-    const match = next.image_url.match(/^data:image\/([^;]+);base64,(.+)$/i);
-    if (!match) {
-      const error = new Error('Invalid image data payload.');
-      error.code = 'INVALID_IMAGE_DATA';
-      throw error;
-    }
     const maxBytes = Number(process.env.MAX_PRODUCT_IMAGE_BYTES || 80 * 1024 * 1024);
-    const buffer = Buffer.from(match[2], 'base64');
-    if (buffer.length > maxBytes) {
-      const error = new Error(`Image is too large. Maximum size is ${Math.round(maxBytes / (1024 * 1024))} MB.`);
-      error.code = 'IMAGE_TOO_LARGE';
-      throw error;
-    }
-    const configuration = cloudinary.config();
-    if (!configuration.cloud_name || !configuration.api_key || !configuration.api_secret) {
-      const error = new Error('Cloudinary is not configured on the server.');
-      error.code = 'CLOUDINARY_NOT_CONFIGURED';
-      throw error;
-    }
-    next.image_url = await new Promise((resolve, reject) => {
-      const upload = cloudinary.uploader.upload_stream(
-        { folder: 'mthunzi/products', resource_type: 'image' },
-        (error, result) => {
-          if (error) return reject(error);
-          if (!result || !result.secure_url) return reject(new Error('Cloudinary did not return a secure image URL.'));
-          resolve(result.secure_url);
-        }
-      );
-      upload.end(buffer);
-    });
+    next.image_url = await uploadImageDataUrl(next.image_url, 'mthunzi/products', maxBytes);
   }
   return next;
 }
@@ -355,7 +395,7 @@ app.post('/api/signup', async (req, res) => {
       return res.status(400).json({ error: 'Please enter a valid phone number with its country code.' });
     }
     const user = await auth.createUser({ name, email, phone: normalizedPhone || null, password });
-    res.status(201).json({ data: user });
+    res.status(201).json({ data: { ...user, token: createCustomerToken(user.id) } });
   } catch (err) {
     console.error(err);
     if (err.code === '23505') {
@@ -385,7 +425,7 @@ app.post('/api/login', async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Invalid login credentials.' });
     }
-    res.json({ data: user });
+    res.json({ data: { ...user, token: createCustomerToken(user.id) } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed.' });
@@ -461,7 +501,31 @@ app.put('/api/admin/credentials', async (req, res) => {
   }
 });
 
-app.get('/api/user/:id', async (req, res) => {
+app.get('/api/user/:id/orders', requireCustomer, async (req, res) => {
+  try {
+    const orders = await db.getOrdersForUser(req.customerId);
+    res.json({ data: orders });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Unable to fetch your orders.' });
+  }
+});
+
+app.put('/api/user/:id/avatar', requireCustomer, async (req, res) => {
+  try {
+    const avatarUrl = await uploadImageDataUrl(req.body && req.body.image, 'mthunzi/avatars', 5 * 1024 * 1024, ['jpeg', 'jpg', 'png', 'webp']);
+    const user = await auth.updateUser({ id: req.customerId, avatarUrl });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json({ data: user });
+  } catch (err) {
+    console.error('Customer avatar upload failed:', err.message || err);
+    const imageErrorResponse = handleProductImageError(err, res);
+    if (imageErrorResponse) return imageErrorResponse;
+    res.status(502).json({ error: 'Unable to upload your photo. Please try again.' });
+  }
+});
+
+app.get('/api/user/:id', requireCustomer, async (req, res) => {
   try {
     const user = await auth.findUserById(parseInt(req.params.id, 10));
     if (!user) {
@@ -474,7 +538,7 @@ app.get('/api/user/:id', async (req, res) => {
   }
 });
 
-app.patch('/api/user/:id', async (req, res) => {
+app.patch('/api/user/:id', requireCustomer, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { name, email, phone, password } = req.body;

@@ -11,7 +11,7 @@ async function createUser({ name, email, phone, password }) {
   const normalizedEmail = normalizeEmail(email);
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   const result = await db.query(
-    'INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, name, email, phone, created_at',
+    'INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, name, email, phone, avatar_url, created_at',
     [name, normalizedEmail, phone, hashedPassword]
   );
   return result.rows[0];
@@ -20,7 +20,7 @@ async function createUser({ name, email, phone, password }) {
 async function findUserByEmail(email) {
   const normalizedEmail = normalizeEmail(email);
   const result = await db.query(
-    'SELECT id, name, email, phone, password_hash FROM users WHERE LOWER(email) = LOWER($1)',
+    'SELECT id, name, email, phone, avatar_url, password_hash FROM users WHERE LOWER(email) = LOWER($1)',
     [normalizedEmail]
   );
   return result.rows[0] || null;
@@ -42,6 +42,7 @@ async function verifyUserPassword(user, password) {
     name: user.name,
     email: user.email,
     phone: user.phone,
+    avatar_url: user.avatar_url,
   };
 }
 
@@ -50,11 +51,11 @@ async function wasAccountRemoved(email) {
 }
 
 async function findUserById(id) {
-  const result = await db.query('SELECT id, name, email, phone, created_at FROM users WHERE id = $1', [id]);
+  const result = await db.query('SELECT id, name, email, phone, avatar_url, created_at FROM users WHERE id = $1', [id]);
   return result.rows[0] || null;
 }
 
-async function updateUser({ id, name, email, phone, password }) {
+async function updateUser({ id, name, email, phone, password, avatarUrl }) {
   const updates = [];
   const values = [];
   let idx = 1;
@@ -71,6 +72,10 @@ async function updateUser({ id, name, email, phone, password }) {
     updates.push(`phone = $${idx++}`);
     values.push(phone);
   }
+  if (avatarUrl !== undefined) {
+    updates.push(`avatar_url = $${idx++}`);
+    values.push(avatarUrl);
+  }
   if (password) {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     updates.push(`password_hash = $${idx++}`);
@@ -82,7 +87,7 @@ async function updateUser({ id, name, email, phone, password }) {
   }
 
   values.push(id);
-  const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${idx} RETURNING id, name, email, phone, created_at`;
+  const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${idx} RETURNING id, name, email, phone, avatar_url, created_at`;
   const result = await db.query(query, values);
   return result.rows[0];
 }
