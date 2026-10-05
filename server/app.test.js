@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createDefaultSettings, readSiteSettings, normalizeProductPayload, isValidInternationalPhone, app } = require('./app');
+const { createDefaultSettings, readSiteSettings, normalizeProductPayload, isValidInternationalPhone, app, createCustomerToken, getCustomerTokenUserId } = require('./app');
 const db = require('./services/db');
 
 test('default payment settings include the configured account details', () => {
@@ -40,6 +40,22 @@ test('international phone numbers must be valid E.164 values', () => {
   assert.equal(isValidInternationalPhone('+447911123456'), true);
   assert.equal(isValidInternationalPhone('0991234567'), false);
   assert.equal(isValidInternationalPhone('+0123456789'), false);
+});
+
+test('customer tokens still validate when no secret is configured', () => {
+  const previous = process.env.ADMIN_TOKEN_SECRET;
+  delete process.env.ADMIN_TOKEN_SECRET;
+
+  try {
+    const token = createCustomerToken(42);
+    assert.equal(getCustomerTokenUserId(token), 42);
+  } finally {
+    if (previous === undefined) {
+      delete process.env.ADMIN_TOKEN_SECRET;
+    } else {
+      process.env.ADMIN_TOKEN_SECRET = previous;
+    }
+  }
 });
 
 test('admin API rejects requests without a bearer token', async () => {
