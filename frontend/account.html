@@ -1024,11 +1024,15 @@
     try{
       const res = await fetch('/api/user/' + encodeURIComponent(user.id) + '/orders', {headers:authHeaders()});
       const body = await res.json().catch(()=>({}));
-      if(res.status === 401) return handleUnauthorized();
+      if(res.status === 401){ handleUnauthorized(); return; }
       if(!res.ok) throw new Error(body.error || 'Unable to load your orders.');
       renderOrders(Array.isArray(body.data) ? body.data : []);
     }catch(err){
       console.error(err);
+      if(allOrders.length){
+        showToast('Your orders could not be refreshed right now. Please try again.', 'error');
+        return;
+      }
       $('chartCard').hidden = true;
       $('toolbar').style.display = 'none';
       $('orderTabs').style.display = 'none';
