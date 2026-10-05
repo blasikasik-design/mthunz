@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -48,6 +49,25 @@ test('customer tokens still validate when no secret is configured', () => {
 
   try {
     const token = createCustomerToken(42);
+    assert.equal(getCustomerTokenUserId(token), 42);
+  } finally {
+    if (previous === undefined) {
+      delete process.env.ADMIN_TOKEN_SECRET;
+    } else {
+      process.env.ADMIN_TOKEN_SECRET = previous;
+    }
+  }
+});
+
+test('legacy empty-secret customer tokens still validate', () => {
+  const previous = process.env.ADMIN_TOKEN_SECRET;
+  delete process.env.ADMIN_TOKEN_SECRET;
+
+  try {
+    const expiresAt = Date.now() + 60 * 60 * 1000;
+    const tokenData = `customer.${expiresAt}.42`;
+    const signature = crypto.createHmac('sha256', '').update(tokenData).digest('hex');
+    const token = `${expiresAt}.42.${signature}`;
     assert.equal(getCustomerTokenUserId(token), 42);
   } finally {
     if (previous === undefined) {

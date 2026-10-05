@@ -14,6 +14,26 @@ function getTokenSecret() {
   return process.env.ADMIN_TOKEN_SECRET || 'mthunzi-local-dev-secret';
 }
 
+function getTokenSecrets() {
+  const secrets = [];
+  const configured = process.env.ADMIN_TOKEN_SECRET;
+  if (configured && configured.trim()) secrets.push(configured);
+  secrets.push('mthunzi-local-dev-secret');
+  secrets.push('');
+  return Array.from(new Set(secrets));
+}
+
+function verifySignedValue(tokenData, signature, secrets) {
+  const received = Buffer.from(signature, 'hex');
+  for (const secret of secrets) {
+    const expected = crypto.createHmac('sha256', secret).update(tokenData).digest();
+    if (received.length === expected.length && crypto.timingSafeEqual(received, expected)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const app = express();
 
 if (!process.env.CLOUDINARY_URL && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
@@ -145,18 +165,13 @@ function createAdminToken(authVersion) {
 }
 
 function getAdminTokenVersion(token) {
-  const secret = getTokenSecret();
   if (!token || typeof token !== 'string') return null;
   const [expiresAt, authVersion, signature] = token.split('.');
   if (!/^\d+$/.test(expiresAt || '') || !/^\d+$/.test(authVersion || '') || !/^[a-f0-9]{64}$/.test(signature || '') || Number(expiresAt) <= Date.now()) {
     return null;
   }
   const tokenData = `${expiresAt}.${authVersion}`;
-  const expected = crypto.createHmac('sha256', secret).update(tokenData).digest();
-  const received = Buffer.from(signature, 'hex');
-  return received.length === expected.length && crypto.timingSafeEqual(received, expected)
-    ? Number(authVersion)
-    : null;
+  return verifySignedValue(tokenData, signature, getTokenSecrets()) ? Number(authVersion) : null;
 }
 
 function createCustomerToken(userId) {
@@ -168,18 +183,13 @@ function createCustomerToken(userId) {
 }
 
 function getCustomerTokenUserId(token) {
-  const secret = getTokenSecret();
   if (!token || typeof token !== 'string') return null;
   const [expiresAt, userId, signature] = token.split('.');
   if (!/^\d+$/.test(expiresAt || '') || !/^\d+$/.test(userId || '') || !/^[a-f0-9]{64}$/.test(signature || '') || Number(expiresAt) <= Date.now()) {
     return null;
   }
   const tokenData = `customer.${expiresAt}.${userId}`;
-  const expected = crypto.createHmac('sha256', secret).update(tokenData).digest();
-  const received = Buffer.from(signature, 'hex');
-  return received.length === expected.length && crypto.timingSafeEqual(received, expected)
-    ? Number(userId)
-    : null;
+  return verifySignedValue(tokenData, signature, getTokenSecrets()) ? Number(userId) : null;
 }
 
 function requireCustomer(req, res, next) {
