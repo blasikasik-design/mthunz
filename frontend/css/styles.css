@@ -39,7 +39,7 @@
     /* Type roles */
     --font-display: 'Fraunces', serif;
     --font-body: 'Inter', sans-serif;
-    --font-mono: 'Space Mono', monospace;
+    --font-mono: var(--font-body);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }

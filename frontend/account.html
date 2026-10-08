@@ -13,8 +13,8 @@
     --inputbg:#ffffff; --inputline:#d3dfe3; --hover:#eef5f5; --tabbg:#e8f0f0;
     --accent:#145c66; --chipOn:#102b3b; --shadow:0 10px 30px rgba(17,44,55,.06);
     --ease:cubic-bezier(.2,.7,.2,1);
-    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
-    --serif:'Fraunces',Georgia,'Times New Roman',serif;
+    --sans:'Inter',sans-serif;
+    --serif:'Fraunces',serif;
   }
   [data-theme="dark"]{
     --bg:#0a1822; --surface:#102633; --surface2:#143040; --line:#22414f;
@@ -1070,7 +1070,7 @@
     const w = window.open('', '_blank', 'width=720,height=860');
     if(!w){ showToast('Please allow pop-ups to print the receipt.', 'error'); return; }
     w.document.write(`<!DOCTYPE html><html><head><title>Receipt #${esc(order.id)}</title><style>
-      body{font-family:Arial,Helvetica,sans-serif;color:#102b3b;padding:40px;max-width:640px;margin:0 auto}
+      body{font-family:Inter,sans-serif;color:#102b3b;padding:40px;max-width:640px;margin:0 auto}
       h1{font-size:22px;margin:0 0 4px}.m{color:#6b7c8f;font-size:13px;line-height:1.7}
       table{width:100%;border-collapse:collapse;margin-top:24px}th{text-align:left;font-size:12px;text-transform:uppercase;color:#6b7c8f;border-bottom:2px solid #102b3b;padding:8px 0}
       td{padding:10px 0;border-bottom:1px solid #e0e9e9;font-size:14px}.t{display:flex;justify-content:space-between;margin-top:18px;font-size:18px;font-weight:700}
