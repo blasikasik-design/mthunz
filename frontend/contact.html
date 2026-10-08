@@ -8,7 +8,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    body { background: linear-gradient(180deg, #f7fbff 0%, #eef4f9 100%); }
+    :root {
+      --font-body: 'Inter', sans-serif;
+      --font-display: 'Fraunces', serif;
+    }
+    body { background: linear-gradient(180deg, #f7fbff 0%, #eef4f9 100%); font-family: var(--font-body); }
     .contact-hero {
       padding: 64px 5% 36px;
       background: radial-gradient(circle at top left, rgba(31,95,168,0.16), transparent 32%), linear-gradient(135deg, #10233b 0%, #173b63 52%, #1f5fa8 100%);
@@ -42,7 +46,7 @@
       margin-bottom: 14px;
     }
     .contact-hero h1 {
-      font-family: 'Fraunces', serif;
+      font-family: var(--font-display);
       font-size: clamp(32px, 4vw, 48px);
       line-height: 1.1;
       margin-bottom: 14px;
@@ -60,7 +64,7 @@
     .contact-main { padding: 24px 5% 72px; }
     .contact-grid { display: grid; grid-template-columns: 1.02fr 0.98fr; gap: 24px; max-width: 1200px; margin: 0 auto; justify-content: center; align-items: center; }
     .contact-card, .info-card { background: #fff; border-radius: 6px; border: 1px solid #dfe8f2; box-shadow: 0 18px 46px rgba(16,35,59,0.06); padding: 28px; width: 100%; max-width: 570px; justify-self: center; }
-    .contact-card h2, .info-card h2 { font-family: 'Fraunces', serif; font-size: 24px; margin-bottom: 8px; color: #10233b; }
+    .contact-card h2, .info-card h2 { font-family: var(--font-display); font-size: 24px; margin-bottom: 8px; color: #10233b; }
     .contact-card p, .info-card p { color: #51657a; line-height: 1.7; }
     .contact-form { display: grid; gap: 16px; margin-top: 20px; }
     .contact-form .field { display: grid; gap: 8px; }

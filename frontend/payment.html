@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Payment — Mthunzi Creations</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fraunces:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    :root{--accent:#1f5fa8;--muted:#6b7c8f;--card:#fff}
-    body{font-family:Inter,sans-serif;margin:0;background:linear-gradient(180deg,#f7fbfe, #ffffff);color:#112233}
+    :root{--accent:#1f5fa8;--muted:#6b7c8f;--card:#fff;--font-body:'Inter',sans-serif;--font-display:'Fraunces',serif}
+    body{font-family:var(--font-body);margin:0;background:linear-gradient(180deg,#f7fbfe, #ffffff);color:#112233}
     .wrap{max-width:1100px;margin:28px auto;padding:20px}
     .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
     .btn-back{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer}
     .layout{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
     .panel{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(15,30,60,0.06)}
-    .panel h2{margin:0 0 12px;font-size:20px}
+    .panel h2{margin:0 0 12px;font-size:20px;font-family:var(--font-display)}
     .payment-hero{margin-bottom:18px;padding:18px 20px;border-radius:18px;background:linear-gradient(135deg,#eef7ff 0%,#f5f9ff 100%);border:1px solid #dfeaf8;box-shadow:0 14px 34px rgba(31,95,168,.08)}
-    .payment-hero h3{margin:0 0 10px;font-size:18px;color:#10324e}
+    .payment-hero h3{margin:0 0 10px;font-size:18px;color:#10324e;font-family:var(--font-display)}
     .payment-hero p{margin:0;color:#44607d;line-height:1.65;font-size:14px}
     .payment-account-row{display:grid;grid-template-columns:repeat(2,minmax(160px,1fr));gap:12px;margin-top:14px}
     .payment-account-box{background:#fff;border:1px solid #dfeaf8;border-radius:12px;padding:12px 14px}
@@ -66,13 +66,13 @@
     .payment-overlay.open{display:flex}
     .payment-modal{background:#fff;border-radius:20px;padding:36px;max-width:420px;width:100%;box-shadow:0 30px 60px rgba(0,0,0,0.3);animation:slideUp 0.3s ease}
     @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    .payment-modal h2{margin:0 0 24px;font-size:24px;color:#10233b;text-align:center}
+    .payment-modal h2{margin:0 0 24px;font-size:24px;color:#10233b;text-align:center;font-family:var(--font-display)}
     .card-form{display:flex;flex-direction:column;gap:16px}
     .form-group{display:flex;flex-direction:column;gap:6px}
     .form-group label{font-weight:600;font-size:13px;color:#2f4662}
-    .form-group input{padding:12px 14px;border:1.5px solid #dce8f4;border-radius:10px;font-size:15px;font-family:Inter,sans-serif}
+    .form-group input{padding:12px 14px;border:1.5px solid #dce8f4;border-radius:10px;font-size:15px;font-family:var(--font-body)}
     .form-group input:focus{outline:none;border-color:#1f5fa8;box-shadow:0 0 0 3px rgba(31,95,168,0.1)}
-    .card-number-input{font-family:Inter,sans-serif;letter-spacing:2px}
+    .card-number-input{font-family:var(--font-body);letter-spacing:2px}
     .card-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .pay-btn{padding:14px;border:none;border-radius:6px;background:linear-gradient(90deg,#1f5fa8,#4a89d4);color:#fff;font-weight:600;font-size:15px;cursor:pointer;margin-top:20px;transition:all 0.2s}
     .pay-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 24px rgba(31,95,168,0.25)}
