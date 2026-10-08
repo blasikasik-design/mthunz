@@ -106,14 +106,17 @@
   .stat .value{font-size:20px;font-weight:700;color:var(--head);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2}
   .stat .label{font-size:12.5px;color:var(--muted)}
 
-  /* ===== Tabs ===== */
-  .tabs{position:relative;display:flex;gap:4px;margin:26px 0 18px;padding:5px;background:var(--tabbg);border-radius:14px;width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
+  /* ===== Account sections ===== */
+  .account-workspace{display:grid;grid-template-columns:210px minmax(0,1fr);gap:22px;align-items:start;margin-top:26px}
+  .panel-stack{min-width:0}
+  .tabs{position:relative;display:flex;flex-direction:column;gap:4px;margin:0;padding:6px;background:var(--tabbg);border-radius:14px;width:auto;max-width:none;overflow:visible;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
-  .tab-ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:10px;background:var(--surface);box-shadow:0 2px 8px rgba(17,44,55,.14);transition:transform .45s var(--ease),width .45s var(--ease);pointer-events:none}
-  .tab{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;border:0;background:transparent;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;color:var(--label);cursor:pointer;white-space:nowrap;transition:color .25s}
+  .tab-ind{display:none;position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:10px;background:var(--surface);box-shadow:0 2px 8px rgba(17,44,55,.14);transition:transform .45s var(--ease),width .45s var(--ease);pointer-events:none}
+  .tab{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;width:100%;min-height:44px;border:0;background:transparent;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--label);cursor:pointer;text-align:left;white-space:normal;transition:color .25s,background .25s}
   .tab .ic{font-size:16px;transition:transform .35s var(--ease)}
   .tab:hover{color:var(--accent)}
   .tab.active{color:var(--accent)}
+  .tabs>.tab.active{background:var(--surface);box-shadow:0 2px 8px rgba(17,44,55,.14)}
   .tab.active .ic{transform:scale(1.12)}
   .tab .cnt{min-width:22px;padding:1px 7px;border-radius:8px;background:var(--teal);color:#fff;font-size:11.5px;font-weight:700;text-align:center}
   .tab .short{display:none}
@@ -332,6 +335,14 @@
     .bar-col .b{transform:none}
   }
 
+  @media (max-width:900px){
+    .account-workspace{display:block;margin-top:26px}
+    .tabs{flex-direction:row;margin:0 0 18px;padding:5px;overflow-x:auto}
+    .tab-ind{display:block}
+    .tab{width:auto;justify-content:center;padding:10px 14px;white-space:nowrap}
+    .tabs>.tab.active{background:transparent;box-shadow:none}
+  }
+
   @media (max-width:760px){
     .wrap{padding:16px 14px 60px}
     .hello h1{font-size:23px}
@@ -468,14 +479,16 @@
     </div>
   </section>
 
-  <!-- Tabs -->
-  <div class="tabs rise" id="mainTabs" role="tablist" style="--d:.2">
-    <span class="tab-ind" id="tabInd"></span>
-    <button class="tab active" data-tab="orders" type="button" role="tab"><span class="ic" data-ic="package"></span> My orders <span class="cnt" id="orderSummaryBadge">0</span></button>
-    <button class="tab" data-tab="addresses" type="button" role="tab"><span class="ic" data-ic="pin"></span> Addresses</button>
-    <button class="tab" data-tab="profile" type="button" role="tab"><span class="ic" data-ic="shield"></span> <span class="long">Profile &amp; security</span><span class="short">Profile</span></button>
-  </div>
+  <div class="account-workspace">
+    <!-- Tabs -->
+    <div class="tabs rise" id="mainTabs" role="tablist" aria-label="Account sections" style="--d:.2">
+      <span class="tab-ind" id="tabInd"></span>
+      <button class="tab active" data-tab="orders" type="button" role="tab"><span class="ic" data-ic="package"></span> My orders <span class="cnt" id="orderSummaryBadge">0</span></button>
+      <button class="tab" data-tab="addresses" type="button" role="tab"><span class="ic" data-ic="pin"></span> Addresses</button>
+      <button class="tab" data-tab="profile" type="button" role="tab"><span class="ic" data-ic="shield"></span> <span class="long">Profile &amp; security</span><span class="short">Profile</span></button>
+    </div>
 
+    <div class="panel-stack">
   <!-- Orders -->
   <section class="panel show rise" id="panel-orders" style="--d:.28">
     <div class="chart-card" id="chartCard" hidden>
@@ -575,6 +588,8 @@
       </div>
     </div>
   </section>
+    </div>
+  </div>
 
 </div>
 
