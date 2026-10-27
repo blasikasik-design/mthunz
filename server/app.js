@@ -138,6 +138,8 @@ async function ensureSchema() {
     ALTER TABLE orders ALTER COLUMN user_id DROP NOT NULL;
     ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_user_id_fkey;
     ALTER TABLE orders ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference VARCHAR(120) UNIQUE;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(30) NOT NULL DEFAULT 'pending';
   `);
 }
 
@@ -202,6 +204,35 @@ function requireCustomer(req, res, next) {
   }
   req.customerId = userId;
   next();
+}
+
+function requireAuthenticatedCustomer(req, res, next) {
+  const authorization = req.get('authorization') || '';
+  const match = authorization.match(/^Bearer (.+)$/i);
+  const userId = match ? getCustomerTokenUserId(match[1]) : null;
+  if (!userId) {
+    return res.status(401).json({ error: 'Customer authentication required.' });
+  }
+  req.customerId = userId;
+  next();
+}
+
+function isMatchingPayChanguPayment(response, order) {
+  const payment = response && response.data;
+  return response && response.status === 'success' && payment &&
+    String(payment.status).toLowerCase() === 'success' &&
+    payment.tx_ref === order.payment_reference &&
+    String(payment.currency).toUpperCase() === 'MWK' &&
+    Number(payment.amount) === Number(order.total_amount);
+}
+
+function verifyPayChanguWebhookSignature(payload, signature, secret) {
+  if (!Buffer.isBuffer(payload) || !secret || !/^[a-f0-9]{64}$/i.test(String(signature || ''))) {
+    return false;
+  }
+  const received = Buffer.from(signature, 'hex');
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest();
+  return received.length === expected.length && crypto.timingSafeEqual(received, expected);
 }
 
 async function requireAdmin(req, res, next) {
@@ -307,9 +338,14 @@ async function startServer(port) {
 
   if (!agedOrderUpdateStarted) {
     agedOrderUpdateStarted = true;
-    const updateAgedOrders = () => db.markOrdersDeliveredAfter30Days().catch(err => {
-      console.error('Unable to update orders older than 30 days:', err.message || err);
-    });
+    const updateAgedOrders = async () => {
+      try {
+        await db.expirePendingPayChanguOrders();
+        await db.markOrdersDeliveredAfter30Days();
+      } catch (err) {
+        console.error('Unable to update order states:', err.message || err);
+      }
+    };
     updateAgedOrders();
     const deliveryInterval = setInterval(updateAgedOrders, 60 * 60 * 1000);
     deliveryInterval.unref();
@@ -348,13 +384,22 @@ module.exports = {
   readSiteSettings,
   normalizeProductPayload,
   isValidInternationalPhone,
+  isMatchingPayChanguPayment,
+  verifyPayChanguWebhookSignature,
   createCustomerToken,
   getCustomerTokenUserId,
   app
 };
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({
+  limit: '50mb',
+  verify(req, res, buffer) {
+    if (req.originalUrl.split('?')[0] === '/api/payments/paychangu/webhook') {
+      req.rawBody = Buffer.from(buffer);
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use((err, req, res, next) => {
   if (err && err.type === 'entity.too.large') {
@@ -652,17 +697,188 @@ app.delete('/api/admin/messages/:id', async (req, res) => {
   }
 });
 
-app.post('/api/order', async (req, res) => {
+app.post('/api/payments/paychangu/initiate', requireAuthenticatedCustomer, async (req, res) => {
+  const secretKey = String(process.env.PAYCHANGU_SECRET_KEY || '').trim();
+  if (!secretKey) {
+    return res.status(503).json({ error: 'PayChangu payments are not configured.' });
+  }
+  const appUrl = String(process.env.APP_URL || '').trim().replace(/\/+$/, '');
+  let appOrigin;
   try {
-    const { userId, items, totalAmount, paymentType, screenshotUrl } = req.body;
-    if (!userId || !items || !totalAmount) {
-      return res.status(400).json({ error: 'Missing required fields.' });
+    const configuredUrl = new URL(appUrl);
+    if (configuredUrl.protocol !== 'https:' || configuredUrl.pathname !== '/' || configuredUrl.search || configuredUrl.hash || configuredUrl.username || configuredUrl.password) {
+      throw new Error('APP_URL must be an HTTPS origin.');
     }
-    const orderId = await db.createOrder({ userId, items, totalAmount, paymentType, screenshot: screenshotUrl });
-    res.status(201).json({ data: { id: orderId, message: 'Order created successfully.' } });
+    appOrigin = configuredUrl.origin;
+  } catch (error) {
+    return res.status(503).json({ error: 'A public HTTPS APP_URL is required for PayChangu payments.' });
+  }
+
+  let order;
+  const paymentReference = `MC-${crypto.randomUUID()}`;
+  try {
+    const user = await auth.findUserById(req.customerId);
+    if (!user) {
+      return res.status(401).json({ error: 'Customer account could not be verified.' });
+    }
+
+    order = await db.createPayChanguOrder({
+      userId: req.customerId,
+      items: req.body && req.body.items,
+      paymentReference
+    });
+    const customerNames = String(user.name || '').trim().split(/\s+/);
+    const gatewayResponse = await fetch('https://api.paychangu.com/payment', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${secretKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        amount: String(order.totalAmount),
+        currency: 'MWK',
+        tx_ref: paymentReference,
+        first_name: customerNames.shift() || 'Customer',
+        last_name: customerNames.join(' ') || ' ',
+        email: user.email,
+        callback_url: `${appOrigin}/payment.html`,
+        return_url: `${appOrigin}/payment.html`,
+        customization: {
+          title: 'Mthunzi Creations',
+          description: `Order ${order.id}`
+        }
+      })
+    });
+    const gatewayBody = await gatewayResponse.json().catch(() => ({}));
+    const checkoutUrl = gatewayBody.data && gatewayBody.data.checkout_url;
+    let checkoutHost = '';
+    try {
+      const checkoutPage = new URL(checkoutUrl);
+      if (checkoutPage.protocol === 'https:') checkoutHost = checkoutPage.hostname;
+    } catch (error) {
+      checkoutHost = '';
+    }
+    if (!gatewayResponse.ok || gatewayBody.status !== 'success' || !/^([a-z0-9-]+\.)?paychangu\.com$/i.test(checkoutHost)) {
+      console.error('PayChangu checkout initialization failed:', gatewayBody.message || gatewayResponse.status);
+      await db.cancelPayChanguOrder(paymentReference);
+      return res.status(502).json({ error: 'Unable to start PayChangu checkout. Please try again.' });
+    }
+    res.status(201).json({
+      data: {
+        checkoutUrl,
+        orderId: order.id,
+        totalAmount: order.totalAmount,
+        paymentReference
+      }
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Unable to create order.' });
+    if (order) {
+      await db.cancelPayChanguOrder(paymentReference).catch(cancelError => {
+        console.error('Unable to release stock after payment initialization failure:', cancelError.message || cancelError);
+      });
+    }
+    if (err.code === 'INVALID_ORDER') {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err.code === 'OUT_OF_STOCK') {
+      return res.status(409).json({ error: err.message });
+    }
+    console.error('PayChangu checkout initialization failed:', err.message || err);
+    res.status(500).json({ error: 'Unable to start payment. Please try again.' });
+  }
+});
+
+app.get('/api/payments/paychangu/verify', requireAuthenticatedCustomer, async (req, res) => {
+  const secretKey = String(process.env.PAYCHANGU_SECRET_KEY || '').trim();
+  if (!secretKey) {
+    return res.status(503).json({ error: 'PayChangu payments are not configured.' });
+  }
+  const paymentReference = String(req.query.tx_ref || '').trim();
+  if (!paymentReference) {
+    return res.status(400).json({ error: 'Payment reference is required.' });
+  }
+
+  try {
+    const order = await db.getPayChanguOrder(paymentReference);
+    if (!order || Number(order.user_id) !== req.customerId) {
+      return res.status(404).json({ error: 'Payment order was not found.' });
+    }
+    if (order.payment_status !== 'paid') {
+      const gatewayResponse = await fetch(`https://api.paychangu.com/verify-payment/${encodeURIComponent(paymentReference)}`, {
+        headers: { Accept: 'application/json', Authorization: `Bearer ${secretKey}` }
+      });
+      const gatewayBody = await gatewayResponse.json().catch(() => ({}));
+      if (!gatewayResponse.ok) {
+        return res.status(502).json({ error: 'Unable to verify payment with PayChangu.' });
+      }
+      const gatewayPaymentStatus = String(gatewayBody && gatewayBody.data && gatewayBody.data.status || '').toLowerCase();
+      if (['failed', 'cancelled', 'canceled'].includes(gatewayPaymentStatus)) {
+        await db.cancelPayChanguOrder(paymentReference);
+        return res.status(202).json({ data: { paid: false, status: gatewayPaymentStatus } });
+      }
+      if (!isMatchingPayChanguPayment(gatewayBody, order)) {
+        return res.status(202).json({ data: { paid: false, status: order.payment_status } });
+      }
+      const updated = await db.markPayChanguOrderPaid(paymentReference);
+      if (!updated) {
+        const latestOrder = await db.getPayChanguOrder(paymentReference);
+        if (!latestOrder || latestOrder.payment_status !== 'paid') {
+          return res.status(202).json({ data: { paid: false, status: latestOrder && latestOrder.payment_status || 'failed' } });
+        }
+      }
+    }
+
+    res.json({
+      data: {
+        paid: true,
+        orderId: order.id,
+        totalAmount: Number(order.total_amount),
+        paymentMethod: 'PayChangu'
+      }
+    });
+  } catch (err) {
+    console.error('PayChangu payment verification failed:', err.message || err);
+    res.status(500).json({ error: 'Unable to verify payment. Please try again.' });
+  }
+});
+
+app.post('/api/payments/paychangu/webhook', async (req, res) => {
+  const webhookSecret = String(process.env.PAYCHANGU_WEBHOOK_SECRET || '').trim();
+  if (!webhookSecret) {
+    return res.status(503).json({ error: 'PayChangu webhooks are not configured.' });
+  }
+  if (!verifyPayChanguWebhookSignature(req.rawBody, req.get('signature'), webhookSecret)) {
+    return res.status(401).json({ error: 'Invalid PayChangu webhook signature.' });
+  }
+  const paymentReference = String(req.body && (req.body.tx_ref || req.body.data && req.body.data.tx_ref) || '').trim();
+  if (!paymentReference) {
+    return res.status(400).json({ error: 'Payment reference is missing from the webhook.' });
+  }
+
+  try {
+    const order = await db.getPayChanguOrder(paymentReference);
+    if (!order || order.payment_status !== 'pending') {
+      return res.sendStatus(200);
+    }
+    const secretKey = String(process.env.PAYCHANGU_SECRET_KEY || '').trim();
+    if (!secretKey) {
+      return res.status(503).json({ error: 'PayChangu payments are not configured.' });
+    }
+    const gatewayResponse = await fetch(`https://api.paychangu.com/verify-payment/${encodeURIComponent(paymentReference)}`, {
+      headers: { Accept: 'application/json', Authorization: `Bearer ${secretKey}` }
+    });
+    const gatewayBody = await gatewayResponse.json().catch(() => ({}));
+    if (!gatewayResponse.ok) {
+      return res.status(502).json({ error: 'Unable to verify webhook transaction with PayChangu.' });
+    }
+    if (isMatchingPayChanguPayment(gatewayBody, order)) {
+      await db.markPayChanguOrderPaid(paymentReference);
+    }
+    return res.sendStatus(200);
+  } catch (err) {
+    console.error('PayChangu webhook processing failed:', err.message || err);
+    return res.status(500).json({ error: 'Unable to process PayChangu webhook.' });
   }
 });
 

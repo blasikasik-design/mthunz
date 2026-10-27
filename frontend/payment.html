@@ -129,8 +129,8 @@
     </div>
 
     <div class="layout">
-      <div class="panel">k
-        <h2>Select Payment Method</h2>
+      <div class="panel">
+        <h2>Pay securely with PayChangu</h2>
         <div class="actions" style="margin:0 0 14px;justify-content:flex-start">
           <button class="btn btn-secondary" id="showSummaryBtn">Review order summary</button>
         </div>
@@ -154,46 +154,18 @@
           </div>
         </div>
         <div class="methods" id="methods">
-          <label class="method" data-method="tnm">
-            <input type="radio" name="paymethod" value="tnm">
-            <div class="method-logo">
-              <img src="assets/payment-logos/tnm-logo.png" alt="TNM">
-            </div>
+          <label class="method chosen" data-method="paychangu">
+            <input type="radio" name="paymethod" value="paychangu" checked>
             <div class="meta">
-              <div style="font-weight:700">TNM Mpamba</div>
-              <div class="instructions">Use your TNM Mobile Money account to send the full order amount, then upload a screenshot of the transfer as proof.</div>
-            </div>
-          </label>
-
-          <label class="method" data-method="airtel">
-            <input type="radio" name="paymethod" value="airtel">
-            <div class="method-logo">
-              <img src="assets/payment-logos/airtel-logo.png" alt="Airtel">
-            </div>
-            <div class="meta">
-              <div style="font-weight:700">Airtel Money</div>
-              <div class="instructions">Use your Airtel Money account to send the full order amount, then upload a screenshot of the transfer as proof.</div>
+              <div style="font-weight:700">PayChangu</div>
+              <div class="instructions">Continue to PayChangu to choose an available payment method and complete your payment securely.</div>
             </div>
           </label>
         </div>
-
-        <div style="margin-top:16px">
-          <div class="ref-warning"><i class="fas fa-exclamation-circle"></i><span>Take a clear screenshot of the payment confirmation and make sure the reference number is visible in the image before uploading.</span></div>
-          <div class="uploader" id="uploader">
-            <img id="preview" class="upload-preview" src="" alt="" style="display:none">
-            <div style="flex:1">
-              <div id="uploadLabel">No file selected</div>
-              <div style="margin-top:8px"><label class="btn btn-secondary" id="chooseBtn">Choose file</label></div>
-            </div>
-            <input type="file" id="fileInput" accept="image/*">
-          </div>
-        </div>
-
-        <div style="margin-top:18px" id="methodDetails"></div>
 
         <div class="actions">
          
-          <button class="btn btn-primary" id="confirmBtn">Confirm Payment</button>
+          <button class="btn btn-primary" id="confirmBtn">Continue to PayChangu</button>
         </div>
       </div>
 
@@ -313,72 +285,11 @@
 
   // Method selection
   function updateMethodUI(){document.querySelectorAll('.method').forEach(lbl=>{const radio=lbl.querySelector('input[type=radio]');lbl.classList.toggle('chosen', radio.checked)})}
-  document.querySelectorAll('.method').forEach(lbl=>{lbl.addEventListener('click',()=>{lbl.querySelector('input[type=radio]').checked=true;updateMethodUI();renderMethodDetails();})})
-
-  async function loadPaymentSettings(){
-    try {
-      const res = await fetch('/api/site-settings');
-      const json = await res.json();
-      return json.data || {};
-    } catch (err) {
-      console.error(err);
-      return {};
-    }
-  }
-
-  function renderMethodDetails(){
-    const chosen = document.querySelector('input[name=paymethod]:checked');
-    const d=$('methodDetails');
-    if(!chosen){d.innerHTML='';return}
-    loadPaymentSettings().then(function(settings){
-      const accountName = settings.paymentAccountName || 'John Botha';
-      const accountNumber = settings.paymentAccountNumber || '0880058488';
-      const referenceLabel = settings.paymentReferenceLabel || 'Reference number';
-      const instructions = settings.paymentInstructions || 'Send the money to that number and the account name is John Botha. Please include the reference number in your payment note so we can match it quickly.';
-      const accountNameEl = document.getElementById('paymentAccountNameDisplay');
-      const accountNumberEl = document.getElementById('paymentAccountNumberDisplay');
-      if (accountNameEl) accountNameEl.textContent = accountName;
-      if (accountNumberEl) accountNumberEl.textContent = accountNumber;
-      if(chosen.value==='tnm'){
-        d.innerHTML = `<div style="margin-top:8px;border:1px solid #dfeaf8;border-radius:12px;padding:14px 16px;background:#f8fbff"><div style="font-weight:800;color:#11233b; margin-bottom:10px;">TNM Mobile Money</div><div style="display:flex;flex-direction:column;gap:6px;font-size:14px;color:#2f4662;line-height:1.6"><div><strong>Account name:</strong> ${accountName}</div><div><strong>Number:</strong> ${accountNumber}</div><div><strong>${referenceLabel}:</strong> Use your order reference or your name</div><div>${instructions}</div></div></div>`;
-      } else if(chosen.value==='airtel'){
-        d.innerHTML = `<div style="margin-top:8px;border:1px solid #dfeaf8;border-radius:12px;padding:14px 16px;background:#f8fbff"><div style="font-weight:800;color:#11233b; margin-bottom:10px;">Airtel Money</div><div style="display:flex;flex-direction:column;gap:6px;font-size:14px;color:#2f4662;line-height:1.6"><div><strong>Account name:</strong> ${accountName}</div><div><strong>Number:</strong> ${accountNumber}</div><div><strong>${referenceLabel}:</strong> Use your order reference or your name</div><div>${instructions}</div></div></div>`;
-      } else {
-        d.innerHTML='';
-      }
-    });
-  }
-
-  // File upload
-  const fileInput=$('fileInput'), preview=$('preview'), uploadLabel=$('uploadLabel'), chooseBtn=$('chooseBtn');
-  chooseBtn.addEventListener('click',()=>fileInput.click());
-  fileInput.addEventListener('change',()=>{
-    const f=fileInput.files[0]; if(!f) { uploadLabel.textContent='No file selected'; preview.style.display='none'; return }
-    uploadLabel.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
-    const reader=new FileReader(); reader.onload=function(e){ preview.src=e.target.result; preview.style.display='block'; preview.dataset.dataurl=e.target.result }; reader.readAsDataURL(f);
-  });
 
   // Buttons
   $('backBtn').addEventListener('click',()=>{window.location.href='shop.html'});
   $('showSummaryBtn').addEventListener('click',()=>{ $('summarySheet').classList.add('open'); $('summarySheet').scrollIntoView({behavior:'smooth', block:'start'}); });
   $('closeSummaryBtn').addEventListener('click',()=>{$('summarySheet').classList.remove('open');});
-  const saveDraftButton = $('saveDraft');
-  if (saveDraftButton) saveDraftButton.addEventListener('click',()=>{
-    const chosen = document.querySelector('input[name=paymethod]:checked');
-    const draft = { method: chosen ? chosen.value : null, proof: preview.dataset.dataurl || null, savedAt: Date.now(), cart: loadCart() };
-    localStorage.setItem('paymentDraft', JSON.stringify(draft));
-    showToast('Draft saved');
-  });
-
-  async function submitOrder(payload){
-    const response = await fetch('/api/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const body = await response.json().catch(() => ({}));
-    return { ok: response.ok, body };
-  }
 
   function downloadReceipt(orderId, paymentMethod, total, items){
     const lines = [
@@ -404,18 +315,10 @@
   }
 
   $('confirmBtn').addEventListener('click', async ()=>{
-    const chosen = document.querySelector('input[name=paymethod]:checked');
-    if(!chosen){ alert('Please choose a payment method'); return }
     const cart = loadCart();
     if(!cart.length){ alert('Your cart is empty. Please add an item before making a payment.'); window.location.href='shop.html'; return }
-    if (!preview.dataset.dataurl) {
-      alert('Please upload a payment screenshot. Make sure the reference number is clearly visible before submitting.');
-      return;
-    }
     setConfirmButtonProcessing();
-    preparePaymentModal(cart, chosen.value);
-    openPaymentModal();
-    startPaymentProcessing(cart, chosen.value);
+    startPaymentProcessing(cart);
   });
 
   // Payment Modal Functions
@@ -429,26 +332,6 @@
     document.body.style.overflow = '';
   }
 
-  function preparePaymentModal(cart, paymentValue) {
-    const paymentMethod = paymentValue === 'tnm' ? 'TNM Mobile Money' : 'Airtel Money';
-    const total = cart.reduce((s, item) => s + item.price * (item.qty || item.quantity || 1), 0);
-    $('paymentMethod').textContent = paymentMethod;
-    $('paymentTotal').textContent = 'MK ' + total.toLocaleString();
-    $('paymentOrderId').textContent = 'Processing…';
-    $('paymentModalTitle').textContent = 'Order Summary';
-    $('paymentModalSubtitle').textContent = 'We are preparing your order confirmation.';
-    $('paymentModalSubtitle').style.display = 'block';
-    $('paymentIcon').innerHTML = '<i class="fas fa-shopping-bag"></i>';
-    $('paymentItems').innerHTML = cart.map(function(item){
-      const qty = item.qty || item.quantity || 1;
-      return '<div class="success-item"><span>' + item.name + ' × ' + qty + '</span><strong>MK ' + ((item.price * qty)).toLocaleString() + '</strong></div>';
-    }).join('');
-    $('payBtn').classList.remove('is-processing');
-    $('payBtn').disabled = false;
-    $('payBtn').querySelector('.btn-label').textContent = 'Processing Payment';
-    $('downloadOrderBtn').style.display = 'none';
-  }
-
   function setConfirmButtonProcessing(){
     const btn = $('confirmBtn');
     btn.classList.add('is-processing');
@@ -460,42 +343,81 @@
     const btn = $('confirmBtn');
     btn.classList.remove('is-processing');
     btn.disabled = false;
-    btn.innerHTML = '<span class="btn-label">Confirm Payment</span>';
+    btn.innerHTML = '<span class="btn-label">Continue to PayChangu</span>';
   }
 
-  async function startPaymentProcessing(cart, paymentValue) {
-    const paymentMethod = paymentValue === 'tnm' ? 'TNM Mobile Money' : 'Airtel Money';
-    $('payBtn').classList.add('is-processing');
-    $('payBtn').disabled = true;
-    $('payBtn').querySelector('.btn-label').textContent = 'Processing Payment';
-
-    const savedUser = JSON.parse(localStorage.getItem('mthunziAuthUser') || 'null');
-    const total = cart.reduce((s, item) => s + item.price * (item.qty || item.quantity || 1), 0);
-    const payload = {
-      userId: savedUser ? savedUser.id : null,
-      items: cart.map(item => ({
-        product_id: item.id,
-        quantity: item.qty || item.quantity || 1,
-        price: item.price
-      })),
-      totalAmount: total,
-      paymentType: paymentMethod,
-      screenshotUrl: preview.dataset.dataurl || null
-    };
-
-    try {
-      const result = await submitOrder(payload);
-      if (!result.ok) {
-        throw new Error(result.body.error || 'Unable to place your order.');
-      }
-
-      const orderId = result.body?.data?.id ? 'ORD-' + String(result.body.data.id).padStart(4, '0') : 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-      currentOrderSummary = { orderId, paymentMethod, total, items: cart };
-      showSuccessSummary(orderId, paymentMethod, total, cart);
+  async function startPaymentProcessing(cart) {
+    const savedUser = getStoredUser();
+    if (!savedUser || !savedUser.token) {
       resetConfirmButton();
+      localStorage.setItem('mthunziAuthRedirect', 'payment.html');
+      window.location.href = 'login.html';
+      return;
+    }
+    try {
+      const response = await fetch('/api/payments/paychangu/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + savedUser.token
+        },
+        body: JSON.stringify({
+          items: cart.map(item => ({
+            product_id: item.id,
+            quantity: item.qty || item.quantity || 1
+          }))
+        })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.data || !body.data.checkoutUrl) {
+        throw new Error(body.error || 'Unable to start PayChangu checkout.');
+      }
+      window.location.assign(body.data.checkoutUrl);
     } catch (error) {
       showToast(error.message || 'Unable to place your order.');
       resetConfirmButton();
+    }
+  }
+
+  async function verifyReturnedPayment() {
+    const params = new URLSearchParams(window.location.search);
+    const paymentReference = params.get('tx_ref');
+    const savedUser = getStoredUser();
+    if (!paymentReference || !savedUser || !savedUser.token) return;
+
+    openPaymentModal();
+    $('paymentModalTitle').textContent = 'Verifying payment';
+    $('paymentModalSubtitle').textContent = 'Please wait while PayChangu confirms your transaction.';
+    $('paymentOrderId').textContent = 'Checking…';
+    $('paymentMethod').textContent = 'PayChangu';
+    $('paymentItems').innerHTML = '';
+    $('payBtn').disabled = true;
+    $('payBtn').querySelector('.btn-label').textContent = 'Verifying';
+
+    try {
+      const response = await fetch('/api/payments/paychangu/verify?tx_ref=' + encodeURIComponent(paymentReference), {
+        headers: { Authorization: 'Bearer ' + savedUser.token }
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok && response.status !== 202) {
+        throw new Error(body.error || 'Unable to verify payment. Please try again.');
+      }
+      if (!body.data || !body.data.paid) {
+        window.history.replaceState(null, '', window.location.pathname);
+        closePaymentModal();
+        showToast(body.data && ['failed', 'cancelled', 'canceled', 'expired'].includes(body.data.status)
+          ? 'Payment was not completed. You can try again.'
+          : 'Payment is not confirmed yet. Your order has not been marked paid.');
+        return;
+      }
+      window.history.replaceState(null, '', window.location.pathname);
+      const orderId = 'ORD-' + String(body.data.orderId).padStart(4, '0');
+      const items = loadCart();
+      currentOrderSummary = { orderId, paymentMethod: 'PayChangu', total: Number(body.data.totalAmount), items };
+      showSuccessSummary(orderId, 'PayChangu', Number(body.data.totalAmount), items);
+    } catch (error) {
+      closePaymentModal();
+      showToast(error.message || 'Unable to verify payment. Please try again.');
     }
   }
 
@@ -520,7 +442,7 @@
   });
 
   // Init
-  renderOrder(); updateMethodUI(); renderMethodDetails();
+  renderOrder(); updateMethodUI(); verifyReturnedPayment();
 </script>
 </body>
 </html>

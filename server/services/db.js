@@ -277,6 +277,7 @@ function mapOrderRows(rows) {
         total_amount: Number(row.total_amount),
         status: row.status,
         payment_type: row.payment_type,
+        payment_status: row.payment_status,
         payment_screenshot_url: row.payment_screenshot_url,
         created_at: row.created_at,
         items: []
@@ -298,7 +299,7 @@ function mapOrderRows(rows) {
 async function getOrders() {
   try {
     const result = await query(`
-      SELECT o.id, o.user_id, COALESCE(u.name, 'Deleted customer') AS name, COALESCE(u.email, '') AS email, o.total_amount, o.status, o.payment_type, o.payment_screenshot_url, o.created_at,
+      SELECT o.id, o.user_id, COALESCE(u.name, 'Deleted customer') AS name, COALESCE(u.email, '') AS email, o.total_amount, o.status, o.payment_type, o.payment_status, o.payment_screenshot_url, o.created_at,
              oi.product_id, oi.quantity, oi.price_at_purchase, p.name as product_name
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
@@ -316,7 +317,7 @@ async function getOrders() {
 async function getOrdersForUser(userId) {
   try {
     const result = await query(`
-      SELECT o.id, o.user_id, u.name, u.email, o.total_amount, o.status, o.payment_type, o.payment_screenshot_url, o.created_at,
+      SELECT o.id, o.user_id, u.name, u.email, o.total_amount, o.status, o.payment_type, o.payment_status, o.payment_screenshot_url, o.created_at,
              oi.product_id, oi.quantity, oi.price_at_purchase, p.name as product_name
       FROM orders o
       JOIN users u ON o.user_id = u.id
@@ -392,6 +393,165 @@ async function createOrder({ userId, items, totalAmount, paymentType, screenshot
   }
 }
 
+async function createPayChanguOrder({ userId, items, paymentReference }) {
+  if (!Array.isArray(items) || !items.length || items.length > 50) {
+    const error = new Error('Your cart is empty or contains too many items.');
+    error.code = 'INVALID_ORDER';
+    throw error;
+  }
+  const quantities = new Map();
+  for (const item of items) {
+    const productId = Number(item && item.product_id);
+    const quantity = Number(item && item.quantity);
+    if (!Number.isSafeInteger(productId) || productId < 1 || !Number.isSafeInteger(quantity) || quantity < 1) {
+      const error = new Error('Your cart contains an invalid item.');
+      error.code = 'INVALID_ORDER';
+      throw error;
+    }
+    quantities.set(productId, (quantities.get(productId) || 0) + quantity);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const productIds = Array.from(quantities.keys());
+    const productResult = await client.query(
+      'SELECT id, name, price, stock FROM products WHERE id = ANY($1::int[]) FOR UPDATE',
+      [productIds]
+    );
+    const products = new Map(productResult.rows.map(product => [Number(product.id), product]));
+    let totalAmount = 0;
+    for (const [productId, quantity] of quantities) {
+      const product = products.get(productId);
+      if (!product) {
+        const error = new Error('A product in your cart is no longer available.');
+        error.code = 'INVALID_ORDER';
+        throw error;
+      }
+      if (Number(product.stock) < quantity) {
+        const error = new Error(`${product.name} does not have enough stock available.`);
+        error.code = 'OUT_OF_STOCK';
+        throw error;
+      }
+      totalAmount += Number(product.price) * quantity;
+    }
+    if (!Number.isSafeInteger(totalAmount) || totalAmount < 1) {
+      const error = new Error('The order total must be a whole amount in MWK.');
+      error.code = 'INVALID_ORDER';
+      throw error;
+    }
+
+    const orderResult = await client.query(
+      `INSERT INTO orders (user_id, total_amount, payment_type, payment_reference, payment_status, status)
+       VALUES ($1, $2, 'PayChangu', $3, 'pending', 'Pending') RETURNING id`,
+      [userId, totalAmount, paymentReference]
+    );
+    const orderId = orderResult.rows[0].id;
+    for (const [productId, quantity] of quantities) {
+      const product = products.get(productId);
+      await client.query(
+        'UPDATE products SET stock = stock - $1, in_stock = stock - $1 > 0 WHERE id = $2',
+        [quantity, productId]
+      );
+      await client.query(
+        'INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES ($1, $2, $3, $4)',
+        [orderId, quantity, product.price]
+      );
+    }
+    await client.query('COMMIT');
+    return { id: orderId, totalAmount };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function getPayChanguOrder(paymentReference) {
+  const result = await query(
+    'SELECT id, user_id, total_amount, payment_reference, payment_status FROM orders WHERE payment_reference = $1',
+    [paymentReference]
+  );
+  return result.rows[0] || null;
+}
+
+async function markPayChanguOrderPaid(paymentReference) {
+  const result = await query(
+    `UPDATE orders SET payment_status = 'paid', status = 'Processing'
+     WHERE payment_reference = $1 AND payment_status = 'pending' RETURNING id`,
+    [paymentReference]
+  );
+  return result.rows[0] || null;
+}
+
+async function cancelPayChanguOrder(paymentReference) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const orderResult = await client.query(
+      `SELECT id FROM orders WHERE payment_reference = $1 AND payment_status = 'pending' FOR UPDATE`,
+      [paymentReference]
+    );
+    if (!orderResult.rowCount) {
+      await client.query('COMMIT');
+      return false;
+    }
+    const orderId = orderResult.rows[0].id;
+    const itemsResult = await client.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1', [orderId]);
+    for (const item of itemsResult.rows) {
+      await client.query(
+        'UPDATE products SET stock = stock + $1, in_stock = true WHERE id = $2',
+        [item.quantity, item.product_id]
+      );
+    }
+    await client.query(
+      `UPDATE orders SET payment_status = 'failed', status = 'Cancelled' WHERE id = $1`,
+      [orderId]
+    );
+    await client.query('COMMIT');
+    return true;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function expirePendingPayChanguOrders() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const ordersResult = await client.query(
+      `SELECT id FROM orders
+       WHERE payment_type = 'PayChangu' AND payment_status = 'pending'
+         AND created_at < NOW() - INTERVAL '24 hours'
+       FOR UPDATE SKIP LOCKED`
+    );
+    for (const order of ordersResult.rows) {
+      const itemsResult = await client.query('SELECT product_id, quantity FROM order_items WHERE order_id = $1', [order.id]);
+      for (const item of itemsResult.rows) {
+        await client.query(
+          'UPDATE products SET stock = stock + $1, in_stock = true WHERE id = $2',
+          [item.quantity, item.product_id]
+        );
+      }
+      await client.query(
+        `UPDATE orders SET payment_status = 'expired', status = 'Cancelled' WHERE id = $1`,
+        [order.id]
+      );
+    }
+    await client.query('COMMIT');
+    return ordersResult.rowCount;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function updateOrderStatus(orderId, status) {
   try {
     const result = await query('UPDATE orders SET status = $1 WHERE id = $2 RETURNING id, user_id, total_amount, status, payment_type, payment_screenshot_url, created_at', [status, orderId]);
@@ -415,4 +575,4 @@ async function createMessage({ name, email, subject, body }) {
   }
 }
 
-module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, updateOrderStatus, createMessage, getStockStatus };
+module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, createPayChanguOrder, getPayChanguOrder, markPayChanguOrderPaid, cancelPayChanguOrder, expirePendingPayChanguOrders, updateOrderStatus, createMessage, getStockStatus };

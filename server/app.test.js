@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createDefaultSettings, readSiteSettings, normalizeProductPayload, isValidInternationalPhone, app, createCustomerToken, getCustomerTokenUserId } = require('./app');
+const { createDefaultSettings, readSiteSettings, normalizeProductPayload, isValidInternationalPhone, isMatchingPayChanguPayment, verifyPayChanguWebhookSignature, app, createCustomerToken, getCustomerTokenUserId } = require('./app');
 const db = require('./services/db');
 
 test('default payment settings include the configured account details', () => {
@@ -41,6 +41,35 @@ test('international phone numbers must be valid E.164 values', () => {
   assert.equal(isValidInternationalPhone('+447911123456'), true);
   assert.equal(isValidInternationalPhone('0991234567'), false);
   assert.equal(isValidInternationalPhone('+0123456789'), false);
+});
+
+test('PayChangu payment verification requires a matching successful transaction', () => {
+  const order = { payment_reference: 'MC-test-reference', total_amount: 12500 };
+  const payment = {
+    status: 'success',
+    data: {
+      status: 'success',
+      tx_ref: 'MC-test-reference',
+      amount: 12500,
+      currency: 'MWK'
+    }
+  };
+
+  assert.equal(isMatchingPayChanguPayment(payment, order), true);
+  assert.equal(isMatchingPayChanguPayment({ ...payment, data: { ...payment.data, amount: 1 } }, order), false);
+  assert.equal(isMatchingPayChanguPayment({ ...payment, data: { ...payment.data, tx_ref: 'other' } }, order), false);
+  assert.equal(isMatchingPayChanguPayment({ ...payment, data: { ...payment.data, currency: 'USD' } }, order), false);
+  assert.equal(isMatchingPayChanguPayment({ ...payment, data: { ...payment.data, status: 'pending' } }, order), false);
+});
+
+test('PayChangu webhooks require the expected raw-body HMAC signature', () => {
+  const payload = Buffer.from('{"tx_ref":"MC-test-reference"}');
+  const secret = 'test-webhook-secret';
+  const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+  assert.equal(verifyPayChanguWebhookSignature(payload, signature, secret), true);
+  assert.equal(verifyPayChanguWebhookSignature(payload, signature, 'wrong-secret'), false);
+  assert.equal(verifyPayChanguWebhookSignature(payload, 'invalid', secret), false);
 });
 
 test('customer tokens still validate when no secret is configured', () => {
@@ -89,7 +118,9 @@ test('admin API rejects requests without a bearer token', async () => {
       { path: '/api/user/1', method: 'GET' },
       { path: '/api/user/1', method: 'PATCH' },
       { path: '/api/user/1/avatar', method: 'PUT' },
-      { path: '/api/user/1/orders', method: 'GET' }
+      { path: '/api/user/1/orders', method: 'GET' },
+      { path: '/api/payments/paychangu/initiate', method: 'POST' },
+      { path: '/api/payments/paychangu/verify?tx_ref=example', method: 'GET' }
     ];
     for (const route of protectedRoutes) {
       const response = await fetch(baseUrl + route.path, { method: route.method });
