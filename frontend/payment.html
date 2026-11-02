@@ -358,6 +358,7 @@
     try {
       const response = await fetch(window.apiUrl('/api/payments/paychangu/initiate'), {
         method: 'POST',
+        signal: AbortSignal.timeout(90000),
         headers: {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + savedUser.token
@@ -375,7 +376,9 @@
       }
       window.location.assign(body.data.checkoutUrl);
     } catch (error) {
-      showToast(error.message || 'Unable to place your order.');
+      showToast(error.name === 'TimeoutError' || error.name === 'AbortError'
+        ? 'Checkout timed out. Please try again.'
+        : error.message || 'Unable to place your order.');
       resetConfirmButton();
     }
   }
@@ -397,6 +400,7 @@
 
     try {
       const response = await fetch(window.apiUrl('/api/payments/paychangu/verify?tx_ref=' + encodeURIComponent(paymentReference)), {
+        signal: AbortSignal.timeout(90000),
         headers: { Authorization: 'Bearer ' + savedUser.token }
       });
       const body = await response.json().catch(() => ({}));
@@ -418,7 +422,9 @@
       showSuccessSummary(orderId, 'PayChangu', Number(body.data.totalAmount), items);
     } catch (error) {
       closePaymentModal();
-      showToast(error.message || 'Unable to verify payment. Please try again.');
+      showToast(error.name === 'TimeoutError' || error.name === 'AbortError'
+        ? 'Payment verification timed out. Check your orders before trying to pay again.'
+        : error.message || 'Unable to verify payment. Please try again.');
     }
   }
 

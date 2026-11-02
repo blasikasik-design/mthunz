@@ -743,6 +743,7 @@ app.post('/api/payments/paychangu/initiate', requireAuthenticatedCustomer, async
         Authorization: `Bearer ${secretKey}`,
         'Content-Type': 'application/json'
       },
+      signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
         amount: String(order.totalAmount),
         currency: 'MWK',
@@ -814,7 +815,8 @@ app.get('/api/payments/paychangu/verify', requireAuthenticatedCustomer, async (r
     }
     if (order.payment_status !== 'paid') {
       const gatewayResponse = await fetch(`https://api.paychangu.com/verify-payment/${encodeURIComponent(paymentReference)}`, {
-        headers: { Accept: 'application/json', Authorization: `Bearer ${secretKey}` }
+        headers: { Accept: 'application/json', Authorization: `Bearer ${secretKey}` },
+        signal: AbortSignal.timeout(20000)
       });
       const gatewayBody = await gatewayResponse.json().catch(() => ({}));
       if (!gatewayResponse.ok) {
@@ -874,7 +876,8 @@ app.post('/api/payments/paychangu/webhook', async (req, res) => {
       return res.status(503).json({ error: 'PayChangu payments are not configured.' });
     }
     const gatewayResponse = await fetch(`https://api.paychangu.com/verify-payment/${encodeURIComponent(paymentReference)}`, {
-      headers: { Accept: 'application/json', Authorization: `Bearer ${secretKey}` }
+      headers: { Accept: 'application/json', Authorization: `Bearer ${secretKey}` },
+      signal: AbortSignal.timeout(20000)
     });
     const gatewayBody = await gatewayResponse.json().catch(() => ({}));
     if (!gatewayResponse.ok) {
