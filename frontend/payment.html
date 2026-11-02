@@ -116,6 +116,7 @@
       .success-actions .btn { width: 100%; }
     }
   </style>
+<script src="js/api-config.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -355,7 +356,7 @@
       return;
     }
     try {
-      const response = await fetch('/api/payments/paychangu/initiate', {
+      const response = await fetch(window.apiUrl('/api/payments/paychangu/initiate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -395,7 +396,7 @@
     $('payBtn').querySelector('.btn-label').textContent = 'Verifying';
 
     try {
-      const response = await fetch('/api/payments/paychangu/verify?tx_ref=' + encodeURIComponent(paymentReference), {
+      const response = await fetch(window.apiUrl('/api/payments/paychangu/verify?tx_ref=' + encodeURIComponent(paymentReference)), {
         headers: { Authorization: 'Bearer ' + savedUser.token }
       });
       const body = await response.json().catch(() => ({}));

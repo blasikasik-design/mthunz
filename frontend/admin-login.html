@@ -268,6 +268,7 @@ body {
   color: var(--gold);
 }
 </style>
+<script src="js/api-config.js"></script>
 </head>
 <body>
 
@@ -366,7 +367,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
   btn.innerHTML = '<span class="login-spinner" aria-hidden="true"></span>Signing in...';
 
   try {
-    var response = await fetch('/api/admin/login', {
+    var response = await fetch(window.apiUrl('/api/admin/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email, password: password })

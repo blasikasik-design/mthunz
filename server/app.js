@@ -9,6 +9,7 @@ const cloudinary = require('cloudinary').v2;
 const db = require('./services/db');
 const auth = require('./services/auth');
 const settingsPath = path.join(__dirname, 'data', 'site-settings.json');
+const defaultAppOrigin = 'https://nthuzi.blessingschibwana44.workers.dev';
 
 function getTokenSecret() {
   return process.env.ADMIN_TOKEN_SECRET || 'mthunzi-local-dev-secret';
@@ -391,7 +392,7 @@ module.exports = {
   app
 };
 
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN || defaultAppOrigin }));
 app.use(express.json({
   limit: '50mb',
   verify(req, res, buffer) {
@@ -702,7 +703,7 @@ app.post('/api/payments/paychangu/initiate', requireAuthenticatedCustomer, async
   if (!secretKey) {
     return res.status(503).json({ error: 'PayChangu payments are not configured.' });
   }
-  const appUrl = String(process.env.APP_URL || '').trim().replace(/\/+$/, '');
+  const appUrl = String(process.env.APP_URL || defaultAppOrigin).trim().replace(/\/+$/, '');
   let appOrigin;
   try {
     const configuredUrl = new URL(appUrl);

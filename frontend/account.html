@@ -89,6 +89,7 @@
   #loginStatus.off{color:#d4727a}
   #loginStatus.off::before{background:#d4727a;animation:none}
   .btn-out{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;border:1px solid #e3cfd1;background:var(--surface);color:#c0505a;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .2s}
+  .btn-out[hidden]{display:none}
   .btn-out:hover{background:rgba(217,83,79,.1)}
   .btn-out .ic{transition:transform .25s var(--ease)}
   .btn-out:hover .ic{transform:translateX(3px)}
@@ -384,6 +385,7 @@
     .toast{max-width:none}
   }
 </style>
+<script src="js/api-config.js"></script>
 </head>
 <body>
 
@@ -469,7 +471,7 @@
           </div>
         </div>
       </div>
-      <a href="#" class="btn-out logout"><span class="ic" data-ic="log-out"></span> Sign out</a>
+      <a href="#" class="btn-out logout" id="signOutBtn" hidden><span class="ic" data-ic="log-out"></span> Sign out</a>
     </div>
     <div class="stats">
       <div class="stat"><div class="si"><span class="ic" data-ic="package"></span></div><div><div class="value" id="summaryOrders">0</div><div class="label">Orders placed</div></div></div>
@@ -753,7 +755,7 @@
         reader.onerror = () => reject(new Error('Could not read that photo.'));
         reader.readAsDataURL(file);
       });
-      const response = await fetch('/api/user/' + encodeURIComponent(currentUser.id) + '/avatar', {
+      const response = await fetch(window.apiUrl('/api/user/' + encodeURIComponent(currentUser.id) + '/avatar'), {
         method:'PUT',
         headers:Object.assign({'Content-Type':'application/json'}, authHeaders()),
         body:JSON.stringify({image:dataUrl})
@@ -779,7 +781,7 @@
     const button = this;
     button.disabled = true;
     try{
-      const response = await fetch('/api/user/' + encodeURIComponent(currentUser.id), {
+      const response = await fetch(window.apiUrl('/api/user/' + encodeURIComponent(currentUser.id)), {
         method:'PATCH',
         headers:Object.assign({'Content-Type':'application/json'}, authHeaders()),
         body:JSON.stringify({removeAvatar:true})
@@ -810,6 +812,7 @@
 
   /* ---------- profile state ---------- */
   function renderProfileState(user){
+    $('signOutBtn').hidden = !user;
     if(!user){
       $('loginStatus').textContent='Not signed in';
       $('loginStatus').classList.add('off');
@@ -839,7 +842,7 @@
   async function loadUserProfile(user){
     if(!user || !user.token) return;
     try{
-      const res = await fetch('/api/user/' + encodeURIComponent(user.id), {headers:authHeaders()});
+      const res = await fetch(window.apiUrl('/api/user/' + encodeURIComponent(user.id)), {headers:authHeaders()});
       const body = await res.json().catch(()=>({}));
       if(res.status === 401) return handleUnauthorized();
       if(!res.ok || !body.data) throw new Error(body.error || 'Unable to load your profile.');
@@ -1037,7 +1040,7 @@
   async function loadUserOrders(user){
     if(!user){ renderOrders([]); return; }
     try{
-      const res = await fetch('/api/user/' + encodeURIComponent(user.id) + '/orders', {headers:authHeaders()});
+      const res = await fetch(window.apiUrl('/api/user/' + encodeURIComponent(user.id) + '/orders'), {headers:authHeaders()});
       const body = await res.json().catch(()=>({}));
       if(res.status === 401){ handleUnauthorized(); return; }
       if(!res.ok) throw new Error(body.error || 'Unable to load your orders.');
@@ -1332,7 +1335,7 @@
     btn.innerHTML = I('loader').replace('class="ic"','class="ic spin"') + ' Saving...';
     let saved = false;
     try{
-      const res=await fetch('/api/user/'+currentUser.id,{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},authHeaders()),body:JSON.stringify(payload)});
+      const res=await fetch(window.apiUrl('/api/user/'+currentUser.id),{method:'PATCH',headers:Object.assign({'Content-Type':'application/json'},authHeaders()),body:JSON.stringify(payload)});
       const body=await res.json().catch(()=>({}));
       if(res.status===401){handleUnauthorized();return;}
       if(!res.ok){showToast(body.error||'Unable to update profile','error'); return;}

@@ -32,7 +32,7 @@
 
   async function loadProducts() {
     try {
-      const response = await fetch('/api/products');
+      const response = await fetch(window.apiUrl('/api/products'));
       if (!response.ok) throw new Error('Network response was not ok');
       const result = await response.json();
       const items = Array.isArray(result.data) ? result.data : [];

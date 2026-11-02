@@ -88,6 +88,7 @@
     @media (max-width: 900px) { .contact-hero-card, .contact-grid { grid-template-columns: 1fr; } }
     @media (max-width: 640px) { .contact-hero { padding: 44px 4% 28px; } .contact-hero-card { padding: 24px; } .contact-main { padding: 20px 4% 56px; } .contact-card, .info-card { padding: 20px; } }
   </style>
+<script src="js/api-config.js"></script>
 </head>
 <body>
   <nav style="position:fixed;top:0;left:0;width:100%;z-index:1000;">
@@ -347,7 +348,7 @@
       }
 
       try {
-        const res = await fetch('/api/contact', {
+        const res = await fetch(window.apiUrl('/api/contact'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

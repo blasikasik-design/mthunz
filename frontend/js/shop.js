@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function refreshCategories() {
     try {
-      var res = await fetch('/api/site-settings');
+      var res = await fetch(window.apiUrl('/api/site-settings'));
       var json = await res.json();
       var categories = Array.isArray(json.data && json.data.categories) ? json.data.categories : [];
       var footerLinks = document.getElementById('footerCategoryLinks');

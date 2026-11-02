@@ -331,6 +331,7 @@ tbody tr:hover { background: var(--paper); }
   .confirm-actions { flex-direction:column; }
 }
 </style>
+<script src="js/api-config.js"></script>
 </head>
 <body>
 
@@ -725,7 +726,7 @@ document.addEventListener('DOMContentLoaded', function(){
   /* ---------- API FUNCTIONS ---------- */
   async function loadOrders(){
     try {
-      const res = await fetch('/api/admin/orders');
+      const res = await fetch(window.apiUrl('/api/admin/orders'));
       const json = await res.json();
       orders = (json.data || []).map(function(o, idx){
         return {
@@ -751,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function loadCustomers(){
     try {
-      const res = await fetch('/api/admin/customers');
+      const res = await fetch(window.apiUrl('/api/admin/customers'));
       const json = await res.json();
       customers = (json.data || []).map(function(c){
         return {
@@ -773,7 +774,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function loadMessages(){
     try {
-      const res = await fetch('/api/admin/messages');
+      const res = await fetch(window.apiUrl('/api/admin/messages'));
       const json = await res.json();
       messages = (json.data || []).map(function(m){
         return {
@@ -797,7 +798,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function loadCategories(){
     try {
-      const res = await fetch('/api/categories');
+      const res = await fetch(window.apiUrl('/api/categories'));
       const json = await res.json();
       categories = Array.isArray(json.data) ? json.data : [];
       renderCategoryManager();
@@ -854,7 +855,7 @@ document.addEventListener('DOMContentLoaded', function(){
         const id = button.getAttribute('data-delete-cat');
         setButtonLoading(button, true, 'Deleting...');
         try {
-          const res = await fetch('/api/admin/categories/' + id, { method: 'DELETE' });
+          const res = await fetch(window.apiUrl('/api/admin/categories/' + id), { method: 'DELETE' });
           const result = await parseResponsePayload(res, 'Unable to delete category');
           if (!result.ok) throw new Error(result.data.error || 'Unable to delete category');
           await loadCategories();
@@ -872,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   async function loadProducts(){
     try {
-      const res = await fetch('/api/products');
+      const res = await fetch(window.apiUrl('/api/products'));
       const json = await res.json();
       products = (json.data || []).map(function(p){
         return {
@@ -1245,7 +1246,7 @@ document.addEventListener('DOMContentLoaded', function(){
       };
 
       if(editingProductId===null){
-        var res = await fetch('/api/admin/products', {
+        var res = await fetch(window.apiUrl('/api/admin/products'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1255,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', function(){
         await loadProducts();
         showToast('Product added');
       } else {
-        var updateRes = await fetch('/api/admin/products/' + editingProductId, {
+        var updateRes = await fetch(window.apiUrl('/api/admin/products/' + editingProductId), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1286,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', function(){
         customer: '/api/admin/customers/',
         message: '/api/admin/messages/'
       };
-      var res = await fetch(endpoints[deleteTargetType] + deleteTargetId, { method: 'DELETE' });
+      var res = await fetch(window.apiUrl(endpoints[deleteTargetType] + deleteTargetId), { method: 'DELETE' });
       var deleteResult = await parseResponsePayload(res, 'Unable to complete deletion');
       if (!deleteResult.ok) throw new Error(deleteResult.data.error || 'Unable to complete deletion');
       if (deleteTargetType === 'product') await loadProducts();
@@ -1358,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', function(){
         var orderRow = orders.find(function(x){ return x.id===sel.getAttribute('data-id'); });
         var newStatus = sel.value;
         try {
-          var res = await fetch('/api/admin/orders/' + orderRow.order_id, {
+          var res = await fetch(window.apiUrl('/api/admin/orders/' + orderRow.order_id), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })
@@ -1571,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', function(){
   /* ================= SETTINGS ================= */
   async function loadSiteSettings(){
     try {
-      const res = await fetch('/api/site-settings');
+      const res = await fetch(window.apiUrl('/api/site-settings'));
       const json = await res.json();
       const settings = json.data || {};
       document.getElementById('setStoreName').value = settings.storeName || 'Mthunzi Creations';
@@ -1621,7 +1622,7 @@ document.addEventListener('DOMContentLoaded', function(){
         lowStockAlerts: document.getElementById('setLowStock').checked,
         orderNotifications: document.getElementById('setOrderNotif').checked
       };
-      const res = await fetch('/api/admin/site-settings', {
+      const res = await fetch(window.apiUrl('/api/admin/site-settings'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1662,7 +1663,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     setButtonLoading(button, true, 'Updating credentials...');
     try {
-      var response = await fetch('/api/admin/credentials', {
+      var response = await fetch(window.apiUrl('/api/admin/credentials'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, currentPassword: currentPassword, newPassword: newPassword })
@@ -1709,7 +1710,7 @@ document.addEventListener('DOMContentLoaded', function(){
     try {
       const url = id ? '/api/admin/categories/' + id : '/api/admin/categories';
       const method = id ? 'PATCH' : 'POST';
-      const res = await fetch(url, {
+      const res = await fetch(window.apiUrl(url), {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
