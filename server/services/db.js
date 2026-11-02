@@ -460,7 +460,7 @@ async function createPayChanguOrder({ userId, items, paymentReference }) {
       );
       await client.query(
         'INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES ($1, $2, $3, $4)',
-        [orderId, quantity, product.price]
+        [orderId, productId, quantity, product.price]
       );
     }
     await client.query('COMMIT');
