@@ -267,7 +267,7 @@ function isValidInternationalPhone(value) {
   return /^\+[1-9]\d{6,14}$/.test(String(value || '').trim());
 }
 
-async function uploadImageDataUrl(dataUrl, folder, maxBytes, allowedFormats) {
+async function uploadImageDataUrl(dataUrl, folder, maxBytes, allowedFormats, maxDimension = 1600) {
   const match = String(dataUrl || '').match(/^data:image\/([a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i);
   if (!match) {
     const error = new Error('Invalid image data payload.');
@@ -294,8 +294,15 @@ async function uploadImageDataUrl(dataUrl, folder, maxBytes, allowedFormats) {
   return new Promise((resolve, reject) => {
     const upload = cloudinary.uploader.upload_stream({ folder, resource_type: 'image' }, (error, result) => {
       if (error) return reject(error);
-      if (!result || !result.secure_url) return reject(new Error('Cloudinary did not return a secure image URL.'));
-      resolve(result.secure_url);
+      if (!result || !result.public_id) return reject(new Error('Cloudinary did not return an image identifier.'));
+      resolve(cloudinary.url(result.public_id, {
+        secure: true,
+        resource_type: 'image',
+        transformation: [
+          { width: maxDimension, height: maxDimension, crop: 'limit' },
+          { quality: 'auto', fetch_format: 'auto' }
+        ]
+      }));
     });
     upload.end(buffer);
   });
@@ -575,7 +582,7 @@ app.get('/api/user/:id/orders', requireCustomer, async (req, res) => {
 
 app.put('/api/user/:id/avatar', requireCustomer, async (req, res) => {
   try {
-    const avatarUrl = await uploadImageDataUrl(req.body && req.body.image, 'mthunzi/avatars', 5 * 1024 * 1024, ['jpeg', 'jpg', 'png', 'webp']);
+    const avatarUrl = await uploadImageDataUrl(req.body && req.body.image, 'mthunzi/avatars', 5 * 1024 * 1024, ['jpeg', 'jpg', 'png', 'webp'], 512);
     const user = await auth.updateUser({ id: req.customerId, avatarUrl });
     if (!user) return res.status(404).json({ error: 'User not found.' });
     res.json({ data: user });
