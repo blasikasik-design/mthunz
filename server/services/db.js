@@ -4,9 +4,14 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const defaultConnectionString = process.env.DATABASE_URL || process.env.DB_URL || 'postgres://postgres:postgres@127.0.0.1:5433/mthunzi';
+const databaseHost = new URL(defaultConnectionString).hostname;
+const databaseSsl = databaseHost.endsWith('.aivencloud.com')
+  ? { ca: fs.readFileSync(path.join(__dirname, '..', 'config', 'aiven-ca.pem'), 'utf8') }
+  : undefined;
 
 const pool = new Pool({
   connectionString: defaultConnectionString,
+  ssl: databaseSsl,
 });
 
 const productsPath = path.join(__dirname, '..', 'data', 'products.json');
