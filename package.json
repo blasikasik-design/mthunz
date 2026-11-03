@@ -5,7 +5,10 @@
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js",
-    "dev": "nodemon server/app.js"
+    "dev": "nodemon server/app.js",
+    "dev:frontend": "vite --config vite.config.mjs",
+    "build:frontend": "vite build --config vite.config.mjs && node scripts/publish-frontend.cjs",
+    "check:frontend": "tsc --noEmit -p storefront/tsconfig.json"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -16,6 +19,13 @@
     "pg": "^8.11.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "nodemon": "^3.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^5.4.21"
   }
 }
