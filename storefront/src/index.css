@@ -29,10 +29,7 @@ img { display: block; width: 100%; }
   border-bottom: 1px solid rgba(255,255,255,.22);
 }
 .brand { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; text-align: left; padding: 0; }
-.brand-mark {
-  width: 42px; height: 42px; display: inline-grid; place-items: center; border: 1px solid currentColor;
-  border-radius: 50%; font: italic 500 23px var(--font-display);
-}
+.brand-logo { width: 64px; height: 64px; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; background: #fff; object-fit: cover; }
 .brand-name { display: flex; flex-direction: column; line-height: 1; text-transform: uppercase; letter-spacing: .12em; }
 .brand-name strong { font: 600 17px var(--font-body); }
 .brand-name small { margin-top: 5px; font-size: 8px; letter-spacing: .31em; opacity: .75; }
@@ -241,7 +238,7 @@ img { display: block; width: 100%; }
 
 footer { background: #24251f; color: var(--cream); padding: 90px 7vw 24px; }
 .footer-main { display: grid; grid-template-columns: 1fr 1fr; gap: 10vw; padding-bottom: 70px; }
-.footer-brand > .brand-mark { margin-bottom: 30px; }
+.footer-brand > .brand-logo { width: 88px; height: 88px; margin-bottom: 30px; border-color: rgba(255,255,255,.35); }
 .footer-brand h2 { font: 400 clamp(35px, 3.3vw, 49px)/1.06 var(--font-display); margin: 0; }
 .footer-brand h2 em { color: #d8ad58; }
 .footer-brand p { font-size: 11px; line-height: 1.7; color: rgba(255,255,255,.54); max-width: 430px; margin: 23px 0; }
@@ -326,7 +323,8 @@ footer { background: #24251f; color: var(--cream); padding: 90px 7vw 24px; }
 @media (max-width: 720px) {
   .site-header { height: 76px; padding: 0 5vw; }
   .page-view { padding-top: 76px; }
-  .brand-mark { width: 36px; height: 36px; font-size: 20px; }
+  .brand-logo { width: 52px; height: 52px; }
+  .footer-brand > .brand-logo { width: 76px; height: 76px; }
   .brand-name strong { font-size: 14px; }
   .bag-action span { display: none; }
   .bag-action { padding-left: 12px; gap: 7px; }

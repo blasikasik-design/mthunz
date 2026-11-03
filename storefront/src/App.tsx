@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react"
 import { apiUrl } from "./api"
+import projectLogo from "../assets/mthunzi-logo.jpg"
 
 type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "menu" | "palette" | "search" | "sparkle"
 
@@ -426,7 +427,7 @@ function App() {
           onClick={() => navigate("home")}
           aria-label="Mthunzi Creations home"
         >
-          <span className="brand-mark">M</span>
+          <img className="brand-logo" src={projectLogo} alt="" />
           <span className="brand-name">
             <strong>Mthunzi</strong>
             <small>Creations</small>
@@ -1197,7 +1198,7 @@ function App() {
       <footer id="contact">
         <div className="footer-main">
           <div className="footer-brand">
-            <span className="brand-mark">M</span>
+            <img className="brand-logo" src={projectLogo} alt="" />
             <h2>
               Art made in Malawi,
               <br />
