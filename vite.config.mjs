@@ -29,7 +29,14 @@ export default defineConfig({
         index: path.resolve(siteRoot, 'index.html'),
         shop: path.resolve(siteRoot, 'shop.html'),
         about: path.resolve(siteRoot, 'about.html'),
-        contact: path.resolve(siteRoot, 'contact.html')
+        contact: path.resolve(siteRoot, 'contact.html'),
+        login: path.resolve(siteRoot, 'login.html'),
+        signup: path.resolve(siteRoot, 'signup.html'),
+        productDetail: path.resolve(siteRoot, 'product-detail.html'),
+        payment: path.resolve(siteRoot, 'payment.html'),
+        account: path.resolve(siteRoot, 'account.html'),
+        adminLogin: path.resolve(siteRoot, 'admin-login.html'),
+        admin: path.resolve(siteRoot, 'admin.html')
       }
     }
   }

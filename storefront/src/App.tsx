@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react"
 import { apiUrl } from "./api"
-import projectLogo from "../assets/mthunzi-logo.jpg"
+import AuthPage from "./AuthPage"
+import AccountPage from "./AccountPage"
+import AdminLoginPage from "./AdminLoginPage"
+import AdminPage from "./AdminPage"
+import { PaymentPage, ProductDetailPage } from "./CommercePages"
+import projectLogo from "./brand"
 
 type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "menu" | "palette" | "search" | "sparkle"
 
@@ -47,7 +52,7 @@ type SiteSettings = {
   storeAddress: string
 }
 
-type Route = "home" | "shop" | "about" | "contact"
+type Route = "home" | "shop" | "about" | "contact" | "login" | "signup" | "product-detail" | "payment" | "account" | "admin-login" | "admin"
 
 const categoryImages: Record<string, string> = {
   Paintings:
@@ -93,7 +98,7 @@ function readSavedCart(): CartItem[] {
 
 function routeFromPath(pathname: string): Route {
   const page = pathname.split("/").pop()?.replace(/\.html$/, "")
-  return page === "shop" || page === "about" || page === "contact"
+  return page === "shop" || page === "about" || page === "contact" || page === "login" || page === "signup" || page === "product-detail" || page === "payment" || page === "account" || page === "admin-login" || page === "admin"
     ? page
     : "home"
 }
@@ -203,6 +208,10 @@ function App() {
   const [contactSending, setContactSending] = useState(false)
 
   useEffect(() => {
+    if (["login", "signup", "product-detail", "payment", "account", "admin-login", "admin"].includes(route)) {
+      setProductsLoading(false)
+      return
+    }
     const controller = new AbortController()
     fetch(apiUrl("/api/products"), { signal: controller.signal })
       .then(async (response) => {
@@ -416,6 +425,15 @@ function App() {
     const queryString = category ? `?category=${encodeURIComponent(category)}` : ""
     window.location.href = `/${filename}${queryString}`
   }
+
+  if (route === "login" || route === "signup") {
+    return <AuthPage mode={route} />
+  }
+  if (route === "account") return <AccountPage />
+  if (route === "admin-login") return <AdminLoginPage />
+  if (route === "admin") return <AdminPage />
+  if (route === "product-detail") return <ProductDetailPage />
+  if (route === "payment") return <PaymentPage />
 
   return (
     <main>
