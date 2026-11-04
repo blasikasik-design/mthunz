@@ -7,7 +7,7 @@ import AdminPage from "./AdminPage"
 import { PaymentPage, ProductDetailPage } from "./CommercePages"
 import projectLogo from "./brand"
 
-type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "menu" | "palette" | "search" | "sparkle"
+type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "menu" | "palette" | "search" | "sparkle" | "user"
 
 type Product = {
   id: number
@@ -117,6 +117,12 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
         <path d="M9 9V6a3 3 0 0 1 6 0v3" />
       </>
     ),
+    user: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </>
+    ),
     check: <path d="m5 12 4 4L19 6" />,
     chevron: <path d="m9 18 6-6-6-6" />,
     close: (
@@ -186,8 +192,19 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   )
 }
 
+type SignedInUser = { name?: string; email?: string }
+
+function readSignedInUser(): SignedInUser | null {
+  try {
+    return JSON.parse(localStorage.getItem("mthunziAuthUser") || "null")
+  } catch {
+    return null
+  }
+}
+
 function App() {
   const route = routeFromPath(window.location.pathname)
+  const [signedInUser] = useState(readSignedInUser)
   const [products, setProducts] = useState<Product[]>([])
   const [productsLoading, setProductsLoading] = useState(true)
   const [productsError, setProductsError] = useState("")
@@ -481,10 +498,12 @@ function App() {
 
         <div className="header-actions">
           <button
-            className="text-action"
-            onClick={() => (window.location.href = "/login.html")}
+            className="text-action account-action"
+            onClick={() => (window.location.href = signedInUser ? "/account.html" : "/login.html")}
+            aria-label={signedInUser?.name ? `Account for ${signedInUser.name}` : "Sign in"}
           >
-            Sign in
+            <Icon name="user" size={18} />
+            <span className="account-name">{signedInUser?.name?.trim() || "Sign in"}</span>
           </button>
           <button
             className="bag-action"
