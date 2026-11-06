@@ -474,11 +474,7 @@ function App() {
           onClick={() => navigate("home")}
           aria-label="Mthunzi Creations home"
         >
-          <img className="brand-logo" src={projectLogo} alt="" />
-          <span className="brand-name">
-            <strong>Mthunzi</strong>
-            <small>Creations</small>
-          </span>
+          <img className="brand-logo" src={projectLogo} alt="Mthunzi Creations" />
         </button>
 
         <nav className="desktop-nav" aria-label="Main navigation">

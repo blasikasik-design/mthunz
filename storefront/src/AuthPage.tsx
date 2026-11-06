@@ -96,7 +96,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     }
   }
 
-  const fieldClass = "w-full border border-[#cfc7bb] bg-[#fffdf9] py-3.5 pl-11 pr-4 text-sm outline-none transition focus:border-[#e15d43] focus:ring-2 focus:ring-[#e15d43]/10"
+  const fieldClass = "w-full border border-[#cfc7bb] bg-[#fffdf9] py-3.5 pl-11 pr-4 text-sm outline-none transition focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10"
   const fieldLabelClass = "grid gap-2 text-[11px] font-semibold text-[#252925]"
 
   return (
@@ -105,13 +105,12 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         <img className="absolute inset-0 h-full w-full object-cover" src="https://images.unsplash.com/photo-1541519230324-f6779f9f4a48?auto=format&fit=crop&w=1400&q=88" alt="" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#10233a]/90 via-[#183655]/35 to-[#183655]/20" />
         <a className="relative z-10 inline-flex w-fit items-center gap-3 text-xs font-semibold uppercase tracking-[.18em]" href="/index.html">
-          <img className="size-11 rounded-full bg-white object-contain p-0.5" src={projectLogo} alt="" />
-          Mthunzi Creations
+          <img className="login-brand-logo" src={projectLogo} alt="Mthunzi Creations" />
         </a>
         <div className="relative z-10 max-w-xl pb-2">
-          <p className="text-[9px] font-semibold tracking-[.2em] text-[#efad90]">{isSignup ? "JOIN THE COLLECTION" : "WELCOME BACK"}</p>
+          <p className="text-[9px] font-semibold tracking-[.2em] text-[#efc38e]">{isSignup ? "JOIN THE COLLECTION" : "WELCOME BACK"}</p>
           <h1 className="mt-5 font-serif text-5xl leading-[1.02] lg:text-7xl">
-            {isSignup ? <>Art finds a home.<br /><em className="text-[#f1a082]">Make yours here.</em></> : <>Your collection<br /><em className="text-[#f1a082]">is waiting.</em></>}
+            {isSignup ? <>Art finds a home.<br /><em className="text-[#efc38e]">Make yours here.</em></> : <>Your collection<br /><em className="text-[#efc38e]">is waiting.</em></>}
           </h1>
           <p className="mt-6 max-w-md text-sm leading-7 text-white/80">Save the pieces that move you, follow your orders, and discover new work from Malawi.</p>
         </div>
@@ -122,9 +121,9 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         <a className="absolute right-6 top-6 text-[11px] text-[#4c596b] underline underline-offset-4 sm:right-10 md:right-[5vw]" href="/index.html">Back to home</a>
         <form className="w-full max-w-[500px] space-y-5" onSubmit={submit}>
           <a className="mb-6 inline-flex items-center gap-2 text-sm text-[#4c596b] md:hidden" href="/index.html">
-            <img className="size-9 rounded-full bg-white object-contain p-0.5" src={projectLogo} alt="" /> Mthunzi Creations
+            <img className="login-brand-logo login-brand-logo-compact" src={projectLogo} alt="Mthunzi Creations" />
           </a>
-          <p className="text-[9px] font-semibold tracking-[.2em] text-[#e15d43]">ACCOUNT</p>
+          <p className="text-[9px] font-semibold tracking-[.2em] text-[#2d6cbb]">ACCOUNT</p>
           <h2 className="font-serif text-4xl leading-tight sm:text-5xl">{isSignup ? "Create your account" : "Sign in to Mthunzi"}</h2>
           <p className="-mt-2 text-sm text-[#777067]">{isSignup ? "A personal space for the art you love." : "Welcome back. Enter your details below."}</p>
 
@@ -137,15 +136,15 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           <label className={fieldLabelClass}>Email address
             <span className="relative block"><svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#817a70]" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><input className={fieldClass} name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></span>
           </label>
-          {isSignup && <label className={fieldLabelClass}>Phone number <span className="font-normal text-[#817a70]">(optional)</span><input className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#e15d43] focus:ring-2 focus:ring-[#e15d43]/10" name="phone" type="tel" autoComplete="tel" placeholder="+265..." /></label>}
+          {isSignup && <label className={fieldLabelClass}>Phone number <span className="font-normal text-[#817a70]">(optional)</span><input className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10" name="phone" type="tel" autoComplete="tel" placeholder="+265..." /></label>}
           <label className={fieldLabelClass}>Password
             <span className="relative block"><svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#817a70]" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input className={fieldClass} name="password" type="password" autoComplete={isSignup ? "new-password" : "current-password"} minLength={8} placeholder={isSignup ? "At least 8 characters" : "Your password"} required /></span>
           </label>
-          {isSignup && <label className={fieldLabelClass}>Confirm password<input className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#e15d43] focus:ring-2 focus:ring-[#e15d43]/10" name="confirmation" type="password" autoComplete="new-password" minLength={8} required /></label>}
-          {isSignup && <label className="flex items-start gap-2 text-[11px] font-normal leading-5 text-[#5f665f]"><input className="mt-1 accent-[#e15d43]" type="checkbox" required /> I agree to the Terms of Service and Privacy Policy.</label>}
-          {!isSignup && <div className="flex items-center gap-2 text-[11px] text-[#5f665f]"><input className="accent-[#e15d43]" type="checkbox" /> Remember me</div>}
+          {isSignup && <label className={fieldLabelClass}>Confirm password<input className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10" name="confirmation" type="password" autoComplete="new-password" minLength={8} required /></label>}
+          {isSignup && <label className="flex items-start gap-2 text-[11px] font-normal leading-5 text-[#5f665f]"><input className="mt-1 accent-[#2d6cbb]" type="checkbox" required /> I agree to the Terms of Service and Privacy Policy.</label>}
+          {!isSignup && <div className="flex items-center gap-2 text-[11px] text-[#5f665f]"><input className="accent-[#2d6cbb]" type="checkbox" /> Remember me</div>}
           <p className={`min-h-5 text-sm ${statusType === "error" ? "text-red-700" : "text-blue-800"}`} role="status" aria-live="polite">{status}</p>
-          <button className="flex min-h-12 w-full items-center justify-between bg-[#e15d43] px-5 py-3.5 text-xs font-semibold text-white transition hover:bg-[#c94c35] disabled:cursor-wait disabled:opacity-60" type="submit" disabled={busy}>{busy ? "Please wait…" : isSignup ? "Create my account" : "Sign in"}<span aria-hidden="true">→</span></button>
+          <button className="flex min-h-12 w-full items-center justify-between bg-[#2d6cbb] px-5 py-3.5 text-xs font-semibold text-white transition hover:bg-[#1f528e] disabled:cursor-wait disabled:opacity-60" type="submit" disabled={busy}>{busy ? "Please wait…" : isSignup ? "Create my account" : "Sign in"}<span aria-hidden="true">→</span></button>
           <p className="pt-1 text-center text-[11px] text-[#777067]">{isSignup ? "Already have an account?" : "New to Mthunzi?"}{" "}<a className="border-b border-[#1d211f] pb-0.5 font-semibold text-[#1d211f]" href={isSignup ? "/login.html" : "/signup.html"}>{isSignup ? "Sign in" : "Create an account"}</a></p>
         </form>
       </section>

@@ -289,7 +289,7 @@ export default function AdminPage() {
   return (
     <main className="admin-shell">
       <aside className={`admin-sidebar ${mobileMenu ? "mobile-open" : ""}`}>
-        <div className="admin-logo"><img src={projectLogo} alt="" /><div><b>MTHUNZI</b><small>ADMIN STUDIO</small></div><button className="admin-menu-close" onClick={() => setMobileMenu(false)} aria-label="Close admin menu">×</button></div>
+        <div className="admin-logo"><img src={projectLogo} alt="Mthunzi Creations" /><small>ADMIN STUDIO</small><button className="admin-menu-close" onClick={() => setMobileMenu(false)} aria-label="Close admin menu">×</button></div>
         <nav aria-label="Workspace navigation"><small>WORKSPACE</small>{navigation.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => { setView(item.id); setMobileMenu(false) }}><Icon name={item.icon} />{item.label}{item.id === "orders" && pendingOrders > 0 && <i>{pendingOrders}</i>}{item.id === "messages" && messages.length > 0 && <i>{messages.length}</i>}</button>)}</nav>
         <div className="admin-sidebar-bottom"><button onClick={() => window.location.assign("/index.html")}><Icon name="arrow" />View storefront</button><div><span>{initials}</span><p><b>{adminName}</b><small>Administrator</small></p></div></div>
       </aside>
