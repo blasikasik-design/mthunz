@@ -7,7 +7,7 @@ import AdminPage from "./AdminPage"
 import { PaymentPage, ProductDetailPage } from "./CommercePages"
 import projectLogo from "./brand"
 
-type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "menu" | "palette" | "search" | "sparkle" | "user"
+type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "mail" | "menu" | "message" | "palette" | "search" | "sparkle" | "user"
 
 type Product = {
   id: number
@@ -147,10 +147,22 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
         <circle cx="12" cy="10" r="2.5" />
       </>
     ),
+    mail: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3 7 9 6 9-6" />
+      </>
+    ),
     menu: (
       <>
         <path d="M4 7h16" />
         <path d="M4 17h16" />
+      </>
+    ),
+    message: (
+      <>
+        <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-.9L3 21l1.9-4.9a8.4 8.4 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3.5a8.5 8.5 0 0 1 8.5 8Z" />
+        <path d="M8 12h.01M12.5 12h.01M17 12h.01" />
       </>
     ),
     palette: (
@@ -1289,10 +1301,14 @@ function App() {
                 target="_blank"
                 rel="noreferrer"
               >
-                WhatsApp
+                <Icon name="message" size={16} /> WhatsApp
               </a>
-              <a href={`mailto:${settings.storeEmail}`}>{settings.storeEmail}</a>
-              <span>{settings.storeAddress}</span>
+              <a href={`mailto:${settings.storeEmail}`}>
+                <Icon name="mail" size={16} /> {settings.storeEmail}
+              </a>
+              <span>
+                <Icon name="location" size={16} /> {settings.storeAddress}
+              </span>
             </div>
           </div>
         </div>

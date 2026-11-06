@@ -253,7 +253,7 @@ export default function AccountPage() {
         <a className="inline-flex items-center gap-3 font-serif text-lg" href="/index.html"><img className="size-10 rounded-full bg-white object-contain p-0.5" src={projectLogo} alt="" />Mthunzi Creations</a>
         <div className="flex items-center gap-5 text-xs"><a className="underline underline-offset-4" href="/shop.html">Shop</a><button className="text-[#9f4432]" onClick={signOut}>Sign out</button></div>
       </header>
-      <section className="bg-[#25463b] px-6 pb-24 pt-14 text-white sm:px-[10vw] sm:pt-16">
+      <section className="bg-[#1d4e7f] px-6 pb-24 pt-14 text-white sm:px-[10vw] sm:pt-16">
         <p className="text-[9px] font-semibold tracking-[.2em] text-[#efad90]">MY ACCOUNT</p>
         <h1 className="mt-4 font-serif text-5xl leading-tight sm:text-7xl">Good morning, <em className="text-[#f1a082]">{displayName}.</em></h1>
         <p className="mt-4 max-w-xl text-sm leading-6 text-white/75">Manage your details, saved artwork, and studio preferences.</p>
@@ -273,7 +273,7 @@ export default function AccountPage() {
         <section className="min-h-[560px] border border-[#ded7cc] bg-[#fbf8f2] px-6 py-8 sm:px-10 sm:py-10">
           {loading && <p className="text-sm text-[#777067]">Loading your account…</p>}
           {error && <p className="mb-5 text-sm text-red-700" role="alert">{error}</p>}
-          {message && <p className="mb-5 text-sm text-emerald-800" role="status">{message}</p>}
+          {message && <p className="mb-5 text-sm text-blue-800" role="status">{message}</p>}
           {!loading && view === "profile" && user && <>
             <div className="mb-7 border-b border-[#d8d0c3] pb-6"><p className="text-[9px] font-semibold tracking-[.2em] text-[#e15d43]">PERSONAL DETAILS</p><h2 className="mt-2 font-serif text-4xl">Your profile</h2><p className="mt-2 text-xs text-[#756e65]">Keep your details up to date for a more personal experience.</p></div>
             <form className="grid gap-5" onSubmit={saveProfile}>
@@ -299,7 +299,7 @@ export default function AccountPage() {
           </>}
           {!loading && view === "notifications" && <>
             <div className="mb-7 border-b border-[#d8d0c3] pb-6"><p className="text-[9px] font-semibold tracking-[.2em] text-[#e15d43]">PREFERENCES</p><h2 className="mt-2 font-serif text-4xl">Studio updates</h2><p className="mt-2 text-xs text-[#756e65]">Choose which updates to receive on this device.</p></div>
-            <div className="max-w-2xl">{[["collections", "New collections", "Be first to see original works and small editions."], ["orders", "Order updates", "Payment and delivery status updates."], ["studio", "Studio notes", "Occasional stories from behind the work."], ["commissions", "Commissions", "Openings for personal and commercial projects."]].map(([key, title, text]) => <button className="flex w-full items-center justify-between gap-5 border-b border-[#d8d0c3] py-5 text-left" key={key} type="button" role="switch" aria-checked={Boolean(preferences[key])} onClick={() => togglePreference(key)}><span><b className="block text-xs">{title}</b><small className="mt-1 block text-[10px] text-[#817a70]">{text}</small></span><span className={`relative h-6 w-11 rounded-full transition ${preferences[key] ? "bg-[#25463b]" : "bg-[#cfc7bb]"}`}><span className={`absolute top-1 size-4 rounded-full bg-white transition ${preferences[key] ? "left-6" : "left-1"}`} /></span></button>)}</div>
+            <div className="max-w-2xl">{[["collections", "New collections", "Be first to see original works and small editions."], ["orders", "Order updates", "Payment and delivery status updates."], ["studio", "Studio notes", "Occasional stories from behind the work."], ["commissions", "Commissions", "Openings for personal and commercial projects."]].map(([key, title, text]) => <button className="flex w-full items-center justify-between gap-5 border-b border-[#d8d0c3] py-5 text-left" key={key} type="button" role="switch" aria-checked={Boolean(preferences[key])} onClick={() => togglePreference(key)}><span><b className="block text-xs">{title}</b><small className="mt-1 block text-[10px] text-[#817a70]">{text}</small></span><span className={`relative h-6 w-11 rounded-full transition ${preferences[key] ? "bg-[#1d4e7f]" : "bg-[#cfc7bb]"}`}><span className={`absolute top-1 size-4 rounded-full bg-white transition ${preferences[key] ? "left-6" : "left-1"}`} /></span></button>)}</div>
           </>}
         </section>
       </section>

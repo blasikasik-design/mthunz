@@ -148,7 +148,7 @@ export function ProductDetailPage() {
               <div><dt className="text-xs uppercase tracking-[.12em] text-[#817a70]">Dimensions</dt><dd className="mt-2">{product.dimensions}</dd></div>
               <div><dt className="text-xs uppercase tracking-[.12em] text-[#817a70]">Availability</dt><dd className="mt-2">{product.stock > 0 ? `${product.stock} available` : "Out of stock"}</dd></div>
             </dl>
-            {message && <p className="mt-5 text-sm text-emerald-800" role="status">{message}</p>}
+            {message && <p className="mt-5 text-sm text-blue-800" role="status">{message}</p>}
             <div className="mt-7 flex flex-wrap gap-3">
               <button className="bg-[#a5482e] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#853721] disabled:cursor-not-allowed disabled:opacity-50" disabled={product.stock < 1} onClick={() => addToCart()}>
                 Add to bag
@@ -287,7 +287,7 @@ export function PaymentPage() {
             <p className="mt-5 text-xs leading-5 text-[#6b655c]">Secure checkout through PayChangu. Your order is confirmed only after payment verification.</p>
             {paidOrder ? (
               <div className="mt-7 space-y-3">
-                <p className="text-sm font-semibold text-emerald-800">Payment confirmed · {paidOrder.id}</p>
+                <p className="text-sm font-semibold text-blue-800">Payment confirmed · {paidOrder.id}</p>
                 <button className="w-full border border-[#26231f] px-4 py-3 text-sm font-semibold" onClick={downloadReceipt}>Download order details</button>
                 <button className="w-full bg-[#a5482e] px-4 py-3 text-sm font-semibold text-white" onClick={finishOrder}>Done</button>
               </div>
