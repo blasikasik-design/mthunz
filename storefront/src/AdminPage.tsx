@@ -103,6 +103,12 @@ export default function AdminPage() {
     void loadData()
   }, [])
 
+  useEffect(() => {
+    if (!notice) return
+    const timer = window.setTimeout(() => setNotice(""), 4000)
+    return () => window.clearTimeout(timer)
+  }, [notice])
+
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
