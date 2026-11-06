@@ -13,6 +13,8 @@ test('default payment settings include the configured account details', () => {
   assert.equal(settings.paymentReferenceLabel, 'Reference number');
   assert.ok(settings.paymentInstructions.includes('Send the money to that number'));
   assert.ok(settings.paymentInstructions.includes('John Botha'));
+  assert.equal(settings.aboutPage.visionTitle, 'Local stories, shared through art.');
+  assert.equal(settings.aboutPage.facts.length, 4);
 
   const persisted = readSiteSettings();
   assert.equal(persisted.paymentAccountName, 'John Botha');
@@ -114,6 +116,7 @@ test('admin API rejects requests without a bearer token', async () => {
     const baseUrl = `http://127.0.0.1:${server.address().port}`;
     const protectedRoutes = [
       { path: '/api/admin/customers', method: 'GET' },
+      { path: '/api/admin/messages/1/read', method: 'PATCH' },
       { path: '/api/admin/credentials', method: 'PUT' },
       { path: '/api/user/1', method: 'GET' },
       { path: '/api/user/1', method: 'PATCH' },

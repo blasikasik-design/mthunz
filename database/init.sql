@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS messages (
   email VARCHAR(180) NOT NULL,
   subject VARCHAR(200) NOT NULL,
   body TEXT NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

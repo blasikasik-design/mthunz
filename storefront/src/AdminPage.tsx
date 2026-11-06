@@ -1,15 +1,23 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react"
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react"
 import { apiUrl } from "./api"
+import { defaultAboutPage, type AboutPageContent } from "./aboutContent"
 import projectLogo from "./brand"
 
 type AdminSession = { name?: string; email?: string; token?: string }
 type Product = { id: number | string; name: string; category?: string; price?: number; image?: string; image_url?: string; description?: string; dimensions?: string; stock?: number; badge?: string }
 type Order = { id: number | string; name?: string; email?: string; total_amount?: number; status?: string; payment_status?: string; created_at?: string; items?: Array<{ name?: string; product_id?: number | string; price?: number; qty?: number; quantity?: number }> }
 type Customer = { id: number | string; name?: string; email?: string; phone?: string; created_at?: string }
-type Message = { id: number | string; name?: string; email?: string; subject?: string; body?: string; created_at?: string }
+type Message = { id: number | string; name?: string; email?: string; subject?: string; body?: string; created_at?: string; is_read?: boolean }
 type Category = { id: string; name: string }
-type Settings = { storeName?: string; storeEmail?: string; storePhone?: string; storeAddress?: string; [key: string]: unknown }
+type Settings = { storeName?: string; storeEmail?: string; storePhone?: string; storeAddress?: string; aboutPage?: AboutPageContent; [key: string]: unknown }
+type AboutImageField = "heroImage" | "profileImage" | "profileDetailImage" | "visionImage"
 type View = "overview" | "orders" | "products" | "customers" | "messages" | "categories" | "settings"
+
+const aboutTextFields: Array<keyof Omit<AboutPageContent, "facts" | "practiceItems">> = [
+  "heroEyebrow", "heroTitle", "heroTitleAccent", "heroText", "heroImage", "heroImageAlt", "heroImageCaption", "heroPrimaryLabel", "heroSecondaryLabel",
+  "statementLocation", "statementQuote", "profileEyebrow", "profileTitle", "profileTitleAccent", "profileLead", "profileStory", "profileImage", "profileDetailImage", "profileImageAlt", "profileDetailImageAlt", "profileCaption", "profileButtonLabel",
+  "visionEyebrow", "visionTitle", "visionText", "visionOwner", "visionImage", "visionImageAlt", "practiceEyebrow", "practiceTitle", "practiceText", "ctaEyebrow", "ctaTitle", "ctaText", "ctaButtonLabel",
+]
 
 function readAdminSession(): AdminSession | null {
   try { return JSON.parse(sessionStorage.getItem("mthunziAdminAuth") || "null") }
@@ -45,7 +53,9 @@ export default function AdminPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [settings, setSettings] = useState<Settings>({})
+  const [aboutImages, setAboutImages] = useState<Partial<Record<AboutImageField, string>>>({})
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
   const [search, setSearch] = useState("")
   const [mobileMenu, setMobileMenu] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -108,6 +118,20 @@ export default function AdminPage() {
     const timer = window.setTimeout(() => setNotice(""), 4000)
     return () => window.clearTimeout(timer)
   }, [notice])
+
+  function readAboutImage(event: ChangeEvent<HTMLInputElement>, field: AboutImageField) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Choose an image smaller than 5 MB.")
+      event.target.value = ""
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setAboutImages((current) => ({ ...current, [field]: String(reader.result || "") }))
+    reader.onerror = () => setError("Unable to read that image. Please try another file.")
+    reader.readAsDataURL(file)
+  }
 
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -172,6 +196,18 @@ export default function AdminPage() {
     }
   }
 
+  async function openMessage(message: Message) {
+    setSelectedMessage(message)
+    if (message.is_read) return
+    try {
+      await request<Message>(`/api/admin/messages/${encodeURIComponent(String(message.id))}/read`, { method: "PATCH" })
+      setMessages((current) => current.map((item) => item.id === message.id ? { ...item, is_read: true } : item))
+      setSelectedMessage({ ...message, is_read: true })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to mark the message as read.")
+    }
+  }
+
   async function saveCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
@@ -221,6 +257,35 @@ export default function AdminPage() {
     }
   }
 
+  async function saveAboutPage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const values = new FormData(event.currentTarget)
+    setBusy(true)
+    setError("")
+    try {
+      const aboutValues = Object.fromEntries(aboutTextFields.map((field) => [field, String(values.get(field) ?? "")])) as Pick<AboutPageContent, typeof aboutTextFields[number]>
+      const nextAboutPage: AboutPageContent = {
+        ...aboutPage,
+        ...aboutValues,
+        facts: aboutPage.facts.map((_, index) => ({
+          title: String(values.get(`factTitle${index}`) || "").trim(),
+          detail: String(values.get(`factDetail${index}`) || "").trim(),
+        })),
+        practiceItems: aboutPage.practiceItems.map((_, index) => String(values.get(`practiceItem${index}`) || "").trim()).filter(Boolean),
+      }
+      setSettings(await request<Settings>("/api/admin/site-settings", {
+        method: "PUT",
+        body: JSON.stringify({ ...settings, aboutPage: nextAboutPage }),
+      }))
+      setAboutImages({})
+      setNotice("About page saved.")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save the About page.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function updateCredentials(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
@@ -259,6 +324,8 @@ export default function AdminPage() {
     { id: "settings", label: "Settings", icon: "settings" },
   ]
   const adminName = admin?.name || admin?.email || "Administrator"
+  const aboutPage = settings.aboutPage || defaultAboutPage
+    const unreadMessageCount = messages.filter((message) => !message.is_read).length
   const initials = adminName.split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "A"
   const fieldClass = "admin-field"
   const matchedProducts = products.filter((product) => `${product.name} ${product.category || ""}`.toLowerCase().includes(search.toLowerCase()))
@@ -291,17 +358,27 @@ export default function AdminPage() {
   const maxWeeklySales = Math.max(1, ...salesWeeks.map((week) => week.amount))
   const activeTitle = navigation.find((item) => item.id === view)?.label || "Overview"
   const openNewProduct = () => setEditingProduct({ id: 0, name: "", category: categories[0]?.name || "", price: 0, stock: 0 })
+  const aboutField = (name: string, label: string, value: string, multiline = false) => (
+    <label className="about-editor-field">{label}{multiline
+      ? <textarea className="admin-field" name={name} rows={3} defaultValue={value} />
+      : <input className="admin-field" name={name} defaultValue={value} />}</label>
+  )
+  const aboutImageField = (field: AboutImageField, label: string) => {
+    const image = aboutImages[field] ?? aboutPage[field]
+    return <div className="about-image-field"><label className="about-editor-field">{label}<input className="admin-field" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => readAboutImage(event, field)} /></label><input type="hidden" name={field} value={image} readOnly />{image && <div className="about-image-preview"><img src={image} alt={`${label} preview`} /><button className="plain-link danger-link" type="button" onClick={() => setAboutImages((current) => ({ ...current, [field]: "" }))}>Remove image</button></div>}</div>
+  }
 
   return (
     <main className="admin-shell">
       <aside className={`admin-sidebar ${mobileMenu ? "mobile-open" : ""}`}>
         <div className="admin-logo"><img src={projectLogo} alt="Mthunzi Creations" /><small>ADMIN STUDIO</small><button className="admin-menu-close" onClick={() => setMobileMenu(false)} aria-label="Close admin menu">×</button></div>
-        <nav aria-label="Workspace navigation"><small>WORKSPACE</small>{navigation.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => { setView(item.id); setMobileMenu(false) }}><Icon name={item.icon} />{item.label}{item.id === "orders" && pendingOrders > 0 && <i>{pendingOrders}</i>}{item.id === "messages" && messages.length > 0 && <i>{messages.length}</i>}</button>)}</nav>
+        <nav aria-label="Workspace navigation"><small>WORKSPACE</small>{navigation.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => { setView(item.id); setMobileMenu(false) }}><Icon name={item.icon} />{item.label}{item.id === "orders" && pendingOrders > 0 && <i>{pendingOrders}</i>}{item.id === "messages" && unreadMessageCount > 0 && <i>{unreadMessageCount}</i>}</button>)}</nav>
         <div className="admin-sidebar-bottom"><button onClick={() => window.location.assign("/index.html")}><Icon name="arrow" />View storefront</button><div><span>{initials}</span><p><b>{adminName}</b><small>Administrator</small></p></div></div>
       </aside>
       {mobileMenu && <button className="admin-menu-backdrop" onClick={() => setMobileMenu(false)} aria-label="Close admin menu" />}
       <section className="admin-main">
         <header className="admin-topbar"><div className="admin-title-area"><button className="admin-menu-trigger" onClick={() => setMobileMenu(true)} aria-label="Open admin menu"><Icon name="menu" size={21} /></button><div><small>STUDIO ADMINISTRATION</small><h1>{activeTitle}</h1></div></div><div className="admin-top-actions"><label><Icon name="search" size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." aria-label="Search records" /></label><button className="notification-button" aria-label="View enquiries" onClick={() => setView("messages")}><Icon name="bell" />{messages.length > 0 && <i />}</button><span className="admin-avatar" aria-label={adminName}>{initials}</span></div></header>
+          <header className="admin-topbar"><div className="admin-title-area"><button className="admin-menu-trigger" onClick={() => setMobileMenu(true)} aria-label="Open admin menu"><Icon name="menu" size={21} /></button><div><small>STUDIO ADMINISTRATION</small><h1>{activeTitle}</h1></div></div><div className="admin-top-actions"><label><Icon name="search" size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." aria-label="Search records" /></label><button className="notification-button" aria-label={unreadMessageCount ? `${unreadMessageCount} unread enquiries` : "View enquiries"} onClick={() => setView("messages")}><Icon name="bell" />{unreadMessageCount > 0 && <i />}</button><span className="admin-avatar" aria-label={adminName}>{initials}</span></div></header>
         {error && <p className="admin-alert" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
         {loading && <div className="admin-content"><p>Loading store data…</p></div>}
 
@@ -329,13 +406,71 @@ export default function AdminPage() {
 
         {!loading && view === "customers" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Customer directory</h2><p>Customer contact information and registration dates.</p></div></div><div className="admin-card table-card"><div className="admin-table-wrap"><table className="admin-table customer-table"><thead><tr><th>Customer</th><th>Phone</th><th>Joined</th><th></th></tr></thead><tbody>{matchedCustomers.map((customer) => <tr key={customer.id}><td><div className="customer-name"><span>{(customer.name || "C").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</span><div><b>{customer.name || "Customer"}</b><small>{customer.email || ""}</small></div></div></td><td>{customer.phone || "—"}</td><td>{customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "—"}</td><td><button className="plain-link danger-link" onClick={() => void deleteRecord("customers", customer.id)}>Remove</button></td></tr>)}</tbody></table></div>{matchedCustomers.length === 0 && <p className="admin-empty-copy">No matching customers.</p>}</div></div>}
 
-        {!loading && view === "messages" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Customer enquiries</h2><p>Messages sent through the storefront.</p></div></div><div className="admin-card table-card">{messages.map((item) => <article className="admin-message-row" key={item.id}><div><p>{item.name} · <a href={`mailto:${item.email}`}>{item.email}</a> · {item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}</p><h3>{item.subject}</h3><div>{item.body}</div></div><button className="admin-secondary" disabled={busy} onClick={() => void deleteRecord("messages", item.id)}>Delete</button></article>)}{messages.length === 0 && <p className="admin-empty-copy">No enquiries yet.</p>}</div></div>}
+        {!loading && view === "messages" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Customer enquiries</h2><p>{unreadMessageCount} unread · {messages.length} total</p></div></div><div className="admin-card table-card message-list">{messages.map((item) => <article className={`admin-message-row ${item.is_read ? "read" : "unread"}`} key={item.id}><div className="admin-message-summary"><div className="admin-message-sender"><span className="message-status" aria-label={item.is_read ? "Read" : "Unread"} /><div><p>{item.name} · <a href={`mailto:${item.email}`}>{item.email}</a> · {item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}</p><h3>{item.subject}</h3></div></div><div className="message-actions"><button className="admin-secondary" onClick={() => void openMessage(item)}>Open message</button><button className="plain-link danger-link" disabled={busy} onClick={() => void deleteRecord("messages", item.id)}>Delete</button></div></div></article>)}{messages.length === 0 && <p className="admin-empty-copy">No enquiries yet.</p>}</div></div>}
 
         {!loading && view === "categories" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Product categories</h2><p>Organise the catalogue and manage how collectors browse.</p></div></div><div className="category-admin-grid"><form className="admin-card add-category" onSubmit={saveCategory}><small>NEW CATEGORY</small><h3>Add a category</h3><label>Category name<input className={fieldClass} name="name" placeholder="e.g. Sculpture" required /></label><button className="admin-primary" disabled={busy}>{busy ? "Adding…" : "Add category"}</button></form><div className="admin-card category-list"><div className="card-heading"><div><small>CATALOGUE</small><h3>Current categories</h3></div><span>{categories.length} total</span></div>{categories.map((category) => <div className="category-admin-row" key={category.id}><span><Icon name="tag" size={17} /></span><div><b>{category.name}</b><small>{products.filter((product) => product.category === category.name).length} products</small></div><button disabled={busy} onClick={() => void deleteCategory(category.id)} aria-label={`Delete ${category.name}`}><Icon name="trash" size={16} /></button></div>)}</div></div></div>}
 
-        {!loading && view === "settings" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Store settings</h2><p>Manage public contact information and administrator access.</p></div></div><div className="admin-settings-grid"><form className="admin-card settings-form" onSubmit={saveSettings}><div className="card-heading"><div><small>STORE PROFILE</small><h3>Contact details</h3></div></div><label>Store name<input className={fieldClass} name="storeName" defaultValue={String(settings.storeName || "Mthunzi Creations")} /></label><label>Email<input className={fieldClass} name="storeEmail" type="email" defaultValue={String(settings.storeEmail || "")} /></label><label>Phone<input className={fieldClass} name="storePhone" defaultValue={String(settings.storePhone || "")} /></label><label>Address<input className={fieldClass} name="storeAddress" defaultValue={String(settings.storeAddress || "")} /></label><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : "Save settings"}</button></form><form className="admin-card settings-form" onSubmit={updateCredentials}><div className="card-heading"><div><small>ACCESS</small><h3>Administrator credentials</h3></div></div><label>New email<input className={fieldClass} name="email" type="email" defaultValue={admin?.email || ""} required /></label><label>Current password<input className={fieldClass} name="currentPassword" type="password" autoComplete="current-password" required /></label><label>New password <small>(leave blank to keep current)</small><input className={fieldClass} name="newPassword" type="password" autoComplete="new-password" /></label><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : "Update credentials"}</button></form></div></div>}
+        {!loading && view === "settings" && <div className="admin-content">
+          <div className="admin-page-tools"><div><h2>Store settings</h2><p>Manage public contact information, administrator access, and About-page content.</p></div></div>
+          <div className="admin-settings-grid">
+            <form className="admin-card settings-form" onSubmit={saveSettings}><div className="card-heading"><div><small>STORE PROFILE</small><h3>Contact details</h3></div></div><label>Store name<input className={fieldClass} name="storeName" defaultValue={String(settings.storeName || "Mthunzi Creations")} /></label><label>Email<input className={fieldClass} name="storeEmail" type="email" defaultValue={String(settings.storeEmail || "")} /></label><label>Phone<input className={fieldClass} name="storePhone" defaultValue={String(settings.storePhone || "")} /></label><label>Address<input className={fieldClass} name="storeAddress" defaultValue={String(settings.storeAddress || "")} /></label><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : "Save settings"}</button></form>
+            <form className="admin-card settings-form" onSubmit={updateCredentials}><div className="card-heading"><div><small>ACCESS</small><h3>Administrator credentials</h3></div></div><label>New email<input className={fieldClass} name="email" type="email" defaultValue={admin?.email || ""} required /></label><label>Current password<input className={fieldClass} name="currentPassword" type="password" autoComplete="current-password" required /></label><label>New password <small>(leave blank to keep current)</small><input className={fieldClass} name="newPassword" type="password" autoComplete="new-password" /></label><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : "Update credentials"}</button></form>
+          </div>
+          <form className="admin-card settings-form about-settings" onSubmit={saveAboutPage}>
+            <div className="card-heading"><div><small>STOREFRONT CONTENT</small><h3>About page</h3></div><span>Changes appear on the public About page</span></div>
+            <fieldset className="about-editor-section"><legend>Opening & artwork</legend><div className="about-editor-grid">
+              {aboutField("heroEyebrow", "Intro label", aboutPage.heroEyebrow)}
+              {aboutField("heroTitle", "Main heading", aboutPage.heroTitle)}
+              {aboutField("heroTitleAccent", "Highlighted heading", aboutPage.heroTitleAccent)}
+              {aboutField("heroText", "Introduction", aboutPage.heroText, true)}
+              {aboutImageField("heroImage", "Opening image")}
+              {aboutField("heroImageAlt", "Opening image description", aboutPage.heroImageAlt)}
+              {aboutField("heroImageCaption", "Image caption", aboutPage.heroImageCaption)}
+              {aboutField("heroPrimaryLabel", "Shop button label", aboutPage.heroPrimaryLabel)}
+              {aboutField("heroSecondaryLabel", "Contact button label", aboutPage.heroSecondaryLabel)}
+            </div></fieldset>
+            <fieldset className="about-editor-section"><legend>Founder & studio story</legend><div className="about-editor-grid">
+              {aboutField("statementLocation", "Location label", aboutPage.statementLocation)}
+              {aboutField("statementQuote", "Studio statement", aboutPage.statementQuote, true)}
+              {aboutField("profileEyebrow", "Story label", aboutPage.profileEyebrow)}
+              {aboutField("profileTitle", "Story heading", aboutPage.profileTitle)}
+              {aboutField("profileTitleAccent", "Highlighted heading", aboutPage.profileTitleAccent)}
+              {aboutField("profileLead", "Story introduction", aboutPage.profileLead, true)}
+              {aboutField("profileStory", "Story paragraphs (separate paragraphs with a blank line)", aboutPage.profileStory, true)}
+              {aboutImageField("profileImage", "Studio image")}
+              {aboutImageField("profileDetailImage", "Artwork detail image")}
+              {aboutField("profileImageAlt", "Studio image description", aboutPage.profileImageAlt)}
+              {aboutField("profileDetailImageAlt", "Detail image description", aboutPage.profileDetailImageAlt)}
+              {aboutField("profileCaption", "Image caption", aboutPage.profileCaption)}
+              {aboutField("profileButtonLabel", "Contact button label", aboutPage.profileButtonLabel)}
+            </div></fieldset>
+            <fieldset className="about-editor-section"><legend>Studio facts</legend><div className="about-editor-grid about-facts-editor">
+              {aboutPage.facts.map((fact, index) => <div className="about-fact-editor" key={index}><small>FACT {String(index + 1).padStart(2, "0")}</small>{aboutField(`factTitle${index}`, "Title", fact.title)}{aboutField(`factDetail${index}`, "Detail", fact.detail)}</div>)}
+            </div></fieldset>
+            <fieldset className="about-editor-section"><legend>Owner & studio vision</legend><div className="about-editor-grid">
+              {aboutField("visionEyebrow", "Section label", aboutPage.visionEyebrow)}
+              {aboutField("visionTitle", "Vision heading", aboutPage.visionTitle)}
+              {aboutField("visionText", "Vision statement", aboutPage.visionText, true)}
+              {aboutField("visionOwner", "Attribution", aboutPage.visionOwner)}
+              {aboutImageField("visionImage", "Vision image")}
+              {aboutField("visionImageAlt", "Vision image description", aboutPage.visionImageAlt)}
+            </div></fieldset>
+            <fieldset className="about-editor-section"><legend>Practice & contact callout</legend><div className="about-editor-grid">
+              {aboutField("practiceEyebrow", "Practice label", aboutPage.practiceEyebrow)}
+              {aboutField("practiceTitle", "Practice heading", aboutPage.practiceTitle)}
+              {aboutField("practiceText", "Practice introduction", aboutPage.practiceText, true)}
+              {aboutPage.practiceItems.map((item, index) => aboutField(`practiceItem${index}`, `Service ${String(index + 1).padStart(2, "0")}`, item))}
+              {aboutField("ctaEyebrow", "Callout label", aboutPage.ctaEyebrow)}
+              {aboutField("ctaTitle", "Callout heading", aboutPage.ctaTitle)}
+              {aboutField("ctaText", "Callout text", aboutPage.ctaText, true)}
+              {aboutField("ctaButtonLabel", "Callout button label", aboutPage.ctaButtonLabel)}
+            </div></fieldset>
+            <button className="admin-primary" disabled={busy}>{busy ? "Saving…" : "Save About page"}</button>
+          </form>
+        </div>}
       </section>
 
+      {selectedMessage && <div className="admin-modal-backdrop" onMouseDown={() => setSelectedMessage(null)}><section className="admin-modal admin-message-modal" role="dialog" aria-modal="true" aria-labelledby="message-modal-title" onMouseDown={(event) => event.stopPropagation()}><div className="modal-heading"><div><small>{selectedMessage.is_read ? "READ ENQUIRY" : "NEW ENQUIRY"}</small><h2 id="message-modal-title">{selectedMessage.subject}</h2></div><button onClick={() => setSelectedMessage(null)} aria-label="Close message">×</button></div><div className="message-detail"><p className="message-detail-meta">From <b>{selectedMessage.name}</b> · <a href={`mailto:${selectedMessage.email}`}>{selectedMessage.email}</a></p><p className="message-detail-date">{selectedMessage.created_at ? new Date(selectedMessage.created_at).toLocaleString() : ""}</p><div className="message-detail-body">{selectedMessage.body}</div><button className="admin-secondary" onClick={() => setSelectedMessage(null)}>Close</button></div></section></div>}
       {editingProduct && <div className="admin-modal-backdrop" onMouseDown={() => setEditingProduct(null)}><div className="admin-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-heading"><div><small>CATALOGUE</small><h2>{Number(editingProduct.id) ? "Edit product" : "Add new product"}</h2></div><button onClick={() => setEditingProduct(null)} aria-label="Close product form">×</button></div><form onSubmit={saveProduct}><label>Product name<input className={fieldClass} name="name" defaultValue={editingProduct.name} required /></label><div className="form-row"><label>Category<select className={fieldClass} name="category" defaultValue={editingProduct.category}>{categories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}</select></label><label>Price (MK)<input className={fieldClass} name="price" type="number" min="0" defaultValue={editingProduct.price || ""} required /></label></div><div className="form-row"><label>Stock quantity<input className={fieldClass} name="stock" type="number" min="0" defaultValue={editingProduct.stock ?? 0} required /></label><label>Dimensions<input className={fieldClass} name="dimensions" defaultValue={editingProduct.dimensions || ""} /></label></div><label>Image URL<input className={fieldClass} name="image" type="url" defaultValue={editingProduct.image || editingProduct.image_url || ""} /></label><label>Description<textarea className={fieldClass} name="description" rows={3} defaultValue={editingProduct.description || ""} /></label><div className="modal-actions"><button type="button" onClick={() => setEditingProduct(null)}>Cancel</button><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : Number(editingProduct.id) ? "Save changes" : "Add product"}</button></div></form></div></div>}
     </main>
   )

@@ -340,12 +340,17 @@ async function getOrdersForUser(userId) {
 
 async function getMessages() {
   try {
-    const result = await query('SELECT id, name, email, subject, body, created_at FROM messages ORDER BY created_at DESC');
+    const result = await query('SELECT id, name, email, subject, body, created_at, is_read FROM messages ORDER BY created_at DESC');
     return result.rows;
   } catch (err) {
     console.error('Error fetching messages:', err);
     throw err;
   }
+}
+
+async function markMessageRead(id) {
+  const result = await query('UPDATE messages SET is_read = true WHERE id = $1 RETURNING id, is_read', [id]);
+  return result.rows[0] || null;
 }
 
 async function deleteMessage(id) {
@@ -580,4 +585,4 @@ async function createMessage({ name, email, subject, body }) {
   }
 }
 
-module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, createPayChanguOrder, getPayChanguOrder, markPayChanguOrderPaid, cancelPayChanguOrder, expirePendingPayChanguOrders, updateOrderStatus, createMessage, getStockStatus };
+module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, markMessageRead, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, createPayChanguOrder, getPayChanguOrder, markPayChanguOrderPaid, cancelPayChanguOrder, expirePendingPayChanguOrders, updateOrderStatus, createMessage, getStockStatus };

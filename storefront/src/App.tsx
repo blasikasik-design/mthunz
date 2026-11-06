@@ -4,6 +4,7 @@ import AuthPage from "./AuthPage"
 import AccountPage from "./AccountPage"
 import AdminLoginPage from "./AdminLoginPage"
 import AdminPage from "./AdminPage"
+import { defaultAboutPage, type AboutPageContent } from "./aboutContent"
 import { PaymentPage, ProductDetailPage } from "./CommercePages"
 import projectLogo from "./brand"
 
@@ -50,6 +51,7 @@ type SiteSettings = {
   storeEmail: string
   storePhone: string
   storeAddress: string
+  aboutPage: AboutPageContent
 }
 
 type Route = "home" | "shop" | "about" | "contact" | "login" | "signup" | "product-detail" | "payment" | "account" | "admin-login" | "admin"
@@ -224,7 +226,9 @@ function App() {
     storeEmail: "mthunzicreations@gmail.com",
     storePhone: "+265 881799537",
     storeAddress: "Lunzu Trading Centre, Blantyre, Malawi",
+    aboutPage: defaultAboutPage,
   })
+  const about = settings.aboutPage || defaultAboutPage
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
@@ -931,223 +935,106 @@ function App() {
         <div className="page-view about-page">
           <section className="about-editorial-hero">
             <div className="about-hero-copy">
-              <span className="kicker">Mthunzi · Artist & founder</span>
+              <span className="kicker">{about.heroEyebrow}</span>
               <h1>
-                Art shaped by place, made with <em>purpose.</em>
+                {about.heroTitle} <em>{about.heroTitleAccent}</em>
               </h1>
-              <p>
-                From a studio in Blantyre, Mthunzi creates expressive work that
-                turns observation, memory, and everyday Malawian life into
-                colour, line, and form.
-              </p>
+              <p>{about.heroText}</p>
               <div className="about-hero-actions">
                 <button
                   className="primary-button"
                   onClick={() => navigate("shop")}
                 >
-                  View available work <Icon name="arrow" size={18} />
+                  {about.heroPrimaryLabel} <Icon name="arrow" size={18} />
                 </button>
                 <button
                   className="underlined-button"
                   onClick={() => navigate("contact")}
                 >
-                  Contact the studio
+                  {about.heroSecondaryLabel}
                 </button>
               </div>
             </div>
             <figure className="about-hero-art">
               <img
-                src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1100&q=90"
-                alt="Expressive original artwork"
+                src={about.heroImage}
+                alt={about.heroImageAlt}
               />
               <figcaption>
-                <span>Inside the practice</span>
-                <strong>Colour, culture & connection</strong>
+                <span>{about.heroEyebrow}</span>
+                <strong>{about.heroImageCaption}</strong>
               </figcaption>
             </figure>
           </section>
 
           <section className="about-statement">
-            <span>Based in Blantyre, Malawi</span>
-            <p>
-              “The goal is not only to make something beautiful. It is to make
-              something honest—work that carries a feeling, starts a
-              conversation, and stays with you.”
-            </p>
+            <span>{about.statementLocation}</span>
+            <p>“{about.statementQuote}”</p>
           </section>
 
           <section className="about-profile">
             <div className="about-profile-images">
               <img
                 className="profile-image-main"
-                src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=90"
-                alt="Artist tools and paint in a working studio"
+                src={about.profileImage}
+                alt={about.profileImageAlt}
               />
               <img
                 className="profile-image-detail"
-                src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=700&q=90"
-                alt="Detail of an original artwork"
+                src={about.profileDetailImage}
+                alt={about.profileDetailImageAlt}
               />
-              <span>
-                Working across painting, drawing, print, and public art
-              </span>
+              <span>{about.profileCaption}</span>
             </div>
             <div className="about-profile-copy">
-              <span className="kicker">The story</span>
+              <span className="kicker">{about.profileEyebrow}</span>
               <h2>
-                From first marks to an independent <em>studio.</em>
+                {about.profileTitle} <em>{about.profileTitleAccent}</em>
               </h2>
-              <p className="profile-lead">
-                Mthunzi’s practice began with curiosity: a natural instinct to
-                draw, observe, and translate the world around him into images.
-              </p>
-              <p>
-                Largely self-taught, he learned by making—experimenting with
-                drawing, painting, illustration, and print until each medium
-                became part of a distinctive visual language. The process was
-                patient, practical, and shaped by a belief that strong creative
-                work comes from attention and consistency.
-              </p>
-              <p>
-                That personal practice grew into Mthunzi Creations, an
-                independent creative enterprise in Blantyre. Today the studio
-                produces original artwork and also works across screen printing,
-                murals, sign-writing, illustration, art lessons, and creative
-                consultancy.
-              </p>
+              <p className="profile-lead">{about.profileLead}</p>
+              {about.profileStory.split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               <button
                 className="underlined-button"
                 onClick={() => navigate("contact")}
               >
-                Work with the studio <Icon name="arrow" size={18} />
+                {about.profileButtonLabel} <Icon name="arrow" size={18} />
               </button>
             </div>
           </section>
 
           <section className="about-facts">
-            <div>
-              <strong>Blantyre</strong>
-              <span>Home of the studio</span>
-            </div>
-            <div>
-              <strong>Self-taught</strong>
-              <span>Built through practice</span>
-            </div>
-            <div>
-              <strong>Multi-disciplinary</strong>
-              <span>From canvas to public space</span>
-            </div>
-            <div>
-              <strong>Malawian made</strong>
-              <span>Created with local perspective</span>
-            </div>
+            {about.facts.map((fact) => <div key={fact.title}><strong>{fact.title}</strong><span>{fact.detail}</span></div>)}
           </section>
 
-          <section className="artist-journey">
-            <div className="journey-heading">
-              <span className="kicker">The journey</span>
-              <h2>A practice that keeps evolving.</h2>
-              <p>
-                Every stage has added a new material, skill, or way of telling a
-                story.
-              </p>
-            </div>
-            <div className="journey-steps">
-              <article>
-                <small>01</small>
-                <div>
-                  <span>The beginning</span>
-                  <h3>Drawing what was close</h3>
-                </div>
-                <p>
-                  Early drawings turned everyday observation into a regular
-                  creative practice.
-                </p>
-              </article>
-              <article>
-                <small>02</small>
-                <div>
-                  <span>Finding a voice</span>
-                  <h3>Learning by making</h3>
-                </div>
-                <p>
-                  Experimenting across materials developed confidence, craft,
-                  and a recognisable visual language.
-                </p>
-              </article>
-              <article>
-                <small>03</small>
-                <div>
-                  <span>Building the studio</span>
-                  <h3>Mthunzi Creations</h3>
-                </div>
-                <p>
-                  The practice expanded into an enterprise serving collectors,
-                  communities, businesses, and creative partners.
-                </p>
-              </article>
-              <article>
-                <small>04</small>
-                <div>
-                  <span>The work today</span>
-                  <h3>Creating with purpose</h3>
-                </div>
-                <p>
-                  The studio continues to create original work while helping
-                  other people bring meaningful visual ideas to life.
-                </p>
-              </article>
+          <section className="about-vision">
+            <figure className="about-vision-image"><img src={about.visionImage} alt={about.visionImageAlt} /></figure>
+            <div className="about-vision-copy">
+              <span className="kicker light">{about.visionEyebrow}</span>
+              <h2>{about.visionTitle}</h2>
+              <p>{about.visionText}</p>
+              <strong>{about.visionOwner}</strong>
             </div>
           </section>
 
           <section className="about-practice">
             <div className="practice-heading">
-              <span className="kicker">The practice</span>
-              <h2>Built for expression in many forms.</h2>
-              <p>
-                The studio brings the same attention to craft and storytelling
-                to every scale of work.
-              </p>
+              <span className="kicker">{about.practiceEyebrow}</span>
+              <h2>{about.practiceTitle}</h2>
+              <p>{about.practiceText}</p>
             </div>
             <div className="practice-list">
-              <div>
-                <span>01</span>
-                <strong>Original painting & drawing</strong>
-              </div>
-              <div>
-                <span>02</span>
-                <strong>Private commissions</strong>
-              </div>
-              <div>
-                <span>03</span>
-                <strong>Murals & public artwork</strong>
-              </div>
-              <div>
-                <span>04</span>
-                <strong>Illustration & sign-writing</strong>
-              </div>
-              <div>
-                <span>05</span>
-                <strong>Screen printing</strong>
-              </div>
-              <div>
-                <span>06</span>
-                <strong>Lessons & creative consultancy</strong>
-              </div>
+              {about.practiceItems.map((item, index) => <div key={`${index}-${item}`}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong></div>)}
             </div>
           </section>
 
           <section className="commission-section">
             <div>
-              <span className="kicker light">Create together</span>
-              <h2>Have an idea for a custom piece?</h2>
+              <span className="kicker light">{about.ctaEyebrow}</span>
+              <h2>{about.ctaTitle}</h2>
             </div>
-            <p>
-              From private commissions to murals and illustration, bring your
-              story to the studio.
-            </p>
+            <p>{about.ctaText}</p>
             <button onClick={() => navigate("contact")}>
-              Start a conversation <Icon name="arrow" size={19} />
+              {about.ctaButtonLabel} <Icon name="arrow" size={19} />
             </button>
           </section>
         </div>

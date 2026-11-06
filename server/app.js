@@ -54,6 +54,50 @@ function createDefaultSettings() {
     storeDescription: 'Mthunzi Creations is a creative enterprise that offers different artistic services to meet your needs. We do screen printing, painting and drawing, illustrations, sign-writing, art lessons and consultancy. We are known for our best quality work.',
     aboutTitle: 'Mthunzi Born to Create',
     aboutText: 'Mthunzi Creations is a creative enterprise that offers different artistic services to meet your needs. We do screen printing, painting and drawing, illustrations, sign-writing, art lessons and consultancy. We are known for our best quality work.',
+    aboutPage: {
+      heroEyebrow: 'Mthunzi · Artist & founder',
+      heroTitle: 'Art shaped by place, made with',
+      heroTitleAccent: 'purpose.',
+      heroText: 'From a studio in Blantyre, Mthunzi creates expressive work that turns observation, memory, and everyday Malawian life into colour, line, and form.',
+      heroImage: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1100&q=90',
+      heroImageAlt: 'Expressive original artwork',
+      heroImageCaption: 'Colour, culture & connection',
+      heroPrimaryLabel: 'View available work',
+      heroSecondaryLabel: 'Contact the studio',
+      statementLocation: 'Based in Blantyre, Malawi',
+      statementQuote: 'The goal is not only to make something beautiful. It is to make something honest: work that carries a feeling, starts a conversation, and stays with you.',
+      profileEyebrow: 'The story',
+      profileTitle: 'From first marks to an independent',
+      profileTitleAccent: 'studio.',
+      profileLead: 'Mthunzi’s practice began with curiosity: a natural instinct to draw, observe, and translate the world around him into images.',
+      profileStory: 'Largely self-taught, he learned by making: experimenting with drawing, painting, illustration, and print until each medium became part of a distinctive visual language. The process was patient, practical, and shaped by a belief that strong creative work comes from attention and consistency.\n\nThat personal practice grew into Mthunzi Creations, an independent creative enterprise in Blantyre. Today the studio produces original artwork and also works across screen printing, murals, sign-writing, illustration, art lessons, and creative consultancy.',
+      profileImage: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=90',
+      profileDetailImage: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=700&q=90',
+      profileImageAlt: 'Artist tools and paint in a working studio',
+      profileDetailImageAlt: 'Detail of an original artwork',
+      profileCaption: 'Working across painting, drawing, print, and public art',
+      profileButtonLabel: 'Work with the studio',
+      facts: [
+        { title: 'Blantyre', detail: 'Home of the studio' },
+        { title: 'Self-taught', detail: 'Built through practice' },
+        { title: 'Multi-disciplinary', detail: 'From canvas to public space' },
+        { title: 'Malawian made', detail: 'Created with local perspective' }
+      ],
+      visionEyebrow: 'The studio vision',
+      visionTitle: 'Local stories, shared through art.',
+      visionText: 'Mthunzi Creations is guided by a vision to make thoughtful, honest work rooted in Malawian life and to share it with people everywhere. The studio brings artists, communities, and collectors together through craft, collaboration, and a lasting respect for where each story begins.',
+      visionOwner: 'Mthunzi · Artist & founder',
+      visionImage: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1000&q=90',
+      visionImageAlt: 'Artwork in the Mthunzi Creations studio',
+      practiceEyebrow: 'The practice',
+      practiceTitle: 'Built for expression in many forms.',
+      practiceText: 'The studio brings the same attention to craft and storytelling to every scale of work.',
+      practiceItems: ['Original painting & drawing', 'Private commissions', 'Murals & public artwork', 'Illustration & sign-writing', 'Screen printing', 'Lessons & creative consultancy'],
+      ctaEyebrow: 'Create together',
+      ctaTitle: 'Have an idea for a custom piece?',
+      ctaText: 'From private commissions to murals and illustration, bring your story to the studio.',
+      ctaButtonLabel: 'Start a conversation'
+    },
     contactHeading: 'We’re here to help you order, enquire, and create with confidence.',
     contactIntro: 'Whether you are looking for a custom piece, a quick order update, or help with payment proof, our team responds quickly and professionally.',
     contactPhone: '+265 881799537',
@@ -141,6 +185,7 @@ async function ensureSchema() {
     ALTER TABLE orders ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference VARCHAR(120) UNIQUE;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(30) NOT NULL DEFAULT 'pending';
+    ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT false;
   `);
 }
 
@@ -690,6 +735,21 @@ app.get('/api/admin/messages', async (req, res) => {
   }
 });
 
+app.patch('/api/admin/messages/:id/read', async (req, res) => {
+  try {
+    const messageId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(messageId) || messageId < 1) {
+      return res.status(400).json({ error: 'Invalid message ID.' });
+    }
+    const message = await db.markMessageRead(messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found.' });
+    res.json({ data: message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Unable to mark message as read.' });
+  }
+});
+
 app.delete('/api/admin/messages/:id', async (req, res) => {
   try {
     const messageId = parseInt(req.params.id, 10);
@@ -1028,12 +1088,25 @@ app.delete('/api/admin/categories/:id', (req, res) => {
   }
 });
 
-app.put('/api/admin/site-settings', (req, res) => {
+app.put('/api/admin/site-settings', async (req, res) => {
   try {
     const current = readSiteSettings();
-    const next = writeSiteSettings({ ...current, ...req.body });
+    const nextSettings = { ...current, ...req.body };
+    if (req.body && req.body.aboutPage && typeof req.body.aboutPage === 'object') {
+      const aboutPage = { ...req.body.aboutPage };
+      const imageFields = ['heroImage', 'profileImage', 'profileDetailImage', 'visionImage'];
+      const maxBytes = Number(process.env.MAX_ABOUT_IMAGE_BYTES || 5 * 1024 * 1024);
+      for (const field of imageFields) {
+        if (typeof aboutPage[field] === 'string' && aboutPage[field].startsWith('data:image/')) {
+          aboutPage[field] = await uploadImageDataUrl(aboutPage[field], 'mthunzi/about', maxBytes, ['jpeg', 'jpg', 'png', 'webp'], 1800);
+        }
+      }
+      nextSettings.aboutPage = aboutPage;
+    }
+    const next = writeSiteSettings(nextSettings);
     res.json({ data: next });
   } catch (err) {
+    if (handleProductImageError(err, res)) return;
     console.error(err);
     res.status(500).json({ error: 'Unable to save site settings.' });
   }
