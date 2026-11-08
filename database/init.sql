@@ -64,6 +64,12 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS site_settings (
+  id SMALLINT PRIMARY KEY CHECK (id = 1),
+  settings JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 INSERT INTO products (name, category, description, price, image_url, in_stock, stock, dimensions)
 VALUES
   ('Ember Dawn Painting', 'Paintings', 'A vibrant acrylic painting inspired by Malawi sunsets.', 34000, 'https://images.unsplash.com/photo-1544785349-c4a5301826fd?w=800&h=600&fit=crop', true, 12, '80x60cm'),

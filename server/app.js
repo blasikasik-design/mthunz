@@ -142,31 +142,30 @@ function normalizeCategories(rawCategories) {
   return categories.length ? categories : defaults;
 }
 
+function normalizeSiteSettings(settings) {
+  const defaults = createDefaultSettings();
+  return {
+    ...defaults,
+    ...(settings || {}),
+    categories: normalizeCategories(settings && settings.categories)
+  };
+}
+
 function readSiteSettings() {
   try {
     const raw = fs.readFileSync(settingsPath, 'utf8');
-    const parsed = JSON.parse(raw);
-    const defaults = createDefaultSettings();
-    return {
-      ...defaults,
-      ...parsed,
-      categories: normalizeCategories(parsed && Array.isArray(parsed.categories) ? parsed.categories : defaults.categories)
-    };
+    return normalizeSiteSettings(JSON.parse(raw));
   } catch (error) {
     return createDefaultSettings();
   }
 }
 
-function writeSiteSettings(nextSettings) {
-  const defaults = createDefaultSettings();
-  const normalized = {
-    ...defaults,
-    ...nextSettings,
-    categories: normalizeCategories(nextSettings && nextSettings.categories)
-  };
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  fs.writeFileSync(settingsPath, JSON.stringify(normalized, null, 2));
-  return normalized;
+async function getSiteSettings() {
+  return normalizeSiteSettings(await db.getSiteSettings() || readSiteSettings());
+}
+
+async function saveSiteSettings(settings) {
+  return db.saveSiteSettings(normalizeSiteSettings(settings));
 }
 
 async function ensureSchema() {
@@ -187,6 +186,9 @@ async function ensureSchema() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(30) NOT NULL DEFAULT 'pending';
     ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT false;
   `);
+  if (!await db.getSiteSettings()) {
+    await db.saveSiteSettings(readSiteSettings());
+  }
 }
 
 async function ensureAdminCredentials() {
@@ -1014,18 +1016,18 @@ app.post('/api/contact', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-app.get('/api/site-settings', (req, res) => {
+app.get('/api/site-settings', async (req, res) => {
   try {
-    res.json({ data: readSiteSettings() });
+    res.json({ data: await getSiteSettings() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Unable to load site settings.' });
   }
 });
 
-app.get('/api/categories', (req, res) => {
+app.get('/api/categories', async (req, res) => {
   try {
-    const settings = readSiteSettings();
+    const settings = await getSiteSettings();
     res.json({ data: settings.categories || [] });
   } catch (err) {
     console.error(err);
@@ -1033,17 +1035,17 @@ app.get('/api/categories', (req, res) => {
   }
 });
 
-app.post('/api/admin/categories', (req, res) => {
+app.post('/api/admin/categories', async (req, res) => {
   try {
     const name = String(req.body && req.body.name || '').trim();
     if (!name) return res.status(400).json({ error: 'Category name is required.' });
-    const current = readSiteSettings();
+    const current = await getSiteSettings();
     const categories = normalizeCategories(current.categories);
     const exists = categories.some(category => category.name.toLowerCase() === name.toLowerCase());
     if (exists) return res.status(409).json({ error: 'Category already exists.' });
     const nextCategory = normalizeCategory(name);
     if (!nextCategory) return res.status(400).json({ error: 'Category name is invalid.' });
-    const next = writeSiteSettings({ ...current, categories: [...categories, nextCategory] });
+    const next = await saveSiteSettings({ ...current, categories: [...categories, nextCategory] });
     res.status(201).json({ data: next.categories });
   } catch (err) {
     console.error(err);
@@ -1051,12 +1053,12 @@ app.post('/api/admin/categories', (req, res) => {
   }
 });
 
-app.patch('/api/admin/categories/:id', (req, res) => {
+app.patch('/api/admin/categories/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const name = String(req.body && req.body.name || '').trim();
     if (!name) return res.status(400).json({ error: 'Category name is required.' });
-    const current = readSiteSettings();
+    const current = await getSiteSettings();
     const categories = normalizeCategories(current.categories);
     const existingIndex = categories.findIndex(category => category.id === id);
     if (existingIndex === -1) return res.status(404).json({ error: 'Category not found.' });
@@ -1065,7 +1067,7 @@ app.patch('/api/admin/categories/:id', (req, res) => {
     const duplicate = categories.some(category => category.id !== id && category.name.toLowerCase() === name.toLowerCase());
     if (duplicate) return res.status(409).json({ error: 'Category already exists.' });
     categories[existingIndex] = { ...categories[existingIndex], ...nextCategory };
-    const next = writeSiteSettings({ ...current, categories });
+    const next = await saveSiteSettings({ ...current, categories });
     res.json({ data: next.categories });
   } catch (err) {
     console.error(err);
@@ -1073,14 +1075,14 @@ app.patch('/api/admin/categories/:id', (req, res) => {
   }
 });
 
-app.delete('/api/admin/categories/:id', (req, res) => {
+app.delete('/api/admin/categories/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const current = readSiteSettings();
+    const current = await getSiteSettings();
     const categories = normalizeCategories(current.categories);
     const nextCategories = categories.filter(category => category.id !== id);
     if (nextCategories.length === categories.length) return res.status(404).json({ error: 'Category not found.' });
-    const next = writeSiteSettings({ ...current, categories: nextCategories });
+    const next = await saveSiteSettings({ ...current, categories: nextCategories });
     res.json({ data: next.categories });
   } catch (err) {
     console.error(err);
@@ -1090,7 +1092,7 @@ app.delete('/api/admin/categories/:id', (req, res) => {
 
 app.put('/api/admin/site-settings', async (req, res) => {
   try {
-    const current = readSiteSettings();
+    const current = await getSiteSettings();
     const nextSettings = { ...current, ...req.body };
     if (req.body && req.body.aboutPage && typeof req.body.aboutPage === 'object') {
       const aboutPage = { ...req.body.aboutPage };
@@ -1103,7 +1105,7 @@ app.put('/api/admin/site-settings', async (req, res) => {
       }
       nextSettings.aboutPage = aboutPage;
     }
-    const next = writeSiteSettings(nextSettings);
+    const next = await saveSiteSettings(nextSettings);
     res.json({ data: next });
   } catch (err) {
     if (handleProductImageError(err, res)) return;

@@ -76,11 +76,16 @@ function getCartStorageKey() {
 
 function readSavedCart(): CartItem[] {
   try {
+    const key = getCartStorageKey()
+    const savedCart = localStorage.getItem(key)
+    const legacyGuestCart = key === "mthunziCart:guest" ? localStorage.getItem("mthunziCart") : null
+    if (key !== "mthunziCart:guest") localStorage.removeItem("mthunziCart")
+    if (!savedCart && legacyGuestCart) {
+      localStorage.setItem(key, legacyGuestCart)
+      localStorage.removeItem("mthunziCart")
+    }
     const cart = JSON.parse(
-      localStorage.getItem(getCartStorageKey()) ||
-        localStorage.getItem("mthunziCart") ||
-        localStorage.getItem("mthunziCart:guest") ||
-        "[]",
+      savedCart || legacyGuestCart || "[]",
     )
     if (!Array.isArray(cart)) return []
     return cart
@@ -387,7 +392,8 @@ function App() {
       price: item.price,
       qty: item.qty,
     }))
-    localStorage.setItem("mthunziCart", JSON.stringify(handoffCart))
+    localStorage.setItem(getCartStorageKey(), JSON.stringify(handoffCart))
+    localStorage.removeItem("mthunziCart")
     window.location.href = "/payment.html"
   }
 

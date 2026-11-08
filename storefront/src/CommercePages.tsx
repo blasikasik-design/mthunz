@@ -50,7 +50,14 @@ function readCart(): CartItem[] {
   try {
     const user = readUser()
     const key = cartKey(user)
-    const saved = JSON.parse(localStorage.getItem(key) || localStorage.getItem("mthunziCart") || "[]")
+    const savedCart = localStorage.getItem(key)
+    const legacyGuestCart = key === "mthunziCart:guest" ? localStorage.getItem("mthunziCart") : null
+    if (key !== "mthunziCart:guest") localStorage.removeItem("mthunziCart")
+    if (!savedCart && legacyGuestCart) {
+      localStorage.setItem(key, legacyGuestCart)
+      localStorage.removeItem("mthunziCart")
+    }
+    const saved = JSON.parse(savedCart || legacyGuestCart || "[]")
     if (!Array.isArray(saved)) return []
     return saved.map((item) => ({
       id: Number(item.id),
@@ -255,8 +262,8 @@ export function PaymentPage() {
 
   function finishOrder() {
     localStorage.removeItem(cartKey(user))
-    localStorage.removeItem("mthunziCart:guest")
     localStorage.removeItem("mthunziCart")
+    if (!user?.id) localStorage.removeItem("mthunziCart:guest")
     setCart([])
     window.location.assign("/shop.html")
   }

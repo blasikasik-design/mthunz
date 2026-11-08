@@ -348,6 +348,20 @@ async function getMessages() {
   }
 }
 
+async function getSiteSettings() {
+  const result = await query('SELECT settings FROM site_settings WHERE id = 1');
+  return result.rows[0]?.settings || null;
+}
+
+async function saveSiteSettings(settings) {
+  const result = await query(`
+    INSERT INTO site_settings (id, settings) VALUES (1, $1::jsonb)
+    ON CONFLICT (id) DO UPDATE SET settings = EXCLUDED.settings, updated_at = now()
+    RETURNING settings
+  `, [JSON.stringify(settings)]);
+  return result.rows[0].settings;
+}
+
 async function markMessageRead(id) {
   const result = await query('UPDATE messages SET is_read = true WHERE id = $1 RETURNING id, is_read', [id]);
   return result.rows[0] || null;
@@ -585,4 +599,4 @@ async function createMessage({ name, email, subject, body }) {
   }
 }
 
-module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, markMessageRead, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, createPayChanguOrder, getPayChanguOrder, markPayChanguOrderPaid, cancelPayChanguOrder, expirePendingPayChanguOrders, updateOrderStatus, createMessage, getStockStatus };
+module.exports = { query, checkConnection, getProducts, createProduct, updateProduct, deleteProduct, getCustomers, deleteCustomer, wasAccountRemoved, getOrders, getOrdersForUser, getMessages, getSiteSettings, saveSiteSettings, markMessageRead, deleteMessage, markOrdersDeliveredAfter30Days, createOrder, createPayChanguOrder, getPayChanguOrder, markPayChanguOrderPaid, cancelPayChanguOrder, expirePendingPayChanguOrders, updateOrderStatus, createMessage, getStockStatus };
