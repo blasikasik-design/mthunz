@@ -36,7 +36,8 @@ type ApiProduct = Partial<Product> & {
 
 function readUser(): StoredUser | null {
   try {
-    return JSON.parse(localStorage.getItem("mthunziAuthUser") || "null")
+    localStorage.removeItem("mthunziAuthUser")
+    return JSON.parse(sessionStorage.getItem("mthunziAuthUser") || "null")
   } catch {
     return null
   }

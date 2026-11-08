@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { apiUrl } from "./api"
 import projectLogo from "./brand"
+import { timeGreeting } from "./timeGreeting"
 
 type AccountUser = {
   id: number | string
@@ -22,7 +23,8 @@ type Order = {
 
 function readAccountUser(): AccountUser | null {
   try {
-    return JSON.parse(localStorage.getItem("mthunziAuthUser") || "null")
+    localStorage.removeItem("mthunziAuthUser")
+    return JSON.parse(sessionStorage.getItem("mthunziAuthUser") || "null")
   } catch {
     return null
   }
@@ -62,14 +64,14 @@ export default function AccountPage() {
         const profileBody = await profileResponse.json().catch(() => ({}))
         const ordersBody = await ordersResponse.json().catch(() => ({}))
         if (profileResponse.status === 401 || ordersResponse.status === 401) {
-          localStorage.removeItem("mthunziAuthUser")
+          sessionStorage.removeItem("mthunziAuthUser")
           window.location.replace("/login.html")
           return
         }
         if (!profileResponse.ok) throw new Error(profileBody.error || "Unable to load your profile.")
         const nextUser = { ...user, ...profileBody.data, token: user.token } as AccountUser
         setUser(nextUser)
-        localStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
+        sessionStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
         if (ordersResponse.ok && Array.isArray(ordersBody.data)) setOrders(ordersBody.data)
       })
       .catch((cause) => {
@@ -101,14 +103,14 @@ export default function AccountPage() {
       })
       const body = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        localStorage.removeItem("mthunziAuthUser")
+        sessionStorage.removeItem("mthunziAuthUser")
         window.location.replace("/login.html")
         return
       }
       if (!response.ok || !body.data) throw new Error(body.error || "Unable to update your profile.")
       const nextUser = { ...user, ...body.data, token: user.token }
       setUser(nextUser)
-      localStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
+      sessionStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
       setMessage("Profile saved.")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to update your profile.")
@@ -144,14 +146,14 @@ export default function AccountPage() {
       })
       const body = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        localStorage.removeItem("mthunziAuthUser")
+        sessionStorage.removeItem("mthunziAuthUser")
         window.location.replace("/login.html")
         return
       }
       if (!response.ok || !body.data) throw new Error(body.error || "Photo upload failed.")
       const nextUser = { ...user, ...body.data, token: user.token }
       setUser(nextUser)
-      localStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
+      sessionStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
       setMessage("Profile photo updated.")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Photo upload failed.")
@@ -173,14 +175,14 @@ export default function AccountPage() {
       })
       const body = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        localStorage.removeItem("mthunziAuthUser")
+        sessionStorage.removeItem("mthunziAuthUser")
         window.location.replace("/login.html")
         return
       }
       if (!response.ok || !body.data) throw new Error(body.error || "Could not remove your photo.")
       const nextUser = { ...user, ...body.data, token: user.token }
       setUser(nextUser)
-      localStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
+      sessionStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
       setMessage("Profile photo removed.")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not remove your photo.")
@@ -215,7 +217,7 @@ export default function AccountPage() {
       })
       const body = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        localStorage.removeItem("mthunziAuthUser")
+        sessionStorage.removeItem("mthunziAuthUser")
         window.location.replace("/login.html")
         return
       }
@@ -238,7 +240,7 @@ export default function AccountPage() {
   }
 
   function signOut() {
-    localStorage.removeItem("mthunziAuthUser")
+    sessionStorage.removeItem("mthunziAuthUser")
     window.location.assign("/index.html")
   }
 
@@ -255,7 +257,7 @@ export default function AccountPage() {
       </header>
       <section className="bg-[#1d4e7f] px-6 pb-24 pt-14 text-white sm:px-[10vw] sm:pt-16">
         <p className="text-[9px] font-semibold tracking-[.2em] text-[#efc38e]">MY ACCOUNT</p>
-        <h1 className="mt-4 font-serif text-5xl leading-tight sm:text-7xl">Good morning, <em className="text-[#efc38e]">{displayName}.</em></h1>
+        <h1 className="mt-4 font-serif text-5xl leading-tight sm:text-7xl">{timeGreeting()}, <em className="text-[#efc38e]">{displayName}.</em></h1>
         <p className="mt-4 max-w-xl text-sm leading-6 text-white/75">Manage your details, saved artwork, and studio preferences.</p>
       </section>
       <section className="relative mx-auto -mt-12 grid w-[min(1180px,92%)] gap-5 md:grid-cols-[270px_minmax(0,1fr)]">

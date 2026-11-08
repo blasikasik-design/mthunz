@@ -67,7 +67,8 @@ const categoryImages: Record<string, string> = {
 
 function getCartStorageKey() {
   try {
-    const user = JSON.parse(localStorage.getItem("mthunziAuthUser") || "null")
+    localStorage.removeItem("mthunziAuthUser")
+    const user = JSON.parse(sessionStorage.getItem("mthunziAuthUser") || "null")
     return user?.id ? `mthunziCart:${user.id}` : "mthunziCart:guest"
   } catch {
     return "mthunziCart:guest"
@@ -215,7 +216,8 @@ type SignedInUser = { id?: number | string; token?: string; name?: string; email
 
 function readSignedInUser(): SignedInUser | null {
   try {
-    return JSON.parse(localStorage.getItem("mthunziAuthUser") || "null")
+    localStorage.removeItem("mthunziAuthUser")
+    return JSON.parse(sessionStorage.getItem("mthunziAuthUser") || "null")
   } catch {
     return null
   }

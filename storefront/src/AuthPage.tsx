@@ -11,6 +11,17 @@ type AuthResponse = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const strongPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/
+const countryCallingCodes = [
+  { country: "Malawi", code: "+265" },
+  { country: "Zambia", code: "+260" },
+  { country: "Tanzania", code: "+255" },
+  { country: "Mozambique", code: "+258" },
+  { country: "South Africa", code: "+27" },
+  { country: "Zimbabwe", code: "+263" },
+  { country: "Kenya", code: "+254" },
+  { country: "United Kingdom", code: "+44" },
+  { country: "United States / Canada", code: "+1" },
+]
 
 function getRedirectTarget() {
   const target = localStorage.getItem("mthunziAuthRedirect")
@@ -40,7 +51,9 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     const lastName = String(values.get("lastName") || "").trim()
     const name = `${firstName} ${lastName}`.trim()
     const email = String(values.get("email") || "").trim()
-    const phone = String(values.get("phone") || "").trim()
+    const phoneDigits = String(values.get("phone") || "").replace(/\D/g, "").replace(/^0+/, "")
+    const phoneCountryCode = String(values.get("phoneCountryCode") || "+265")
+    const phone = phoneDigits ? `${phoneCountryCode}${phoneDigits}` : ""
     const password = String(values.get("password") || "")
     const confirmation = String(values.get("confirmation") || "")
 
@@ -85,7 +98,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         throw new Error(body.error || (isSignup ? "Signup failed." : "Login failed."))
       }
 
-      localStorage.setItem("mthunziAuthUser", JSON.stringify(body.data))
+      sessionStorage.setItem("mthunziAuthUser", JSON.stringify(body.data))
       setStatus(isSignup ? "Account created. Redirecting..." : "Welcome back. Redirecting...")
       setStatusType("success")
       window.setTimeout(() => window.location.assign(getRedirectTarget()), 700)
@@ -136,7 +149,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           <label className={fieldLabelClass}>Email address
             <span className="relative block"><svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#817a70]" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><input className={fieldClass} name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></span>
           </label>
-          {isSignup && <label className={fieldLabelClass}>Phone number <span className="font-normal text-[#817a70]">(optional)</span><input className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10" name="phone" type="tel" autoComplete="tel" placeholder="+265..." /></label>}
+          {isSignup && <label className={fieldLabelClass}>Phone number <span className="font-normal text-[#817a70]">(optional)</span><span className="grid gap-2 sm:grid-cols-[minmax(0,170px)_1fr]"><select className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-3 py-3.5 text-sm outline-none focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10" name="phoneCountryCode" defaultValue="+265" aria-label="Country calling code">{countryCallingCodes.map(({ country, code }) => <option key={code} value={code}>{country} ({code})</option>)}</select><input className="w-full min-w-0 border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="Phone number" /></span></label>}
           <label className={fieldLabelClass}>Password
             <span className="relative block"><svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#817a70]" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input className={fieldClass} name="password" type="password" autoComplete={isSignup ? "new-password" : "current-password"} minLength={8} placeholder={isSignup ? "At least 8 characters" : "Your password"} required /></span>
           </label>

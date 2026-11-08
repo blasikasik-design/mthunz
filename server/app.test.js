@@ -76,6 +76,8 @@ test('PayChangu webhooks require the expected raw-body HMAC signature', () => {
 
 test('customer tokens still validate when no secret is configured', () => {
   const previous = process.env.ADMIN_TOKEN_SECRET;
+  const previousEnvironment = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'test';
   delete process.env.ADMIN_TOKEN_SECRET;
 
   try {
@@ -87,11 +89,15 @@ test('customer tokens still validate when no secret is configured', () => {
     } else {
       process.env.ADMIN_TOKEN_SECRET = previous;
     }
+    if (previousEnvironment === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = previousEnvironment
   }
 });
 
 test('legacy empty-secret customer tokens still validate', () => {
   const previous = process.env.ADMIN_TOKEN_SECRET;
+  const previousEnvironment = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'test';
   delete process.env.ADMIN_TOKEN_SECRET;
 
   try {
@@ -106,6 +112,31 @@ test('legacy empty-secret customer tokens still validate', () => {
     } else {
       process.env.ADMIN_TOKEN_SECRET = previous;
     }
+    if (previousEnvironment === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = previousEnvironment
+  }
+});
+
+test('non-development tokens reject development secrets and require a configured secret', () => {
+  const previousSecret = process.env.ADMIN_TOKEN_SECRET;
+  const previousEnvironment = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'test';
+  delete process.env.ADMIN_TOKEN_SECRET;
+  const developmentToken = createCustomerToken(42);
+
+  try {
+    delete process.env.NODE_ENV;
+    assert.equal(getCustomerTokenUserId(developmentToken), null);
+    assert.throws(() => createCustomerToken(42), /ADMIN_TOKEN_SECRET/);
+
+    process.env.ADMIN_TOKEN_SECRET = 'test-secret-that-is-at-least-32-characters';
+    const productionToken = createCustomerToken(42);
+    assert.equal(getCustomerTokenUserId(productionToken), 42);
+  } finally {
+    if (previousSecret === undefined) delete process.env.ADMIN_TOKEN_SECRET
+    else process.env.ADMIN_TOKEN_SECRET = previousSecret
+    if (previousEnvironment === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = previousEnvironment
   }
 });
 

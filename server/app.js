@@ -6,22 +6,38 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
+const { rateLimit } = require('express-rate-limit');
 const db = require('./services/db');
 const auth = require('./services/auth');
 const settingsPath = path.join(__dirname, 'data', 'site-settings.json');
 const defaultAppOrigin = 'https://nthuzi.blessingschibwana44.workers.dev';
+const developmentTokenSecret = 'mthunzi-local-dev-secret';
+const tokenLifetimeMs = 8 * 60 * 60 * 1000;
+
+function allowsDevelopmentTokenSecrets() {
+  return ['development', 'test'].includes(process.env.NODE_ENV);
+}
 
 function getTokenSecret() {
-  return process.env.ADMIN_TOKEN_SECRET || 'mthunzi-local-dev-secret';
+  const configured = process.env.ADMIN_TOKEN_SECRET;
+  if (configured && configured.trim()) return configured;
+  if (!allowsDevelopmentTokenSecrets()) {
+    throw new Error('ADMIN_TOKEN_SECRET must be configured in production.');
+  }
+  return developmentTokenSecret;
 }
 
 function getTokenSecrets() {
-  const secrets = [];
   const configured = process.env.ADMIN_TOKEN_SECRET;
-  if (configured && configured.trim()) secrets.push(configured);
-  secrets.push('mthunzi-local-dev-secret');
-  secrets.push('');
-  return Array.from(new Set(secrets));
+  if (configured && configured.trim()) return [configured];
+  return allowsDevelopmentTokenSecrets() ? [developmentTokenSecret, ''] : [];
+}
+
+function assertProductionSecurityConfig() {
+  const secret = String(process.env.ADMIN_TOKEN_SECRET || '').trim();
+  if (!allowsDevelopmentTokenSecrets() && secret.length < 32) {
+    throw new Error('Set ADMIN_TOKEN_SECRET to a random value of at least 32 characters outside development and test.');
+  }
 }
 
 function verifySignedValue(tokenData, signature, secrets) {
@@ -36,6 +52,22 @@ function verifySignedValue(tokenData, signature, secrets) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
+
+const loginRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many sign-in attempts. Please try again in 15 minutes.' }
+});
+const signupRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many account creation attempts. Please try again later.' }
+});
 
 if (!process.env.CLOUDINARY_URL && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
   cloudinary.config({
@@ -208,7 +240,7 @@ async function ensureAdminCredentials() {
 
 function createAdminToken(authVersion) {
   const secret = getTokenSecret();
-  const expiresAt = Date.now() + 12 * 60 * 60 * 1000;
+  const expiresAt = Date.now() + tokenLifetimeMs;
   const tokenData = `${expiresAt}.${authVersion}`;
   const signature = crypto.createHmac('sha256', secret).update(tokenData).digest('hex');
   return `${tokenData}.${signature}`;
@@ -226,7 +258,7 @@ function getAdminTokenVersion(token) {
 
 function createCustomerToken(userId) {
   const secret = getTokenSecret();
-  const expiresAt = Date.now() + 12 * 60 * 60 * 1000;
+  const expiresAt = Date.now() + tokenLifetimeMs;
   const tokenData = `customer.${expiresAt}.${userId}`;
   const signature = crypto.createHmac('sha256', secret).update(tokenData).digest('hex');
   return `${expiresAt}.${userId}.${signature}`;
@@ -388,6 +420,7 @@ function handleProductImageError(err, res) {
 let agedOrderUpdateStarted = false;
 
 async function startServer(port) {
+  assertProductionSecurityConfig();
   await ensureSchema();
   await ensureAdminCredentials();
 
@@ -497,7 +530,7 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.post('/api/signup', async (req, res) => {
+app.post('/api/signup', signupRateLimit, async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
     const normalizedPhone = String(phone || '').trim();
@@ -524,7 +557,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', loginRateLimit, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -551,7 +584,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', loginRateLimit, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
