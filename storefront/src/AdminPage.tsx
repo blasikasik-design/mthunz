@@ -54,6 +54,7 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [settings, setSettings] = useState<Settings>({})
   const [aboutImages, setAboutImages] = useState<Partial<Record<AboutImageField, string>>>({})
+  const [productImage, setProductImage] = useState("")
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
   const [search, setSearch] = useState("")
@@ -133,6 +134,20 @@ export default function AdminPage() {
     reader.readAsDataURL(file)
   }
 
+  function readProductImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/) || file.size > 5 * 1024 * 1024) {
+      setError("Choose a JPG, PNG, or WebP image smaller than 5 MB.")
+      event.target.value = ""
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setProductImage(String(reader.result || ""))
+    reader.onerror = () => setError("Unable to read that image. Please try another file.")
+    reader.readAsDataURL(file)
+  }
+
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
@@ -149,7 +164,7 @@ export default function AdminPage() {
           category: String(values.get("category") || "Others").trim(),
           description: String(values.get("description") || "").trim(),
           price: Number(values.get("price") || 0),
-          image_url: String(values.get("image") || "").trim(),
+          image_url: productImage || String(values.get("image") || "").trim(),
           dimensions: String(values.get("dimensions") || "").trim(),
           stock,
           in_stock: stock > 0,
@@ -157,6 +172,7 @@ export default function AdminPage() {
         }),
       })
       setEditingProduct(null)
+      setProductImage("")
       setNotice(productId && Number(productId) > 0 ? "Product updated." : "Product added.")
       form.reset()
       await loadData()
@@ -357,7 +373,18 @@ export default function AdminPage() {
   })
   const maxWeeklySales = Math.max(1, ...salesWeeks.map((week) => week.amount))
   const activeTitle = navigation.find((item) => item.id === view)?.label || "Overview"
-  const openNewProduct = () => setEditingProduct({ id: 0, name: "", category: categories[0]?.name || "", price: 0, stock: 0 })
+  const openNewProduct = () => {
+    setProductImage("")
+    setEditingProduct({ id: 0, name: "", category: categories[0]?.name || "", price: 0, stock: 0 })
+  }
+  const openExistingProduct = (product: Product) => {
+    setProductImage(product.image || product.image_url || "")
+    setEditingProduct(product)
+  }
+  const closeProductEditor = () => {
+    setEditingProduct(null)
+    setProductImage("")
+  }
   const aboutField = (name: string, label: string, value: string, multiline = false) => (
     <label className="about-editor-field">{label}{multiline
       ? <textarea className="admin-field" name={name} rows={3} defaultValue={value} />
@@ -377,7 +404,6 @@ export default function AdminPage() {
       </aside>
       {mobileMenu && <button className="admin-menu-backdrop" onClick={() => setMobileMenu(false)} aria-label="Close admin menu" />}
       <section className="admin-main">
-        <header className="admin-topbar"><div className="admin-title-area"><button className="admin-menu-trigger" onClick={() => setMobileMenu(true)} aria-label="Open admin menu"><Icon name="menu" size={21} /></button><div><small>STUDIO ADMINISTRATION</small><h1>{activeTitle}</h1></div></div><div className="admin-top-actions"><label><Icon name="search" size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." aria-label="Search records" /></label><button className="notification-button" aria-label="View enquiries" onClick={() => setView("messages")}><Icon name="bell" />{messages.length > 0 && <i />}</button><span className="admin-avatar" aria-label={adminName}>{initials}</span></div></header>
           <header className="admin-topbar"><div className="admin-title-area"><button className="admin-menu-trigger" onClick={() => setMobileMenu(true)} aria-label="Open admin menu"><Icon name="menu" size={21} /></button><div><small>STUDIO ADMINISTRATION</small><h1>{activeTitle}</h1></div></div><div className="admin-top-actions"><label><Icon name="search" size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." aria-label="Search records" /></label><button className="notification-button" aria-label={unreadMessageCount ? `${unreadMessageCount} unread enquiries` : "View enquiries"} onClick={() => setView("messages")}><Icon name="bell" />{unreadMessageCount > 0 && <i />}</button><span className="admin-avatar" aria-label={adminName}>{initials}</span></div></header>
         {error && <p className="admin-alert" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
         {loading && <div className="admin-content"><p>Loading store data…</p></div>}
@@ -396,13 +422,13 @@ export default function AdminPage() {
           </div>
           <div className="admin-grid-bottom">
             <article className="admin-card recent-orders"><div className="card-heading"><div><small>LIVE ACTIVITY</small><h3>Recent orders</h3></div><button onClick={() => setView("orders")}>View all orders</button></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>{orders.slice(0, 4).map((order) => <tr key={order.id}><td><b>#{order.id}</b></td><td><div><b>{order.name || "Customer"}</b><small>{order.email || ""}</small></div></td><td>MK {Number(order.total_amount || 0).toLocaleString()}</td><td><span className={`status-pill ${String(order.status || "pending").toLowerCase()}`}>{order.status || "Pending"}</span></td></tr>)}</tbody></table></div>{orders.length === 0 && <p className="admin-empty-copy">No orders have been placed yet.</p>}</article>
-            <article className="admin-card low-stock"><div className="card-heading"><div><small>INVENTORY</small><h3>Low in stock</h3></div><span>{lowStock.length} items</span></div>{lowStock.slice(0, 5).map((product) => <div className="stock-row" key={product.id}><img src={product.image || product.image_url || ""} alt="" /><div><b>{product.name}</b><small>{product.category || "Artwork"}</small></div><span className={Number(product.stock || 0) <= 1 ? "critical" : ""}>{Number(product.stock || 0)} left</span><button onClick={() => { setEditingProduct(product); setView("products") }}>Restock</button></div>)}{lowStock.length === 0 && <p className="admin-empty-copy">No products need restocking.</p>}</article>
+            <article className="admin-card low-stock"><div className="card-heading"><div><small>INVENTORY</small><h3>Low in stock</h3></div><span>{lowStock.length} items</span></div>{lowStock.slice(0, 5).map((product) => <div className="stock-row" key={product.id}><img src={product.image || product.image_url || ""} alt="" /><div><b>{product.name}</b><small>{product.category || "Artwork"}</small></div><span className={Number(product.stock || 0) <= 1 ? "critical" : ""}>{Number(product.stock || 0)} left</span><button onClick={() => { openExistingProduct(product); setView("products") }}>Restock</button></div>)}{lowStock.length === 0 && <p className="admin-empty-copy">No products need restocking.</p>}</article>
           </div>
         </div>}
 
         {!loading && view === "orders" && <div className="admin-content"><div className="admin-page-tools"><div><h2>All orders</h2><p>Track payments, fulfilment, and live customer orders.</p></div></div><div className="admin-card table-card"><div className="table-filter"><span>{matchedOrders.length} orders</span><label><Icon name="search" size={16} /><input aria-label="Search orders" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search orders" /></label></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Placed</th></tr></thead><tbody>{matchedOrders.map((order) => <tr key={order.id}><td><b>#{order.id}</b></td><td><div><b>{order.name || "Customer"}</b><small>{order.email || ""}</small></div></td><td>{order.items?.map((item) => `${item.name || "Artwork"} × ${item.qty || item.quantity || 1}`).join(", ") || "—"}</td><td>MK {Number(order.total_amount || 0).toLocaleString()}</td><td>{order.payment_status || "—"}</td><td><select className="admin-status-select" value={order.status || "Pending"} disabled={busy} onChange={(event) => void updateOrder(order.id, event.target.value)}>{["Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map((status) => <option key={status}>{status}</option>)}</select></td><td>{order.created_at ? new Date(order.created_at).toLocaleDateString() : "—"}</td></tr>)}</tbody></table></div>{matchedOrders.length === 0 && <p className="admin-empty-copy">No matching orders.</p>}</div></div>}
 
-        {!loading && view === "products" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Product catalogue</h2><p>Edit inventory, pricing, product details, and availability.</p></div><button className="admin-primary" onClick={openNewProduct}>+ Add product</button></div><div className="admin-card table-card"><div className="table-filter"><span>{matchedProducts.length} products</span><label><Icon name="search" size={16} /><input aria-label="Search products" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" /></label></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead><tbody>{matchedProducts.map((product) => <tr key={product.id}><td><div className="table-product"><img src={product.image || product.image_url || ""} alt="" /><div><b>{product.name}</b><small>SKU-MC-{String(product.id).padStart(3, "0")}</small></div></div></td><td>{product.category || "Artwork"}</td><td>MK {Number(product.price || 0).toLocaleString()}</td><td><span className={`stock-pill ${Number(product.stock || 0) <= 3 ? "warning" : ""}`}>{Number(product.stock || 0)} in stock</span></td><td><div className="row-actions"><button onClick={() => setEditingProduct(product)} aria-label={`Edit ${product.name}`}><Icon name="edit" size={16} /></button><button className="danger" onClick={() => void deleteRecord("products", product.id)} aria-label={`Delete ${product.name}`}><Icon name="trash" size={16} /></button></div></td></tr>)}</tbody></table></div>{matchedProducts.length === 0 && <p className="admin-empty-copy">No matching products.</p>}</div></div>}
+        {!loading && view === "products" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Product catalogue</h2><p>Edit inventory, pricing, product details, and availability.</p></div><button className="admin-primary" onClick={openNewProduct}>+ Add product</button></div><div className="admin-card table-card"><div className="table-filter"><span>{matchedProducts.length} products</span><label><Icon name="search" size={16} /><input aria-label="Search products" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" /></label></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead><tbody>{matchedProducts.map((product) => <tr key={product.id}><td><div className="table-product"><img src={product.image || product.image_url || ""} alt="" /><div><b>{product.name}</b><small>SKU-MC-{String(product.id).padStart(3, "0")}</small></div></div></td><td>{product.category || "Artwork"}</td><td>MK {Number(product.price || 0).toLocaleString()}</td><td><span className={`stock-pill ${Number(product.stock || 0) <= 3 ? "warning" : ""}`}>{Number(product.stock || 0)} in stock</span></td><td><div className="row-actions"><button onClick={() => openExistingProduct(product)} aria-label={`Edit ${product.name}`}><Icon name="edit" size={16} /></button><button className="danger" onClick={() => void deleteRecord("products", product.id)} aria-label={`Delete ${product.name}`}><Icon name="trash" size={16} /></button></div></td></tr>)}</tbody></table></div>{matchedProducts.length === 0 && <p className="admin-empty-copy">No matching products.</p>}</div></div>}
 
         {!loading && view === "customers" && <div className="admin-content"><div className="admin-page-tools"><div><h2>Customer directory</h2><p>Customer contact information and registration dates.</p></div></div><div className="admin-card table-card"><div className="admin-table-wrap"><table className="admin-table customer-table"><thead><tr><th>Customer</th><th>Phone</th><th>Joined</th><th></th></tr></thead><tbody>{matchedCustomers.map((customer) => <tr key={customer.id}><td><div className="customer-name"><span>{(customer.name || "C").split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</span><div><b>{customer.name || "Customer"}</b><small>{customer.email || ""}</small></div></div></td><td>{customer.phone || "—"}</td><td>{customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "—"}</td><td><button className="plain-link danger-link" onClick={() => void deleteRecord("customers", customer.id)}>Remove</button></td></tr>)}</tbody></table></div>{matchedCustomers.length === 0 && <p className="admin-empty-copy">No matching customers.</p>}</div></div>}
 
@@ -471,7 +497,7 @@ export default function AdminPage() {
       </section>
 
       {selectedMessage && <div className="admin-modal-backdrop" onMouseDown={() => setSelectedMessage(null)}><section className="admin-modal admin-message-modal" role="dialog" aria-modal="true" aria-labelledby="message-modal-title" onMouseDown={(event) => event.stopPropagation()}><div className="modal-heading"><div><small>{selectedMessage.is_read ? "READ ENQUIRY" : "NEW ENQUIRY"}</small><h2 id="message-modal-title">{selectedMessage.subject}</h2></div><button onClick={() => setSelectedMessage(null)} aria-label="Close message">×</button></div><div className="message-detail"><p className="message-detail-meta">From <b>{selectedMessage.name}</b> · <a href={`mailto:${selectedMessage.email}`}>{selectedMessage.email}</a></p><p className="message-detail-date">{selectedMessage.created_at ? new Date(selectedMessage.created_at).toLocaleString() : ""}</p><div className="message-detail-body">{selectedMessage.body}</div><button className="admin-secondary" onClick={() => setSelectedMessage(null)}>Close</button></div></section></div>}
-      {editingProduct && <div className="admin-modal-backdrop" onMouseDown={() => setEditingProduct(null)}><div className="admin-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-heading"><div><small>CATALOGUE</small><h2>{Number(editingProduct.id) ? "Edit product" : "Add new product"}</h2></div><button onClick={() => setEditingProduct(null)} aria-label="Close product form">×</button></div><form onSubmit={saveProduct}><label>Product name<input className={fieldClass} name="name" defaultValue={editingProduct.name} required /></label><div className="form-row"><label>Category<select className={fieldClass} name="category" defaultValue={editingProduct.category}>{categories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}</select></label><label>Price (MK)<input className={fieldClass} name="price" type="number" min="0" defaultValue={editingProduct.price || ""} required /></label></div><div className="form-row"><label>Stock quantity<input className={fieldClass} name="stock" type="number" min="0" defaultValue={editingProduct.stock ?? 0} required /></label><label>Dimensions<input className={fieldClass} name="dimensions" defaultValue={editingProduct.dimensions || ""} /></label></div><label>Image URL<input className={fieldClass} name="image" type="url" defaultValue={editingProduct.image || editingProduct.image_url || ""} /></label><label>Description<textarea className={fieldClass} name="description" rows={3} defaultValue={editingProduct.description || ""} /></label><div className="modal-actions"><button type="button" onClick={() => setEditingProduct(null)}>Cancel</button><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : Number(editingProduct.id) ? "Save changes" : "Add product"}</button></div></form></div></div>}
+      {editingProduct && <div className="admin-modal-backdrop" onMouseDown={closeProductEditor}><div className="admin-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-heading"><div><small>CATALOGUE</small><h2>{Number(editingProduct.id) ? "Edit product" : "Add new product"}</h2></div><button onClick={closeProductEditor} aria-label="Close product form">×</button></div><form onSubmit={saveProduct}><label>Product name<input className={fieldClass} name="name" defaultValue={editingProduct.name} required /></label><div className="form-row"><label>Category<select className={fieldClass} name="category" defaultValue={editingProduct.category}>{categories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}</select></label><label>Price (MK)<input className={fieldClass} name="price" type="number" min="0" defaultValue={editingProduct.price || ""} required /></label></div><div className="form-row"><label>Stock quantity<input className={fieldClass} name="stock" type="number" min="0" defaultValue={editingProduct.stock ?? 0} required /></label><label>Dimensions<input className={fieldClass} name="dimensions" defaultValue={editingProduct.dimensions || ""} /></label></div><label>Image URL<input className={fieldClass} name="image" type="url" value={productImage.startsWith("data:image/") ? "" : productImage} onChange={(event) => setProductImage(event.target.value)} placeholder="https://..." /></label><label>Or upload from this device<input className={fieldClass} type="file" accept="image/jpeg,image/png,image/webp" onChange={readProductImage} /></label>{productImage && <div className="product-image-preview"><img src={productImage} alt="Product image preview" /><button className="plain-link danger-link" type="button" onClick={() => setProductImage("")}>Remove image</button></div>}<label>Description<textarea className={fieldClass} name="description" rows={3} defaultValue={editingProduct.description || ""} /></label><div className="modal-actions"><button type="button" onClick={closeProductEditor}>Cancel</button><button className="admin-primary" disabled={busy}>{busy ? "Saving…" : Number(editingProduct.id) ? "Save changes" : "Add product"}</button></div></form></div></div>}
     </main>
   )
 }

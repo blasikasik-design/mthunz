@@ -542,7 +542,7 @@ function App() {
             <div className="hero-art" aria-hidden="true">
               <div className="art-frame">
                 <img
-                  src="https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=1400&q=90"
+                  src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1400&q=90"
                   alt=""
                 />
               </div>

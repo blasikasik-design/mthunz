@@ -587,6 +587,8 @@ footer { background: #24251f; color: var(--cream); padding: 90px 7vw 24px; }
 .about-image-field { min-width: 0; }
 .about-image-preview { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .about-image-preview img { width: 96px; height: 66px; object-fit: cover; background: #eeede8; }
+.product-image-preview { display: flex; align-items: center; gap: 12px; border: 1px solid #e8e7e1; padding: 10px; }
+.product-image-preview img { width: 108px; height: 76px; object-fit: cover; background: #eeede8; }
 .about-fact-editor { display: grid; gap: 10px; border-left: 2px solid #dfe6ef; padding-left: 12px; }
 .about-fact-editor > small { color: var(--admin-accent); font-size: 7px; letter-spacing: .14em; }
 .settings-form label, .admin-modal label, .add-category label { display: block; font-size: 9px; font-weight: 600; }
