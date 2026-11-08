@@ -360,8 +360,13 @@ footer { background: #24251f; color: var(--cream); padding: 90px 7vw 24px; }
   .section { padding: 82px 5vw; }
   .section-heading { flex-direction: column; align-items: flex-start; gap: 25px; margin-bottom: 40px; }
   .section-heading h2, .works-top h2, .artist-copy h2 { font-size: 45px; }
-  .category-grid { grid-template-columns: 1fr; }
-  .category-card { height: 350px; }
+  .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .category-card { height: 185px; }
+  .category-number { top: 12px; left: 12px; font-size: 11px; }
+  .category-overlay { left: 12px; right: 12px; bottom: 12px; }
+  .category-overlay small { font-size: 7px; }
+  .category-overlay strong { font-size: 18px; }
+  .category-overlay i { width: 30px; height: 30px; }
   .works-top { flex-direction: column; align-items: flex-start; }
   .search-box { width: 100%; }
   .filter-row { overflow-x: auto; padding-bottom: 14px; }

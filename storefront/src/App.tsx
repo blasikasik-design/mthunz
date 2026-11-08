@@ -211,7 +211,7 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   )
 }
 
-type SignedInUser = { name?: string; email?: string }
+type SignedInUser = { id?: number | string; token?: string; name?: string; email?: string }
 
 function readSignedInUser(): SignedInUser | null {
   try {
@@ -224,6 +224,7 @@ function readSignedInUser(): SignedInUser | null {
 function App() {
   const route = routeFromPath(window.location.pathname)
   const [signedInUser] = useState(readSignedInUser)
+  const isSignedIn = Boolean(signedInUser?.id && signedInUser?.token)
   const [products, setProducts] = useState<Product[]>([])
   const [productsLoading, setProductsLoading] = useState(true)
   const [productsError, setProductsError] = useState("")
@@ -341,11 +342,26 @@ function App() {
       return matchesFilter && matchesQuery
     })
   }, [filter, products, query])
+  const featuredProducts = useMemo(
+    () => products.filter((product) => product.label?.trim().toLowerCase() === "featured"),
+    [products],
+  )
+  const visibleProducts = route === "home"
+    ? featuredProducts.filter((product) => {
+        const search = query.trim().toLowerCase()
+        return !search || product.name.toLowerCase().includes(search) || product.category.toLowerCase().includes(search)
+      })
+    : filteredProducts
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0)
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0)
 
   const addToCart = (product: Product) => {
+    if (!isSignedIn) {
+      localStorage.setItem("mthunziAuthRedirect", `${window.location.pathname}${window.location.search}`)
+      window.location.assign("/login.html")
+      return
+    }
     if (product.stock < 1) {
       setToast("This artwork is currently unavailable.")
       return
@@ -384,6 +400,11 @@ function App() {
   }
 
   const checkout = () => {
+    if (!isSignedIn) {
+      localStorage.setItem("mthunziAuthRedirect", `${window.location.pathname}${window.location.search}`)
+      window.location.assign("/login.html")
+      return
+    }
     if (!cart.length) return
     const handoffCart = cart.map((item) => ({
       id: item.id,
@@ -517,13 +538,13 @@ function App() {
         <div className="header-actions">
           <button
             className="text-action account-action"
-            onClick={() => (window.location.href = signedInUser ? "/account.html" : "/login.html")}
-            aria-label={signedInUser?.name ? `Account for ${signedInUser.name}` : "Sign in"}
+            onClick={() => (window.location.href = isSignedIn ? "/account.html" : "/login.html")}
+            aria-label={isSignedIn && signedInUser?.name ? `Account for ${signedInUser.name}` : "Sign in"}
           >
             <Icon name="user" size={18} />
-            <span className="account-name">{signedInUser?.name?.trim() || "Sign in"}</span>
+            <span className="account-name">{isSignedIn ? signedInUser?.name?.trim() || "Account" : "Sign in"}</span>
           </button>
-          <button
+          {isSignedIn && <button
             className="bag-action"
             onClick={() => setCartOpen(true)}
             aria-label={`Open cart with ${cartCount} items`}
@@ -531,7 +552,7 @@ function App() {
             <Icon name="bag" size={19} />
             <span>Bag</span>
             <b>{cartCount}</b>
-          </button>
+          </button>}
           <button
             className="menu-action"
             onClick={() => setMenuOpen(true)}
@@ -649,7 +670,7 @@ function App() {
           <section className="section works-section" id="works">
             <div className="works-top">
               <div>
-                <span className="kicker">Selected works</span>
+                <span className="kicker">{route === "home" ? "Featured works" : "Selected works"}</span>
                 <h2>Made with intention</h2>
               </div>
               <div className="search-box">
@@ -663,21 +684,8 @@ function App() {
               </div>
             </div>
 
-            <div className="filter-row">
-              {filters.map((item) => (
-                <button
-                  key={item}
-                  className={filter === item ? "active" : ""}
-                  onClick={() => setFilter(item)}
-                >
-                  {item}
-                </button>
-              ))}
-              <span>{filteredProducts.length} works</span>
-            </div>
-
             <div className="product-grid">
-              {filteredProducts.map((product, index) => (
+              {visibleProducts.map((product, index) => (
                 <article
                   className={`product-card product-${index + 1}`}
                   key={product.id}
@@ -704,19 +712,19 @@ function App() {
                     </div>
                     <div className="product-price">
                       <strong>MK {product.price.toLocaleString()}</strong>
-                      <button
+                      {isSignedIn && <button
                         onClick={() => addToCart(product)}
                         disabled={product.stock < 1}
                         aria-label={`Add ${product.name} to cart`}
                       >
                         <Icon name="bag" size={19} />
-                      </button>
+                      </button>}
                     </div>
                   </div>
                 </article>
               ))}
             </div>
-            {productsLoading && filteredProducts.length === 0 && (
+            {productsLoading && visibleProducts.length === 0 && (
               <div className="empty-state">
                 <h3>Loading available works</h3>
                 <p>The collection is on its way.</p>
@@ -728,19 +736,11 @@ function App() {
                 <p>{productsError}</p>
               </div>
             )}
-            {!productsLoading && !productsError && filteredProducts.length === 0 && (
+            {!productsLoading && !productsError && visibleProducts.length === 0 && (
               <div className="empty-state">
                 <Icon name="palette" size={34} />
-                <h3>No works found</h3>
-                <p>Try another search or browse the full collection.</p>
-                <button
-                  onClick={() => {
-                    setQuery("")
-                    setFilter("All")
-                  }}
-                >
-                  View all works
-                </button>
+                <h3>No featured works yet</h3>
+                <p>Featured pieces will appear here.</p>
               </div>
             )}
           </section>
@@ -1235,7 +1235,7 @@ function App() {
         </div>
       )}
 
-      {cartOpen && (
+      {cartOpen && isSignedIn && (
         <div className="overlay" onMouseDown={() => setCartOpen(false)}>
           <aside
             className="cart-drawer"
@@ -1345,13 +1345,9 @@ function App() {
                   <dd>Signed original</dd>
                 </div>
               </dl>
-              <button
-                className="primary-button"
-                disabled={activeProduct.stock < 1}
-                onClick={() => addToCart(activeProduct)}
-              >
-                {activeProduct.stock > 0 ? "Add to art bag" : "Sold out"} <Icon name="bag" size={19} />
-              </button>
+              {isSignedIn
+                ? <button className="primary-button" disabled={activeProduct.stock < 1} onClick={() => addToCart(activeProduct)}>{activeProduct.stock > 0 ? "Add to art bag" : "Sold out"} <Icon name="bag" size={19} /></button>
+                : <button className="primary-button" onClick={() => { localStorage.setItem("mthunziAuthRedirect", `${window.location.pathname}${window.location.search}`); window.location.assign("/login.html") }}>Sign in to purchase <Icon name="user" size={19} /></button>}
             </div>
           </div>
         </div>
