@@ -229,7 +229,7 @@ async function deleteProduct(id) {
 
 async function getCustomers() {
   try {
-    const result = await query('SELECT id, name, email, phone, created_at FROM users ORDER BY created_at DESC');
+    const result = await query('SELECT id, name, email, phone, avatar_url, addresses, created_at FROM users ORDER BY created_at DESC');
     return result.rows;
   } catch (err) {
     console.error('Error fetching customers:', err);
