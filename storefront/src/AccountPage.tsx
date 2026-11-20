@@ -3,6 +3,17 @@ import { apiUrl } from "./api"
 import projectLogo from "./brand"
 import { timeGreeting } from "./timeGreeting"
 
+type SavedAddress = {
+  id: string
+  label: string
+  recipient: string
+  phone: string
+  street: string
+  city: string
+  region: string
+  postalCode: string
+}
+
 type AccountUser = {
   id: number | string
   name: string
@@ -10,6 +21,7 @@ type AccountUser = {
   phone?: string
   avatar_url?: string
   token: string
+  addresses?: SavedAddress[]
 }
 
 type Order = {
@@ -47,6 +59,8 @@ export default function AccountPage() {
       return {}
     }
   })
+  const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null)
+  const [addressFormOpen, setAddressFormOpen] = useState(false)
 
   useEffect(() => {
     if (!user?.id || !user.token) {
@@ -231,6 +245,70 @@ export default function AccountPage() {
     }
   }
 
+  async function saveAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!user) return
+    const values = new FormData(event.currentTarget)
+    const address: SavedAddress = {
+      id: editingAddress?.id || `address-${Date.now()}`,
+      label: String(values.get("label") || "Home").trim(),
+      recipient: String(values.get("recipient") || "").trim(),
+      phone: String(values.get("phone") || "").trim(),
+      street: String(values.get("street") || "").trim(),
+      city: String(values.get("city") || "").trim(),
+      region: String(values.get("region") || "").trim(),
+      postalCode: String(values.get("postalCode") || "").trim(),
+    }
+    const current = Array.isArray(user.addresses) ? user.addresses : []
+    const addresses = editingAddress ? current.map((item) => item.id === editingAddress.id ? address : item) : [...current, address]
+    setBusy(true)
+    setError("")
+    setMessage("")
+    try {
+      const response = await fetch(apiUrl(`/api/user/${encodeURIComponent(user.id)}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify({ addresses }),
+      })
+      const body = await response.json().catch(() => ({}))
+      if (!response.ok || !body.data) throw new Error(body.error || "Unable to save address.")
+      const nextUser = { ...user, ...body.data, token: user.token }
+      setUser(nextUser)
+      sessionStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
+      setAddressFormOpen(false)
+      setEditingAddress(null)
+      setMessage("Address saved.")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to save address.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function deleteAddress(addressId: string) {
+    if (!user) return
+    const addresses = (user.addresses || []).filter((item) => item.id !== addressId)
+    setBusy(true)
+    setError("")
+    try {
+      const response = await fetch(apiUrl(`/api/user/${encodeURIComponent(user.id)}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify({ addresses }),
+      })
+      const body = await response.json().catch(() => ({}))
+      if (!response.ok || !body.data) throw new Error(body.error || "Unable to delete address.")
+      const nextUser = { ...user, ...body.data, token: user.token }
+      setUser(nextUser)
+      sessionStorage.setItem("mthunziAuthUser", JSON.stringify(nextUser))
+      setMessage("Address deleted.")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to delete address.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   function togglePreference(key: string) {
     setPreferences((current) => {
       const next = { ...current, [key]: !current[key] }
@@ -294,7 +372,15 @@ export default function AccountPage() {
             <div className="divide-y divide-[#d8d0c3] border-y border-[#d8d0c3]">{orders.length ? orders.map((order) => <article className="grid gap-3 py-5 sm:grid-cols-[1fr_auto_auto] sm:items-center" key={order.id}><div><p className="text-[9px] uppercase tracking-[.14em] text-[#817a70]">Order #{order.id} · {order.created_at ? new Date(order.created_at).toLocaleDateString() : ""}</p><p className="mt-2 font-serif text-xl">{(order.items || []).map((item) => `${item.name || item.product_name || "Artwork"} × ${item.quantity || item.qty || 1}`).join(", ") || "Order items"}</p></div><span className="w-fit border border-[#d8d0c3] px-3 py-1 text-[9px] uppercase tracking-wider">{order.status || "Pending"}</span><strong className="text-xs">MK {Number(order.total_amount || order.total || 0).toLocaleString()}</strong></article>) : <div className="py-14 text-center"><span className="mx-auto grid size-14 place-items-center rounded-full bg-[#f5f0e7] text-2xl text-[#2d6cbb]">♡</span><h3 className="mt-4 font-serif text-2xl">No orders yet</h3><p className="mt-2 text-xs text-[#777067]">When you collect a piece, your order and delivery progress will appear here.</p><a className="mt-5 inline-block bg-[#2d6cbb] px-5 py-3 text-xs font-semibold text-white" href="/shop.html">Explore available work</a></div>}</div>
           </>}
           {!loading && view === "wishlist" && <div className="grid min-h-[440px] place-items-center text-center"><div><span className="mx-auto grid size-[70px] place-items-center rounded-full bg-[#f5f0e7] text-3xl text-[#2d6cbb]">♡</span><h2 className="mt-5 font-serif text-4xl">Your wishlist is ready</h2><p className="mx-auto mt-3 max-w-md text-xs leading-6 text-[#777067]">Saved artwork will appear here when wishlist support is available.</p><a className="mt-5 inline-block border-b border-[#1d211f] pb-1 text-xs" href="/shop.html">Discover the collection</a></div></div>}
-          {!loading && view === "addresses" && <div className="grid min-h-[440px] place-items-center text-center"><div><p className="text-[9px] font-semibold tracking-[.2em] text-[#2d6cbb]">DELIVERY DETAILS</p><h2 className="mt-3 font-serif text-4xl">Saved addresses</h2><p className="mx-auto mt-3 max-w-md text-xs leading-6 text-[#777067]">Address management isn’t available in your account yet. Add delivery details when you contact the studio about an order.</p><a className="mt-5 inline-block border-b border-[#1d211f] pb-1 text-xs" href="/contact.html">Contact the studio</a></div></div>}
+          {!loading && view === "addresses" && <>
+            <div className="mb-7 flex items-end justify-between gap-4 border-b border-[#d8d0c3] pb-6">
+              <div><p className="text-[9px] font-semibold tracking-[.2em] text-[#2d6cbb]">DELIVERY DETAILS</p><h2 className="mt-2 font-serif text-4xl">Saved addresses</h2></div>
+              <button className="bg-[#2d6cbb] px-4 py-3 text-xs font-semibold text-white" type="button" onClick={() => { setEditingAddress(null); setAddressFormOpen(true) }}>Add address</button>
+            </div>
+            {(user?.addresses || []).length === 0 && !addressFormOpen && <div className="grid min-h-[330px] place-items-center text-center"><div><p className="font-serif text-2xl">No saved addresses</p><p className="mt-2 max-w-sm text-xs leading-6 text-[#777067]">Add a delivery address for faster checkout and clearly visible delivery details.</p></div></div>}
+            {(user?.addresses || []).length > 0 && !addressFormOpen && <div className="grid gap-4 sm:grid-cols-2">{(user?.addresses || []).map((address) => <article className="border border-[#d8d0c3] p-5" key={address.id}><p className="text-[9px] font-semibold uppercase tracking-[.16em] text-[#2d6cbb]">{address.label}</p><h3 className="mt-3 font-serif text-xl">{address.recipient}</h3><p className="mt-2 text-xs leading-6 text-[#777067]">{address.street}<br />{address.city}{address.region ? `, ${address.region}` : ""}{address.postalCode ? ` ${address.postalCode}` : ""}<br />{address.phone}</p><div className="mt-5 flex gap-4 text-[11px]"><button className="border-b border-[#1d211f]" type="button" onClick={() => { setEditingAddress(address); setAddressFormOpen(true) }}>Edit</button><button className="text-red-700" type="button" disabled={busy} onClick={() => void deleteAddress(address.id)}>Delete</button></div></article>)}</div>}
+            {addressFormOpen && <form className="grid gap-4" onSubmit={saveAddress}><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-[11px] font-semibold">Address label<input className={inputClass} name="label" defaultValue={editingAddress?.label || "Home"} required /></label><label className="grid gap-2 text-[11px] font-semibold">Recipient name<input className={inputClass} name="recipient" defaultValue={editingAddress?.recipient || user?.name || ""} required /></label></div><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-[11px] font-semibold">Phone number<input className={inputClass} name="phone" type="tel" defaultValue={editingAddress?.phone || user?.phone || ""} required /></label><label className="grid gap-2 text-[11px] font-semibold">Postal code<input className={inputClass} name="postalCode" defaultValue={editingAddress?.postalCode || ""} /></label></div><label className="grid gap-2 text-[11px] font-semibold">Street address<input className={inputClass} name="street" defaultValue={editingAddress?.street || ""} required /></label><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-[11px] font-semibold">City / town<input className={inputClass} name="city" defaultValue={editingAddress?.city || ""} required /></label><label className="grid gap-2 text-[11px] font-semibold">Region / district<input className={inputClass} name="region" defaultValue={editingAddress?.region || ""} /></label></div><div className="flex justify-end gap-3 border-t border-[#d8d0c3] pt-5"><button className="px-4 py-3 text-xs" type="button" onClick={() => { setAddressFormOpen(false); setEditingAddress(null) }}>Cancel</button><button className="bg-[#2d6cbb] px-5 py-3 text-xs font-semibold text-white disabled:opacity-60" disabled={busy}>{busy ? "Saving…" : "Save address"}</button></div></form>}
+          </>}
           {!loading && view === "security" && <>
             <div className="mb-7 border-b border-[#d8d0c3] pb-6"><p className="text-[9px] font-semibold tracking-[.2em] text-[#2d6cbb]">SECURITY</p><h2 className="mt-2 font-serif text-4xl">Password & access</h2><p className="mt-2 text-xs text-[#756e65]">Choose a strong, unique password for your account.</p></div>
             <form className="max-w-lg space-y-5" onSubmit={savePassword}><label className="grid gap-2 text-[11px] font-semibold">New password<input className={inputClass} name="password" type="password" autoComplete="new-password" minLength={8} required /></label><label className="grid gap-2 text-[11px] font-semibold">Confirm new password<input className={inputClass} name="confirmation" type="password" autoComplete="new-password" minLength={8} required /></label><button className="bg-[#2d6cbb] px-5 py-3 text-xs font-semibold text-white disabled:opacity-60" disabled={busy}>{busy ? "Updating…" : "Update password"}</button></form>

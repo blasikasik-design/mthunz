@@ -32,6 +32,8 @@ export default defineConfig({
         contact: path.resolve(siteRoot, 'contact.html'),
         login: path.resolve(siteRoot, 'login.html'),
         signup: path.resolve(siteRoot, 'signup.html'),
+        terms: path.resolve(siteRoot, 'terms.html'),
+        privacy: path.resolve(siteRoot, 'privacy.html'),
         productDetail: path.resolve(siteRoot, 'product-detail.html'),
         payment: path.resolve(siteRoot, 'payment.html'),
         account: path.resolve(siteRoot, 'account.html'),

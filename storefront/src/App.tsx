@@ -8,7 +8,7 @@ import { defaultAboutPage, type AboutPageContent } from "./aboutContent"
 import { PaymentPage, ProductDetailPage } from "./CommercePages"
 import projectLogo from "./brand"
 
-type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "instagram" | "location" | "mail" | "menu" | "message" | "palette" | "search" | "sparkle" | "user"
+type IconName = "arrow" | "bag" | "check" | "chevron" | "close" | "heart" | "facebook" | "location" | "mail" | "menu" | "message" | "palette" | "search" | "sparkle" | "user"
 
 type Product = {
   id: number
@@ -142,12 +142,8 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
     heart: (
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
     ),
-    instagram: (
-      <>
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle cx="17.5" cy="6.5" r=".5" fill="currentColor" />
-      </>
+    facebook: (
+      <path d="M14 8h3V4h-3c-3.3 0-6 2.7-6 6v2H5v4h3v6h4v-6h3l1-4h-4v-2c0-1.1.9-2 2-2Z" />
     ),
     location: (
       <>
@@ -1184,8 +1180,8 @@ function App() {
             </div>
             <div>
               <h3>Connect</h3>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer">
-                <Icon name="instagram" size={16} /> Instagram
+              <a href="https://facebook.com" target="_blank" rel="noreferrer">
+                <Icon name="facebook" size={16} /> Facebook
               </a>
               <a
                 href={`https://wa.me/${settings.storePhone.replace(/\D/g, "")}`}

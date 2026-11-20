@@ -205,6 +205,9 @@ async function ensureSchema() {
   await db.query(fs.readFileSync(schemaPath, 'utf8'));
   await db.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS addresses JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMPTZ;
     ALTER TABLE products ADD COLUMN IF NOT EXISTS badge VARCHAR(40) DEFAULT '';
     ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER NOT NULL DEFAULT 0;
     CREATE TABLE IF NOT EXISTS removed_accounts (
@@ -532,7 +535,7 @@ app.get('/api/health', async (req, res) => {
 
 app.post('/api/signup', signupRateLimit, async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password, termsAccepted, privacyAccepted } = req.body;
     const normalizedPhone = String(phone || '').trim();
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
@@ -545,6 +548,9 @@ app.post('/api/signup', signupRateLimit, async (req, res) => {
     }
     if (normalizedPhone && !isValidInternationalPhone(normalizedPhone)) {
       return res.status(400).json({ error: 'Please enter a valid phone number with its country code.' });
+    }
+    if (termsAccepted !== true || privacyAccepted !== true) {
+      return res.status(400).json({ error: 'You must agree to the Terms of Service and Privacy Policy.' });
     }
     const user = await auth.createUser({ name, email, phone: normalizedPhone || null, password });
     res.status(201).json({ data: { ...user, token: createCustomerToken(user.id) } });
@@ -690,8 +696,8 @@ app.get('/api/user/:id', requireCustomer, async (req, res) => {
 app.patch('/api/user/:id', requireCustomer, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { name, email, phone, password, removeAvatar } = req.body;
-    const user = await auth.updateUser({ id, name, email, phone, password, avatarUrl: removeAvatar === true ? null : undefined });
+    const { name, email, phone, password, removeAvatar, addresses } = req.body;
+    const user = await auth.updateUser({ id, name, email, phone, password, addresses, avatarUrl: removeAvatar === true ? null : undefined });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }

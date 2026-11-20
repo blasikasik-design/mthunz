@@ -11,8 +11,8 @@ async function createUser({ name, email, phone, password }) {
   const normalizedEmail = normalizeEmail(email);
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   const result = await db.query(
-    'INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, name, email, phone, avatar_url, created_at',
-    [name, normalizedEmail, phone, hashedPassword]
+    'INSERT INTO users (name, email, phone, password_hash, addresses, terms_accepted_at, privacy_accepted_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id, name, email, phone, avatar_url, addresses, created_at',
+    [name, normalizedEmail, phone, hashedPassword, JSON.stringify([])]
   );
   return result.rows[0];
 }
@@ -20,7 +20,7 @@ async function createUser({ name, email, phone, password }) {
 async function findUserByEmail(email) {
   const normalizedEmail = normalizeEmail(email);
   const result = await db.query(
-    'SELECT id, name, email, phone, avatar_url, password_hash FROM users WHERE LOWER(email) = LOWER($1)',
+    'SELECT id, name, email, phone, avatar_url, addresses, password_hash FROM users WHERE LOWER(email) = LOWER($1)',
     [normalizedEmail]
   );
   return result.rows[0] || null;
@@ -43,6 +43,7 @@ async function verifyUserPassword(user, password) {
     email: user.email,
     phone: user.phone,
     avatar_url: user.avatar_url,
+    addresses: user.addresses || [],
   };
 }
 
@@ -51,11 +52,11 @@ async function wasAccountRemoved(email) {
 }
 
 async function findUserById(id) {
-  const result = await db.query('SELECT id, name, email, phone, avatar_url, created_at FROM users WHERE id = $1', [id]);
+  const result = await db.query('SELECT id, name, email, phone, avatar_url, addresses, created_at FROM users WHERE id = $1', [id]);
   return result.rows[0] || null;
 }
 
-async function updateUser({ id, name, email, phone, password, avatarUrl }) {
+async function updateUser({ id, name, email, phone, password, avatarUrl, addresses }) {
   const updates = [];
   const values = [];
   let idx = 1;
@@ -81,13 +82,17 @@ async function updateUser({ id, name, email, phone, password, avatarUrl }) {
     updates.push(`password_hash = $${idx++}`);
     values.push(passwordHash);
   }
+  if (addresses !== undefined) {
+    updates.push(`addresses = $${idx++}`);
+    values.push(JSON.stringify(addresses));
+  }
 
   if (!updates.length) {
     return findUserById(id);
   }
 
   values.push(id);
-  const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${idx} RETURNING id, name, email, phone, avatar_url, created_at`;
+  const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${idx} RETURNING id, name, email, phone, avatar_url, addresses, created_at`;
   const result = await db.query(query, values);
   return result.rows[0];
 }

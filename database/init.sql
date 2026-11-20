@@ -4,6 +4,9 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(180) NOT NULL UNIQUE,
   phone VARCHAR(24),
   avatar_url TEXT,
+  addresses JSONB NOT NULL DEFAULT '[]'::jsonb,
+  terms_accepted_at TIMESTAMPTZ,
+  privacy_accepted_at TIMESTAMPTZ,
   password_hash TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

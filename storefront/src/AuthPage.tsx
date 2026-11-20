@@ -90,7 +90,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          isSignup ? { name, email, phone, password } : { email, password },
+          isSignup ? { name, email, phone, password, termsAccepted: true, privacyAccepted: true } : { email, password },
         ),
       })
       const body = (await response.json().catch(() => ({}))) as AuthResponse
@@ -153,8 +153,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           <label className={fieldLabelClass}>Password
             <span className="relative block"><svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#817a70]" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input className={fieldClass} name="password" type="password" autoComplete={isSignup ? "new-password" : "current-password"} minLength={8} placeholder={isSignup ? "At least 8 characters" : "Your password"} required /></span>
           </label>
-          {isSignup && <label className={fieldLabelClass}>Confirm password<input className="w-full border border-[#cfc7bb] bg-[#fffdf9] px-4 py-3.5 text-sm outline-none focus:border-[#2d6cbb] focus:ring-2 focus:ring-[#2d6cbb]/10" name="confirmation" type="password" autoComplete="new-password" minLength={8} required /></label>}
-          {isSignup && <label className="flex items-start gap-2 text-[11px] font-normal leading-5 text-[#5f665f]"><input className="mt-1 accent-[#2d6cbb]" type="checkbox" required /> I agree to the Terms of Service and Privacy Policy.</label>}
+          {isSignup && <label className="flex items-start gap-2 text-[11px] font-normal leading-5 text-[#5f665f]"><input className="mt-1 accent-[#2d6cbb]" type="checkbox" name="legalAgreement" required /> <span>I agree to the <a className="underline underline-offset-2" href="/terms.html" target="_blank" rel="noreferrer">Terms of Service</a> and <a className="underline underline-offset-2" href="/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>}
           {!isSignup && <div className="flex items-center gap-2 text-[11px] text-[#5f665f]"><input className="accent-[#2d6cbb]" type="checkbox" /> Remember me</div>}
           <p className={`min-h-5 text-sm ${statusType === "error" ? "text-red-700" : "text-blue-800"}`} role="status" aria-live="polite">{status}</p>
           <button className="flex min-h-12 w-full items-center justify-between bg-[#2d6cbb] px-5 py-3.5 text-xs font-semibold text-white transition hover:bg-[#1f528e] disabled:cursor-wait disabled:opacity-60" type="submit" disabled={busy}>{busy ? "Please wait…" : isSignup ? "Create my account" : "Sign in"}<span aria-hidden="true">→</span></button>
